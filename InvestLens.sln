@@ -5,6 +5,8 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{8EC462FD-D22E-90A8-E5CE-7E832BA40C5D}"
 	ProjectSection(SolutionItems) = preProject
+		.env = .env
+		Directory.Packages.props = Directory.Packages.props
 		README.md = README.md
 	EndProjectSection
 EndProject
@@ -27,6 +29,10 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InvestLens.Shared", "src\InvestLens.Shared\InvestLens.Shared.csproj", "{2DE0DE86-CB7C-4BF2-AE69-D2A28157B28D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InvestLens.Worker", "src\InvestLens.Worker\InvestLens.Worker.csproj", "{79E37A13-FE23-4B63-B95E-F5468C2778AE}"
+EndProject
+Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{81DDED9D-158B-E303-5F62-77A2896D2A5A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InvestLens.Abstraction", "src\InvestLens.Abstraction\InvestLens.Abstraction.csproj", "{35DEA1BA-B40D-4AEB-B6EB-0A3F27B08F2A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -66,6 +72,14 @@ Global
 		{79E37A13-FE23-4B63-B95E-F5468C2778AE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{79E37A13-FE23-4B63-B95E-F5468C2778AE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{79E37A13-FE23-4B63-B95E-F5468C2778AE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{81DDED9D-158B-E303-5F62-77A2896D2A5A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{81DDED9D-158B-E303-5F62-77A2896D2A5A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{81DDED9D-158B-E303-5F62-77A2896D2A5A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{81DDED9D-158B-E303-5F62-77A2896D2A5A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{35DEA1BA-B40D-4AEB-B6EB-0A3F27B08F2A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{35DEA1BA-B40D-4AEB-B6EB-0A3F27B08F2A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{35DEA1BA-B40D-4AEB-B6EB-0A3F27B08F2A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{35DEA1BA-B40D-4AEB-B6EB-0A3F27B08F2A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -80,6 +94,7 @@ Global
 		{FBB478E7-8EDF-41B7-9C31-55D14422F599} = {CD010B40-7690-4095-9E87-389E55309EC7}
 		{2DE0DE86-CB7C-4BF2-AE69-D2A28157B28D} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{79E37A13-FE23-4B63-B95E-F5468C2778AE} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{35DEA1BA-B40D-4AEB-B6EB-0A3F27B08F2A} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {F09F387B-F917-4C4C-993B-B2E123B73E68}

@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "Docker Compose": {
+      "commandName": "DockerCompose",
+      "commandVersion": "1.0",
+      "serviceActions": {
+        "investlens.web": "StartDebugging",
+        "investlens.data.api": "StartDebugging"
+      }
+    }
+  }
+}
