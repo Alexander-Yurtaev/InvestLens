@@ -1,0 +1,87 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{8EC462FD-D22E-90A8-E5CE-7E832BA40C5D}"
+	ProjectSection(SolutionItems) = preProject
+		README.md = README.md
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InvestLens.Web", "src\InvestLens.Web\InvestLens.Web.csproj", "{60DD5C15-EEF1-4ABC-AFBA-650CBC0C94FC}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "InvestLens.Data", "InvestLens.Data", "{CD010B40-7690-4095-9E87-389E55309EC7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InvestLens.Data.Api", "src\InvestLens.Data\InvestLens.Data.Api\InvestLens.Data.Api.csproj", "{DFF31AE2-0AA3-4D36-9C07-CB0F10F6C951}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InvestLens.Data.Entities", "src\InvestLens.Data\InvestLens.Data.Entities\InvestLens.Data.Entities.csproj", "{475022FC-4301-4044-9F73-BF992F5FFA64}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InvestLens.Data.DataContext", "src\InvestLens.Data\InvestLens.Data.DataContext\InvestLens.Data.DataContext.csproj", "{DFF69EE6-785B-45A2-B1DC-F22E907E746D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InvestLens.Data.Repositories", "src\InvestLens.Data\InvestLens.Data.Repositories\InvestLens.Data.Repositories.csproj", "{8AF9FE6F-B3EF-4CD4-951A-60F8EA06B205}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InvestLens.Data.Core", "src\InvestLens.Data\InvestLens.Data.Core\InvestLens.Data.Core.csproj", "{FBB478E7-8EDF-41B7-9C31-55D14422F599}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InvestLens.Shared", "src\InvestLens.Shared\InvestLens.Shared.csproj", "{2DE0DE86-CB7C-4BF2-AE69-D2A28157B28D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InvestLens.Worker", "src\InvestLens.Worker\InvestLens.Worker.csproj", "{79E37A13-FE23-4B63-B95E-F5468C2778AE}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{60DD5C15-EEF1-4ABC-AFBA-650CBC0C94FC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{60DD5C15-EEF1-4ABC-AFBA-650CBC0C94FC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{60DD5C15-EEF1-4ABC-AFBA-650CBC0C94FC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{60DD5C15-EEF1-4ABC-AFBA-650CBC0C94FC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DFF31AE2-0AA3-4D36-9C07-CB0F10F6C951}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DFF31AE2-0AA3-4D36-9C07-CB0F10F6C951}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DFF31AE2-0AA3-4D36-9C07-CB0F10F6C951}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DFF31AE2-0AA3-4D36-9C07-CB0F10F6C951}.Release|Any CPU.Build.0 = Release|Any CPU
+		{475022FC-4301-4044-9F73-BF992F5FFA64}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{475022FC-4301-4044-9F73-BF992F5FFA64}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{475022FC-4301-4044-9F73-BF992F5FFA64}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{475022FC-4301-4044-9F73-BF992F5FFA64}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DFF69EE6-785B-45A2-B1DC-F22E907E746D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DFF69EE6-785B-45A2-B1DC-F22E907E746D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DFF69EE6-785B-45A2-B1DC-F22E907E746D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DFF69EE6-785B-45A2-B1DC-F22E907E746D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8AF9FE6F-B3EF-4CD4-951A-60F8EA06B205}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8AF9FE6F-B3EF-4CD4-951A-60F8EA06B205}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8AF9FE6F-B3EF-4CD4-951A-60F8EA06B205}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8AF9FE6F-B3EF-4CD4-951A-60F8EA06B205}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FBB478E7-8EDF-41B7-9C31-55D14422F599}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FBB478E7-8EDF-41B7-9C31-55D14422F599}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FBB478E7-8EDF-41B7-9C31-55D14422F599}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FBB478E7-8EDF-41B7-9C31-55D14422F599}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2DE0DE86-CB7C-4BF2-AE69-D2A28157B28D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2DE0DE86-CB7C-4BF2-AE69-D2A28157B28D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2DE0DE86-CB7C-4BF2-AE69-D2A28157B28D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2DE0DE86-CB7C-4BF2-AE69-D2A28157B28D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{79E37A13-FE23-4B63-B95E-F5468C2778AE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{79E37A13-FE23-4B63-B95E-F5468C2778AE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{79E37A13-FE23-4B63-B95E-F5468C2778AE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{79E37A13-FE23-4B63-B95E-F5468C2778AE}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{60DD5C15-EEF1-4ABC-AFBA-650CBC0C94FC} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{CD010B40-7690-4095-9E87-389E55309EC7} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{DFF31AE2-0AA3-4D36-9C07-CB0F10F6C951} = {CD010B40-7690-4095-9E87-389E55309EC7}
+		{475022FC-4301-4044-9F73-BF992F5FFA64} = {CD010B40-7690-4095-9E87-389E55309EC7}
+		{DFF69EE6-785B-45A2-B1DC-F22E907E746D} = {CD010B40-7690-4095-9E87-389E55309EC7}
+		{8AF9FE6F-B3EF-4CD4-951A-60F8EA06B205} = {CD010B40-7690-4095-9E87-389E55309EC7}
+		{FBB478E7-8EDF-41B7-9C31-55D14422F599} = {CD010B40-7690-4095-9E87-389E55309EC7}
+		{2DE0DE86-CB7C-4BF2-AE69-D2A28157B28D} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{79E37A13-FE23-4B63-B95E-F5468C2778AE} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {F09F387B-F917-4C4C-993B-B2E123B73E68}
+	EndGlobalSection
+EndGlobal

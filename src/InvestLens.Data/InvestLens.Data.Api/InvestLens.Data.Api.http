@@ -1,0 +1,6 @@
+@InvestLens.Data.Api_HostAddress = http://localhost:5252
+
+GET {{InvestLens.Data.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
