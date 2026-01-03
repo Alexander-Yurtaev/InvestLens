@@ -36,6 +36,8 @@ public static partial class Program
 
             app.UseHttpsRedirection();
 
+            app.MapGet("/", () => "Data service");
+
             app.Run();
         }
         catch (Exception ex)

@@ -1,0 +1,25 @@
+﻿.max-width-800 {
+    max-width: 800px;
+}
+
+.feature-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 1px solid #eaeaea;
+}
+
+.feature-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+}
+
+.feature-icon {
+    line-height: 1;
+}
+
+.text-primary {
+    color: #2c3e50 !important;
+}
+
+.bg-light {
+    background-color: #f8f9fa !important;
+}
