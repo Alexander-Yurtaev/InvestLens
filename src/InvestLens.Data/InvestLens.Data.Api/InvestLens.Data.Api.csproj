@@ -12,6 +12,8 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" />
+    <PackageReference Include="Microsoft.Extensions.DependencyModel" />
     <PackageReference Include="Npgsql" />
   </ItemGroup>
 
@@ -24,6 +26,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\InvestLens.Shared\InvestLens.Shared.csproj" />
+    <ProjectReference Include="..\InvestLens.Data.DataContext\InvestLens.Data.DataContext.csproj" />
   </ItemGroup>
 
 </Project>

@@ -11,6 +11,8 @@
   </PropertyGroup>
 
   <ItemGroup Label="Serilog">
+	<PackageReference Include="Microsoft.EntityFrameworkCore.Relational" />
+	<PackageReference Include="Microsoft.Extensions.DependencyModel" />
 	<PackageReference Include="Serilog" />
 	<PackageReference Include="Serilog.Extensions.Logging" />
 	<PackageReference Include="Serilog.AspNetCore" />

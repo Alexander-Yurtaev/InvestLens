@@ -1,11 +1,14 @@
-﻿using InvestLens.Shared.Helpers;
+﻿using InvestLens.Abstraction.Services;
+using InvestLens.Data.Api.Extensions;
+using InvestLens.Shared.Helpers;
+using InvestLens.Shared.Services;
 using Serilog;
 
 namespace InvestLens.Data.Api;
 
 public static partial class Program
 {
-    public static void Main(string[] args)
+    public static async Task Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
 
@@ -20,6 +23,9 @@ public static partial class Program
             // Add services to the container.
             // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
             builder.Services.AddOpenApi();
+
+            builder.Services.AddInvestLensDatabaseInfrastructure(builder.Configuration);
+            builder.Services.AddScoped<IDataService, DataService>();
 
             var app = builder.Build();
 
@@ -36,17 +42,52 @@ public static partial class Program
 
             app.UseHttpsRedirection();
 
+            await app.EnsureDatabaseInitAsync();
+
             app.MapGet("/", () => "Data service");
 
-            app.Run();
+            await app.RunAsync();
         }
         catch (Exception ex)
         {
             Log.Fatal(ex, "Приложение остановлено из‑за исключения");
+            throw;
         }
         finally
         {
-            Log.CloseAndFlush();
+            await Log.CloseAndFlushAsync();
+        }
+    }
+
+    private static async Task EnsureDatabaseInitAsync(this WebApplication app)
+    {
+        try
+        {
+            using var scope = app.Services.CreateScope();
+            var databaseService = scope.ServiceProvider.GetRequiredService<IDatabaseService>();
+
+            // Получаем параметры из конфигурации
+            var targetMigration = PostgresDataHelper.GetTargetMigration(app.Configuration);
+
+            // 2.1 Создаем БД и пользователя
+            await databaseService.EnsureDatabaseCreatedAsync(app.Configuration);
+
+            // 2.2 Применяем миграции
+            if (string.IsNullOrEmpty(targetMigration))
+            {
+                await databaseService.ApplyMigrationsAsync(scope.ServiceProvider);
+            }
+            else
+            {
+                await databaseService.ApplyMigrationsAsync(scope.ServiceProvider, targetMigration);
+            }
+
+            Log.Information("✅ Database initialized successfully");
+        }
+        catch (Exception ex)
+        {
+            Log.Fatal(ex, "⚠️ Database initialization fatal");
+            throw;
         }
     }
 }
