@@ -27,6 +27,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\InvestLens.Shared\InvestLens.Shared.csproj" />
     <ProjectReference Include="..\InvestLens.Data.DataContext\InvestLens.Data.DataContext.csproj" />
+    <ProjectReference Include="..\InvestLens.Data.Repositories\InvestLens.Data.Repositories.csproj" />
   </ItemGroup>
 
 </Project>

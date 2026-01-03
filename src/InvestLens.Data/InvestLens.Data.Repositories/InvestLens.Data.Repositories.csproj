@@ -6,4 +6,9 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\InvestLens.Abstraction\InvestLens.Abstraction.csproj" />
+    <ProjectReference Include="..\InvestLens.Data.DataContext\InvestLens.Data.DataContext.csproj" />
+  </ItemGroup>
+
 </Project>

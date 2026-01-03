@@ -1,5 +1,7 @@
-﻿using InvestLens.Abstraction.Services;
+﻿using InvestLens.Abstraction.Repositories;
+using InvestLens.Abstraction.Services;
 using InvestLens.Data.Api.Extensions;
+using InvestLens.Data.Repositories;
 using InvestLens.Shared.Helpers;
 using InvestLens.Shared.Services;
 using Serilog;
@@ -26,6 +28,7 @@ public static partial class Program
 
             builder.Services.AddInvestLensDatabaseInfrastructure(builder.Configuration);
             builder.Services.AddScoped<IDataService, DataService>();
+            builder.Services.AddScoped<ISecurityRepository, SecurityRepository>();
 
             var app = builder.Build();
 
