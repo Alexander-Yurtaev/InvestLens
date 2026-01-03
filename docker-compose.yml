@@ -32,6 +32,15 @@ services:
       - redis
       - rabbitmq
 
+  investlens.worker:
+    image: ${DOCKER_REGISTRY-}investlensworker
+    container_name: investlens.worker
+    build:
+      context: .
+      dockerfile: src/InvestLens.Worker/Dockerfile
+    environment:
+      - DB_HOST=postgres_multi_db
+
   postgres:
     image: postgres:15-alpine
     container_name: postgres_multi_db

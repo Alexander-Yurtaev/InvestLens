@@ -34,6 +34,8 @@ public static class Program
 
             app.UseHttpsRedirection();
 
+            app.MapGet("/", () => "Worker service");
+
             app.Run();
         }
         catch (Exception ex)

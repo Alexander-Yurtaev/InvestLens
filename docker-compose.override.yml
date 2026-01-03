@@ -30,6 +30,22 @@ services:
       - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
       - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro
       - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
+ 
+  investlens.worker:
+    env_file: 
+      - src/InvestLens.Worker/.env
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=8080
+      - ASPNETCORE_HTTPS_PORTS=8081
+    ports:
+      - "5020:8080"
+      - "5021:8081"
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
+      - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
+      - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro
+      - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
   
   postgres:
     env_file:
@@ -58,8 +74,7 @@ services:
       - "15672:15672" # Management UI
     volumes:
       - ./rabbitmq_data:/var/lib/rabbitmq
-
-
+  
 volumes:
   postgres_data:
   redis_data:
