@@ -15,4 +15,15 @@
     <PackageReference Include="Npgsql" />
   </ItemGroup>
 
+  <ItemGroup Label="Serilog">
+	<PackageReference Include="Serilog" />
+	<PackageReference Include="Serilog.Extensions.Logging" />
+	<PackageReference Include="Serilog.AspNetCore" />
+	<PackageReference Include="Serilog.Sinks.File" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\InvestLens.Shared\InvestLens.Shared.csproj" />
+  </ItemGroup>
+
 </Project>

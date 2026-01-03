@@ -11,14 +11,15 @@
     <PackageReference Include="Polly" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\InvestLens.Abstraction\InvestLens.Abstraction.csproj" />
+  <ItemGroup Label="Serilog">
+	<PackageReference Include="Serilog" />
+	<PackageReference Include="Serilog.Extensions.Logging" />
+	<PackageReference Include="Serilog.AspNetCore" />
+	<PackageReference Include="Serilog.Sinks.File" />
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="Microsoft.Extensions.Configuration.Abstractions">
-      <HintPath>..\..\..\..\..\Program Files\dotnet\shared\Microsoft.AspNetCore.App\9.0.11\Microsoft.Extensions.Configuration.Abstractions.dll</HintPath>
-    </Reference>
+    <ProjectReference Include="..\InvestLens.Abstraction\InvestLens.Abstraction.csproj" />
   </ItemGroup>
 
 </Project>
