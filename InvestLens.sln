@@ -39,6 +39,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{A6408FA0-0
 		docs\migrations.md = docs\migrations.md
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InvestLens.Data.Shared", "src\InvestLens.Data.Shared\InvestLens.Data.Shared.csproj", "{0FEC3AE7-B5F1-4B0C-97F2-116056DA30C7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -85,6 +87,10 @@ Global
 		{35DEA1BA-B40D-4AEB-B6EB-0A3F27B08F2A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{35DEA1BA-B40D-4AEB-B6EB-0A3F27B08F2A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{35DEA1BA-B40D-4AEB-B6EB-0A3F27B08F2A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0FEC3AE7-B5F1-4B0C-97F2-116056DA30C7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0FEC3AE7-B5F1-4B0C-97F2-116056DA30C7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0FEC3AE7-B5F1-4B0C-97F2-116056DA30C7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0FEC3AE7-B5F1-4B0C-97F2-116056DA30C7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -100,6 +106,7 @@ Global
 		{2DE0DE86-CB7C-4BF2-AE69-D2A28157B28D} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{79E37A13-FE23-4B63-B95E-F5468C2778AE} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{35DEA1BA-B40D-4AEB-B6EB-0A3F27B08F2A} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{0FEC3AE7-B5F1-4B0C-97F2-116056DA30C7} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {F09F387B-F917-4C4C-993B-B2E123B73E68}

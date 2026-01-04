@@ -53,7 +53,7 @@ public class InvestLensDataContext : DbContext
             security.Property(s => s.RegNumber)
                 .HasColumnName("regnumber")
                 .HasMaxLength(189)
-                .IsRequired();
+                .IsRequired(false);
 
             security.Property(s => s.Name)
                 .HasColumnName("name")
@@ -63,29 +63,30 @@ public class InvestLensDataContext : DbContext
             security.Property(s => s.Isin)
                 .HasColumnName("isin")
                 .HasMaxLength(51)
-                .IsRequired();
+                .IsRequired(false);
 
             security.Property(s => s.IsTraded)
                 .HasColumnName("is_trade")
                 .IsRequired();
 
             security.Property(s => s.EmitentId)
-                .HasColumnName("emitent_id");
+                .HasColumnName("emitent_id")
+                .IsRequired(false);
 
             security.Property(s => s.EmitentTitle)
                 .HasColumnName("emitent_title")
                 .HasMaxLength(765)
-                .IsRequired();
+                .IsRequired(false);
 
             security.Property(s => s.EmitentInn)
                 .HasColumnName("emitent_inn")
                 .HasMaxLength(30)
-                .IsRequired();
+                .IsRequired(false);
 
             security.Property(s => s.EmitentOkpo)
                 .HasColumnName("emitent_okpo")
                 .HasMaxLength(21)
-                .IsRequired();
+                .IsRequired(false);
 
             security.Property(s => s.Type)
                 .HasColumnName("type")
@@ -105,7 +106,7 @@ public class InvestLensDataContext : DbContext
             security.Property(s => s.MarketpriceBoardId)
                 .HasColumnName("marketprice_boardid")
                 .HasMaxLength(12)
-                .IsRequired();
+                .IsRequired(false);
         });
 
     }

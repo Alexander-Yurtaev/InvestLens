@@ -1,33 +1,84 @@
 ﻿using InvestLens.Abstraction.Repositories;
+using InvestLens.Data.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace InvestLens.Shared.Repositories;
 
-public class BaseRepository<TEntity> : IBaseRepository<TEntity> where TEntity : class
+public abstract class BaseRepository<TEntity, TKey> : IBaseRepository<TEntity, TKey> where TEntity : BaseEntity<TKey>
 {
-    private readonly DbContext _context;
-    private readonly ILogger<BaseRepository<TEntity>> _logger;
-    private readonly DbSet<TEntity> _dbSet;
+    protected readonly DbContext Context;
+    protected readonly ILogger<BaseRepository<TEntity, TKey>> Logger;
+    protected readonly DbSet<TEntity> DbSet;
 
-    public BaseRepository(DbContext context, ILogger<BaseRepository<TEntity>> logger)
+    protected BaseRepository(DbContext context, ILogger<BaseRepository<TEntity, TKey>> logger)
     {
-        _context = context;
-        _dbSet = context.Set<TEntity>();
-        _logger = logger;
+        Context = context;
+        DbSet = context.Set<TEntity>();
+        Logger = logger;
     }
 
-    public async Task<TEntity> Create(TEntity entity)
+    public virtual async Task<TEntity> Add(TEntity entity, bool orUpdate = false)
     {
         try
         {
-            await _dbSet.AddAsync(entity);
-            await _context.SaveChangesAsync();
+            if (orUpdate)
+            {
+                var savedEntity = await Get(entity.Id);
+                if (savedEntity is not null)
+                {
+                    DbSet.Update(entity);
+                }
+                else
+                {
+                    DbSet.Add(entity);
+                }
+            }
+            else
+            {
+                DbSet.Add(entity);
+            }
+                
+            await Context.SaveChangesAsync();
             return entity;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Ошибка при создании сущности");
+            Logger.LogError(ex, "Ошибка при создании сущности Id: {Id}", entity.Id);
+            throw;
+        }
+    }
+
+    public virtual async Task<List<TEntity>> Add(List<TEntity> entities, bool orUpdate=false)
+    {
+        try
+        {
+            if (orUpdate)
+            {
+                foreach (var entity in entities)
+                {
+                    var savedEntity = await Get(entity.Id);
+                    if (savedEntity is not null)
+                    {
+                        DbSet.Update(entity);
+                    }
+                    else
+                    {
+                        DbSet.Add(entity);
+                    }
+                }
+            }
+            else
+            {
+                DbSet.AddRange(entities);
+            }
+
+            await Context.SaveChangesAsync();
+            return entities;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Ошибка при создании сущности");
             throw;
         }
     }
@@ -36,17 +87,17 @@ public class BaseRepository<TEntity> : IBaseRepository<TEntity> where TEntity : 
     {
         try
         {
-            var entities = await _dbSet.ToListAsync();
+            var entities = await DbSet.AsNoTracking().ToListAsync();
             return entities;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Ошибка при получении списка сущностей");
+            Logger.LogError(ex, "Ошибка при получении списка сущностей");
             throw;
         }
     }
 
-    public async Task<TEntity?> Get(Guid id)
+    public async Task<TEntity?> Get(TKey id)
     {
         try
         {
@@ -55,12 +106,12 @@ public class BaseRepository<TEntity> : IBaseRepository<TEntity> where TEntity : 
         }
         catch (KeyNotFoundException ex)
         {
-            _logger.LogError(ex, ex.Message);
+            Logger.LogError(ex, ex.Message);
             return null;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Ошибка при получении сущности");
+            Logger.LogError(ex, "Ошибка при получении сущности Id: {Id}", id);
             throw;
         }
     }
@@ -69,46 +120,47 @@ public class BaseRepository<TEntity> : IBaseRepository<TEntity> where TEntity : 
     {
         try
         {
-            _dbSet.Update(entity);
-            await _context.SaveChangesAsync();
+            DbSet.Update(entity);
+            await Context.SaveChangesAsync();
             return entity;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Ошибка при обновлении сущности");
+            Logger.LogError(ex, "Ошибка при обновлении сущности Id: {Id}", entity.Id);
             throw;
         }
     }
 
-    public async Task Delete(Guid id)
+    public async Task Delete(TKey id)
     {
         try
         {
             var entity = await Find(id, true);
-            _dbSet.Remove(entity!);
-            await _context.SaveChangesAsync();
+            DbSet.Remove(entity!);
+            await Context.SaveChangesAsync();
         }
         catch (KeyNotFoundException ex)
         {
-            _logger.LogError(ex, ex.Message);
+            Logger.LogError(ex, ex.Message);
             throw;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Ошибка при удалении сущности");
+            Logger.LogError(ex, "Ошибка при удалении сущности Id: {Id}", id);
             throw;
         }
     }
 
     #region Private Methods
 
-    private async Task<TEntity?> Find(Guid id, bool throwIfNotFound = false)
+    private async Task<TEntity?> Find(TKey id, bool throwIfNotFound = false)
     {
-        var entity = await _dbSet.FindAsync(id);
+        var entity = await DbSet.FindAsync(id);
 
         if (entity is null && throwIfNotFound)
         {
-            throw new KeyNotFoundException($"Entity with Id={id} not found.");
+            Logger.LogWarning("Сущность не найдена с Id: {Id}", id);
+            throw new KeyNotFoundException($"Entity not found.");
         }
 
         return entity;

@@ -1,6 +1,7 @@
 ﻿using InvestLens.Abstraction.Repositories;
 using InvestLens.Abstraction.Services;
 using InvestLens.Data.Api.Extensions;
+using InvestLens.Data.Api.Services;
 using InvestLens.Data.Repositories;
 using InvestLens.Shared.Helpers;
 using InvestLens.Shared.Services;
@@ -26,9 +27,15 @@ public static partial class Program
             // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
             builder.Services.AddOpenApi();
 
+            string? moexBaseUrl = builder.Configuration["MOEX_BASE_URL"];
+            ArgumentException.ThrowIfNullOrEmpty(moexBaseUrl, "MOEX_BASE_URL");
+            builder.Services.AddHttpClient("MoexClient", options => options.BaseAddress = new Uri(moexBaseUrl));
+
             builder.Services.AddInvestLensDatabaseInfrastructure(builder.Configuration);
-            builder.Services.AddScoped<IDataService, DataService>();
+            builder.Services.AddScoped<IMoexClient, MoexClient>();
             builder.Services.AddScoped<ISecurityRepository, SecurityRepository>();
+            builder.Services.AddScoped<IRefreshStatusRepository, RefreshStatusRepository>();
+            builder.Services.AddScoped<IDataService, DataService>();
 
             var app = builder.Build();
 
@@ -47,7 +54,14 @@ public static partial class Program
 
             await app.EnsureDatabaseInitAsync();
 
-            app.MapGet("/", () => "Data service");
+            app.MapGet("/", () =>
+                Results.Content(
+                    "<html><body>" +
+                    "<a href='securities'>securities</a>" +
+                    "</body></html>",
+                    "text/html"
+                ));
+            app.MapGet("/securities", (IDataService dataService) => dataService.GetSecurities());
 
             await app.RunAsync();
         }

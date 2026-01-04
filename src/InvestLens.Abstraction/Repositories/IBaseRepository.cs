@@ -1,14 +1,18 @@
-﻿namespace InvestLens.Abstraction.Repositories;
+﻿using InvestLens.Data.Entities;
 
-public interface IBaseRepository<TEntity> where TEntity : class
+namespace InvestLens.Abstraction.Repositories;
+
+public interface IBaseRepository<TEntity, TKey> where TEntity : BaseEntity<TKey>
 {
-    Task<TEntity> Create(TEntity entity);
+    Task<TEntity> Add(TEntity entity, bool orUpdate=false);
+
+    Task<List<TEntity>> Add(List<TEntity> entities, bool orUpdate=false);
 
     Task<List<TEntity>> Get();
 
-    Task<TEntity?> Get(Guid id);
+    Task<TEntity?> Get(TKey id);
 
     Task<TEntity> Update(TEntity entity);
 
-    Task Delete(Guid id);
+    Task Delete(TKey id);
 }

@@ -1,8 +1,12 @@
 ﻿namespace InvestLens.Data.Entities;
 
-public class RefreshStatus
+public class RefreshStatus : BaseEntity<Guid>
 {
-    public Guid Id { get; set; }
+    public RefreshStatus(string entityName)
+    {
+        EntityName = entityName;
+        RefreshDate = DateTime.UtcNow;
+    }
 
     public string EntityName { get; set; } = string.Empty;
 

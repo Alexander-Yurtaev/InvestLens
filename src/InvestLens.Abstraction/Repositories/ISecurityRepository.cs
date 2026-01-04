@@ -2,6 +2,4 @@
 
 namespace InvestLens.Abstraction.Repositories;
 
-public interface ISecurityRepository : IBaseRepository<Security>
-{
-}
+public interface ISecurityRepository : IBaseRepository<Security, Guid>;
