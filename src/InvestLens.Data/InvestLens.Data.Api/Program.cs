@@ -5,7 +5,6 @@ using InvestLens.Data.Api.Services;
 using InvestLens.Data.Repositories;
 using InvestLens.Shared.Helpers;
 using InvestLens.Shared.Services;
-using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 
 namespace InvestLens.Data.Api;
