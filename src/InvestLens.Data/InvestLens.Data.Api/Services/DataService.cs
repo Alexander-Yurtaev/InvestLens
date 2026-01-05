@@ -41,9 +41,9 @@ public class DataService : IDataService
         {
             // 1. Получаем данные от MOEX
             var securitiesResponse = await _moexClient.GetSecurities();
-            if (securitiesResponse is null)
+            if (securitiesResponse is null || securitiesResponse.Securities.Data.Length == 0)
             {
-                throw new InvalidOperationException();
+                throw new InvalidOperationException("Не были получены данные от MOEX.");
             }
 
             // 2. Конвертируем данные из Response в Entity

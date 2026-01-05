@@ -5,6 +5,7 @@ using InvestLens.Data.Api.Services;
 using InvestLens.Data.Repositories;
 using InvestLens.Shared.Helpers;
 using InvestLens.Shared.Services;
+using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 
 namespace InvestLens.Data.Api;
@@ -27,9 +28,14 @@ public static partial class Program
             // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
             builder.Services.AddOpenApi();
 
+            builder.Services.AddScoped<IPollyService, PollyService>();
+
             string? moexBaseUrl = builder.Configuration["MOEX_BASE_URL"];
             ArgumentException.ThrowIfNullOrEmpty(moexBaseUrl, "MOEX_BASE_URL");
-            builder.Services.AddHttpClient("MoexClient", options => options.BaseAddress = new Uri(moexBaseUrl));
+            builder.Services
+                .AddHttpClient("MoexClient", options => options.BaseAddress = new Uri(moexBaseUrl))
+                .AddPolicyHandler((provider, message) => provider.GetService<IPollyService>()!.GetRetryPolicy())
+                .AddPolicyHandler((provider, message) => provider.GetService<IPollyService>()!.GetCircuitBreakerPolicy());
 
             builder.Services.AddInvestLensDatabaseInfrastructure(builder.Configuration);
             builder.Services.AddScoped<IMoexClient, MoexClient>();
