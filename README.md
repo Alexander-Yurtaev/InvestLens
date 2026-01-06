@@ -14,4 +14,6 @@
 
 **Цель проекта:** Предоставить инвесторам единый, удобный инструмент для глубокого анализа своих вложений и принятия обоснованных решений на основе актуальных данных.
 
-![[.\docs\images\Portfolio Lens.jpeg]]
+<p align="center">
+  <img src="docs/images/Invest Lens.jpeg" alt="Invest Lens" width="800">
+</p>
