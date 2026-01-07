@@ -1,11 +1,27 @@
-﻿using InvestLens.Abstraction.Services;
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using Npgsql;
 
 namespace InvestLens.Shared.Helpers;
 
-public static class PostgresDataHelper
+public static class ConnectionStringHelper
 {
+    public static void ValidateCommonConfigurations(IConfiguration configuration)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(configuration["DB_HOST"], "DB_HOST");
+        ArgumentException.ThrowIfNullOrEmpty(configuration["POSTGRES_PASSWORD"], "POSTGRES_PASSWORD");
+    }
+
+    public static void ValidateUserConfigurations(IConfiguration configuration)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(configuration["DB_USER"], "DB_USER");
+        ArgumentException.ThrowIfNullOrEmpty(configuration["DB_PASSWORD"], "DB_PASSWORD");
+    }
+
+    public static void ValidateMigrationConfigurations(IConfiguration configuration)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(configuration["TARGET_MIGRATION"], "TARGET_MIGRATION");
+    }
+
     public static string GetMasterConnectionString(IConfiguration configuration)
     {
         NpgsqlConnectionStringBuilder builder = new()
@@ -54,29 +70,18 @@ public static class PostgresDataHelper
 
     public static string GetDatabaseName(IConfiguration configuration)
     {
-        var dbName = configuration["DB_NAME"];
-
-        ArgumentException.ThrowIfNullOrEmpty(dbName);
-
-        return dbName;
+        return configuration["DB_NAME"]!;
     }
 
     public static string? GetTargetMigration(IConfiguration configuration)
     {
-        var targetMigration = configuration["TARGET_MIGRATION"];
-
-        ArgumentException.ThrowIfNullOrEmpty(targetMigration);
-
-        return targetMigration;
+        return configuration["TARGET_MIGRATION"];
     }
 
     public static (string username, string password) GetServiceUserInfo(IConfiguration configuration)
     {
-        var username = configuration["DB_USER"];
-        var password = configuration["DB_PASSWORD"];
-
-        ArgumentException.ThrowIfNullOrEmpty(username, "DB_USER");
-        ArgumentException.ThrowIfNullOrEmpty(password, "DB_PASSWORD");
+        var username = configuration["DB_USER"]!;
+        var password = configuration["DB_PASSWORD"]!;
 
         return (username, password);
     }

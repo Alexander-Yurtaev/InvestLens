@@ -20,7 +20,7 @@ public class InvestLensDataContext : DbContext
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         if (optionsBuilder.IsConfigured) return;
-        optionsBuilder.UseNpgsql(PostgresDataHelper.GetTargetConnectionString(_configuration));
+        optionsBuilder.UseNpgsql(ConnectionStringHelper.GetTargetConnectionString(_configuration));
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

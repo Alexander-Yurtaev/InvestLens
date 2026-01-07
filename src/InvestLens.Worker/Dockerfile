@@ -16,6 +16,8 @@ COPY ["Directory.Packages.props", "."]
 COPY ["src/InvestLens.Worker/InvestLens.Worker.csproj", "src/InvestLens.Worker/"]
 COPY ["src/InvestLens.Shared/InvestLens.Shared.csproj", "src/InvestLens.Shared/"]
 COPY ["src/InvestLens.Abstraction/InvestLens.Abstraction.csproj", "src/InvestLens.Abstraction/"]
+COPY ["src/InvestLens.Data.Shared/InvestLens.Data.Shared.csproj", "src/InvestLens.Data.Shared/"]
+COPY ["src/InvestLens.Data/InvestLens.Data.Entities/InvestLens.Data.Entities.csproj", "src/InvestLens.Data/InvestLens.Data.Entities/"]
 RUN dotnet restore "./src/InvestLens.Worker/InvestLens.Worker.csproj"
 COPY . .
 WORKDIR "/src/src/InvestLens.Worker"

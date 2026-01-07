@@ -9,10 +9,11 @@
   <ItemGroup>
     <PackageReference Include="AutoMapper" />
     <PackageReference Include="DotNetEnv" />
-    <PackageReference Include="Microsoft.Extensions.Http.Polly" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
-    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
-    <PackageReference Include="Polly" />
+  </ItemGroup>
+
+  <ItemGroup>
+	<PackageReference Include="Polly" />
+	<PackageReference Include="Microsoft.Extensions.Http.Polly" />
   </ItemGroup>
 
   <ItemGroup Label="EFCore">
@@ -29,6 +30,14 @@
 	<PackageReference Include="Serilog.AspNetCore" />
 	<PackageReference Include="Serilog.Sinks.File" />
   </ItemGroup>
+
+  <ItemGroup Label="Hangfire">
+	<PackageReference Include="Hangfire.AspNetCore" />
+	<PackageReference Include="Hangfire.PostgreSql" />
+	<PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+	<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+	<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+</ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\InvestLens.Abstraction\InvestLens.Abstraction.csproj" />

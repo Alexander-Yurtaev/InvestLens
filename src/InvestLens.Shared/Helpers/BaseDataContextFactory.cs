@@ -29,7 +29,7 @@ public abstract class BaseDataContextFactory<T> : IDesignTimeDbContextFactory<T>
             .AddEnvironmentVariables()  // Берём из переменных ОС (включая .env после Env.Load())
             .Build();
 
-        var connectionString = PostgresDataHelper.GetTargetConnectionString(configuration);
+        var connectionString = ConnectionStringHelper.GetTargetConnectionString(configuration);
         Console.WriteLine($"ConnectionString: {connectionString}");
 
         Console.WriteLine("3. Настраиваем опции контекста");

@@ -30,7 +30,7 @@ services:
       - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
       - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro
       - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
- 
+
   investlens.worker:
     env_file: 
       - src/InvestLens.Worker/.env
@@ -74,8 +74,9 @@ services:
       - "15672:15672" # Management UI
     volumes:
       - ./rabbitmq_data:/var/lib/rabbitmq
-  
+
 volumes:
   postgres_data:
   redis_data:
   rabbitmq_data:  
+

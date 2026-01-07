@@ -2,6 +2,7 @@
 using InvestLens.Abstraction.Services;
 using InvestLens.Data.Api.Extensions;
 using InvestLens.Data.Api.Services;
+using InvestLens.Data.DataContext;
 using InvestLens.Data.Repositories;
 using InvestLens.Shared.Helpers;
 using InvestLens.Shared.Services;
@@ -33,8 +34,8 @@ public static partial class Program
             ArgumentException.ThrowIfNullOrEmpty(moexBaseUrl, "MOEX_BASE_URL");
             builder.Services
                 .AddHttpClient("MoexClient", options => options.BaseAddress = new Uri(moexBaseUrl))
-                .AddPolicyHandler((provider, message) => provider.GetService<IPollyService>()!.GetRetryPolicy())
-                .AddPolicyHandler((provider, message) => provider.GetService<IPollyService>()!.GetCircuitBreakerPolicy());
+                .AddPolicyHandler((provider, _) => provider.GetService<IPollyService>()!.GetRetryPolicy())
+                .AddPolicyHandler((provider, _) => provider.GetService<IPollyService>()!.GetCircuitBreakerPolicy());
 
             builder.Services.AddInvestLensDatabaseInfrastructure(builder.Configuration);
             builder.Services.AddScoped<IMoexClient, MoexClient>();
@@ -57,7 +58,7 @@ public static partial class Program
 
             app.UseHttpsRedirection();
 
-            await app.EnsureDatabaseInitAsync();
+            await EnsureDatabaseInitAsync(app);
 
             app.MapGet("/", () =>
                 Results.Content(
@@ -81,34 +82,35 @@ public static partial class Program
         }
     }
 
-    private static async Task EnsureDatabaseInitAsync(this WebApplication app)
+    private static async Task EnsureDatabaseInitAsync(WebApplication app)
     {
+        ConnectionStringHelper.ValidateMigrationConfigurations(app.Configuration);
+
         try
         {
             using var scope = app.Services.CreateScope();
-            var databaseService = scope.ServiceProvider.GetRequiredService<IDatabaseService>();
-
-            // Получаем параметры из конфигурации
-            var targetMigration = PostgresDataHelper.GetTargetMigration(app.Configuration);
 
             // 2.1 Создаем БД и пользователя
-            await databaseService.EnsureDatabaseCreatedAsync(app.Configuration);
+            await DatabaseHelper.EnsureDatabaseCreatedAsync(app.Configuration, true);
 
-            // 2.2 Применяем миграции
+            // 2.2 Получаем целевую миграцию
+            var targetMigration = ConnectionStringHelper.GetTargetMigration(app.Configuration);
+
+            // 2.3 Применяем миграции
             if (string.IsNullOrEmpty(targetMigration))
             {
-                await databaseService.ApplyMigrationsAsync(scope.ServiceProvider);
+                await DatabaseHelper.ApplyMigrationsAsync<InvestLensDataContext>(scope.ServiceProvider);
             }
             else
             {
-                await databaseService.ApplyMigrationsAsync(scope.ServiceProvider, targetMigration);
+                await DatabaseHelper.ApplyMigrationsAsync<InvestLensDataContext>(scope.ServiceProvider, targetMigration);
             }
 
-            Log.Information("✅ Database initialized successfully");
+            Log.Information("Database initialized successfully");
         }
         catch (Exception ex)
         {
-            Log.Fatal(ex, "⚠️ Database initialization fatal");
+            Log.Fatal(ex, "Database initialization fatal");
             throw;
         }
     }

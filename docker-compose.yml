@@ -28,18 +28,19 @@ services:
       context: .
       dockerfile: src/InvestLens.Data/InvestLens.Data.Api/Dockerfile
     depends_on:
-      - postgres
-      - redis
-      - rabbitmq
+      - investlens.worker
 
   investlens.worker:
     image: ${DOCKER_REGISTRY-}investlensworker
     container_name: investlens.worker
+    environment:
+      - DB_HOST=postgres_multi_db
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     build:
       context: .
       dockerfile: src/InvestLens.Worker/Dockerfile
-    environment:
-      - DB_HOST=postgres_multi_db
+    depends_on:
+      - postgres
 
   postgres:
     image: postgres:15-alpine
