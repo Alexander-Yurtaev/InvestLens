@@ -10,7 +10,7 @@ using Serilog;
 
 namespace InvestLens.Data.Api;
 
-public static partial class Program
+public static class Program
 {
     public static async Task Main(string[] args)
     {
@@ -24,14 +24,15 @@ public static partial class Program
 
         try
         {
+            ValidateSettings(builder.Configuration);
+
             // Add services to the container.
             // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
             builder.Services.AddOpenApi();
 
             builder.Services.AddScoped<IPollyService, PollyService>();
 
-            string? moexBaseUrl = builder.Configuration["MOEX_BASE_URL"];
-            ArgumentException.ThrowIfNullOrEmpty(moexBaseUrl, "MOEX_BASE_URL");
+            string moexBaseUrl = builder.Configuration["MOEX_BASE_URL"]!;
             builder.Services
                 .AddHttpClient("MoexClient", options => options.BaseAddress = new Uri(moexBaseUrl))
                 .AddPolicyHandler((provider, _) => provider.GetService<IPollyService>()!.GetRetryPolicy())
@@ -47,8 +48,6 @@ public static partial class Program
 
             // 3. Использование Serilog для логирования запросов
             app.UseSerilogRequestLogging();
-
-            ValidateSettings(builder.Configuration);
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
@@ -113,5 +112,10 @@ public static partial class Program
             Log.Fatal(ex, "Database initialization fatal");
             throw;
         }
+    }
+
+    private static void ValidateSettings(IConfiguration configuration)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(configuration["MOEX_BASE_URL"], "MOEX_BASE_URL");
     }
 }
