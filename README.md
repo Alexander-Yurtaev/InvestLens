@@ -17,3 +17,26 @@
 <p align="center">
   <img src="docs/images/Invest Lens.jpeg" alt="Invest Lens" width="800">
 </p>
+
+---
+
+## 📋 **Общая архитектура (микросервисы)**
+```mermaid
+flowchart TD
+	web@{ shape: circle, label: "Web клиент [InvestLens.Web] (ASP.NET Web Core + Razor Pages)" }
+	-->
+	api_gateway@{ shape: rounded, label: "API Gateway [] (Ocelot) Аутентификация, маршрутизация, CORS" }
+	-->
+	portfolio_service@{ shape: rounded, label: "Portfolio Service [] (Minimal API) Сервис для работы с портфелями" }
+
+	api_gateway
+	--> 
+	api_service@{ shape: rounded, label: "API Service [] (Minimal API) Сервис с основной бизнес-логикой" }
+	-->
+	data_service@{ shape: rounded, label: "Data Service [InvestLens.Data] (Minimal API) Сервис для работы с данными от MOEX" }
+	--gRPC-->
+	worker_service@{ shape: rounded, label: "Worker Service [InvestLens.Worker] (Hangfire + Minimal API) Сервис для запуска фоновых процессов" }
+	--gRPC-->
+	data_service
+```
+
