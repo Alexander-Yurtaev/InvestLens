@@ -23,7 +23,7 @@ public class SecuritiesService : ISecuritiesService
 
     private async Task RefreshSecuritiesAsync()
     {
-        _logger.LogDebug("Send message to the RabbitMQ to refresh securities.");
+        _logger.LogInformation("Send message to the RabbitMQ to refresh securities.");
         await Task.CompletedTask;
     }
 
