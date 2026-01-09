@@ -1,7 +1,12 @@
 using Hangfire;
 using Hangfire.PostgreSql;
+using Hangfire.States;
 using InvestLens.Shared.Filters;
 using InvestLens.Shared.Helpers;
+using InvestLens.Worker.Filters;
+using InvestLens.Worker.Jobs;
+using InvestLens.Worker.Models;
+using InvestLens.Worker.Services;
 using Serilog;
 
 namespace InvestLens.Worker;
@@ -12,6 +17,14 @@ public static class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
+        // Загружаем конфигурацию из нескольких файлов
+        builder.Configuration
+            .SetBasePath(Directory.GetCurrentDirectory())
+            .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+            .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true)
+            .AddJsonFile("appsettings.Jobs.json", optional: false, reloadOnChange: true) // ← наш файл!
+            .AddEnvironmentVariables();
+
         // 1. Настройка Serilog
         Log.Logger = SerilogHelper.CreateLogger(builder);
 
@@ -21,12 +34,26 @@ public static class Program
         try
         {
             // Add services to the container.
-            // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
             builder.Services.AddOpenApi();
 
             // Добавляем Hangfire
             ConnectionStringHelper.ValidateCommonConfigurations(builder.Configuration);
             ConnectionStringHelper.ValidateUserConfigurations(builder.Configuration);
+
+            #region Registration of services
+
+            // 1. Регистрация сервисов
+            builder.Services.AddScoped<ISecuritiesService, SecuritiesService>();
+
+            // 2. Регистрация конфигурируемого планировщика
+            builder.Services.Configure<HangfireJobsConfiguration>(builder.Configuration.GetSection("HangfireJobs"));
+            builder.Services.AddSingleton<IConfigurableJobScheduler, ConfigurableJobScheduler>();
+
+            builder.Services.AddSingleton<IElectStateFilter, NoRetryForSpecificExceptionsFilter>();
+
+            #endregion Registration of services
+
+            #region AddHangfire
 
             var hangfireConnectionString = ConnectionStringHelper.GetTargetConnectionString(builder.Configuration);
             builder.Services.AddHangfire(config =>
@@ -51,6 +78,14 @@ public static class Program
                 options.ServerName = "Hangfire-Microservice";
             });
 
+            builder.Services.AddHealthChecks()
+                .AddHangfire(options =>
+                {
+                    options.MinimumAvailableServers = 1;
+                });
+
+            #endregion AddHangfire
+
             // Настройка CORS
             builder.Services.AddCors(options =>
             {
@@ -61,12 +96,6 @@ public static class Program
                         .AllowAnyHeader();
                 });
             });
-
-            builder.Services.AddHealthChecks()
-                .AddHangfire(options =>
-                {
-                    options.MinimumAvailableServers = 1;
-                });
 
             var app = builder.Build();
 
@@ -79,11 +108,19 @@ public static class Program
                 app.MapOpenApi();
             }
 
+            using (var scope = app.Services.CreateScope())
+            {
+                var filter = scope.ServiceProvider.GetService<IElectStateFilter>();
+                GlobalJobFilters.Filters.Add(filter);
+            }
+
             app.UseCors("AllowAll");
 
             await EnsureDatabaseInitAsync(app);
 
             app.MapHealthChecks("/health");
+
+            #region UseHangfire
 
             app.MapHangfireDashboard("/metrics", new DashboardOptions
             {
@@ -93,7 +130,7 @@ public static class Program
                 IgnoreAntiforgeryToken = true
             });
 
-            // Настройка dashboard
+            // 5. Настройка Dashboard
             app.UseHangfireDashboard("/jobs", new DashboardOptions
             {
                 DashboardTitle = "Worker Jobs Dashboard",
@@ -103,6 +140,43 @@ public static class Program
                 AppPath = "/jobs", // URL возврата
                 IgnoreAntiforgeryToken = true
             });
+
+            // 6. API для управления задачами
+            app.MapGet("/api/jobs", (IConfigurableJobScheduler scheduler) =>
+            {
+                return scheduler.GetRegisteredJobs();
+            });
+
+            app.MapPost("/api/jobs/{jobId}/reschedule", (string jobId, string cron, IConfigurableJobScheduler scheduler) =>
+            {
+                scheduler.UpdateJobSchedule(jobId, cron);
+                return Results.Ok(new { Message = $"Расписание задачи {jobId} обновлено" });
+            });
+
+            app.MapPost("/api/jobs/reload", (IConfigurableJobScheduler scheduler) =>
+            {
+                // Удаляем все существующие задачи
+                RecurringJob.RemoveIfExists("");
+
+                // Регистрируем заново из конфигурации
+                scheduler.ScheduleRecurringJobs();
+
+                return Results.Ok(new { Message = "Все задачи перезагружены из конфигурации" });
+            });
+
+            // 7. Запуск планировщика при старте приложения
+            using (var scope = app.Services.CreateScope())
+            {
+                var scheduler = scope.ServiceProvider.GetRequiredService<IConfigurableJobScheduler>();
+
+                // Регистрируем повторяющиеся задачи
+                scheduler.ScheduleRecurringJobs();
+
+                // Планируем задачи при старте
+                scheduler.ScheduleStartupJobs();
+            }
+
+            #endregion UseHangfire
 
             app.MapGet("/", () => "Worker service");
 
@@ -116,7 +190,7 @@ public static class Program
         }
         finally
         {
-            Log.CloseAndFlush();
+            await Log.CloseAndFlushAsync();
         }
     }
 
