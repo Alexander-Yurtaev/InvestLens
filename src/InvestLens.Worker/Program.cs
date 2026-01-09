@@ -34,12 +34,20 @@ public static class Program
                 config.UsePostgreSqlStorage(options =>
                 {
                     options.UseNpgsqlConnection(hangfireConnectionString);
+                },
+                new Hangfire.PostgreSql.PostgreSqlStorageOptions
+                {
+                    QueuePollInterval = TimeSpan.FromSeconds(15), // Как часто проверять очередь
+                    DistributedLockTimeout = TimeSpan.FromMinutes(5),
+                    PrepareSchemaIfNecessary = true // Автоматически создает таблицы
                 });
             });
 
             builder.Services.AddHangfireServer(options =>
             {
-                options.WorkerCount = 2; // Настройте по необходимости
+                options.WorkerCount = 2; // Оптимальное количество воркеров
+                options.Queues = ["default", "critical", "daily"]; // Разные очереди
+                // options.ServerName = $"Worker-{Environment.MachineName}";
                 options.ServerName = "Hangfire-Microservice";
             });
 
@@ -77,14 +85,22 @@ public static class Program
 
             app.MapHealthChecks("/health");
 
-            // Настройка dashboard
-            app.UseHangfireDashboard("/hangfire", new DashboardOptions
+            app.MapHangfireDashboard("/metrics", new DashboardOptions
             {
-                Authorization =
-                [
-                    new HangfireDashboardAuthorizationFilter()
-                ],
-                AppPath = "/hangfire", // URL возврата
+                DashboardTitle = "Metrics",
+                AppPath = null,
+                DisplayStorageConnectionString = false,
+                IgnoreAntiforgeryToken = true
+            });
+
+            // Настройка dashboard
+            app.UseHangfireDashboard("/jobs", new DashboardOptions
+            {
+                DashboardTitle = "Worker Jobs Dashboard",
+                Authorization = [new HangfireDashboardAuthorizationFilter()],
+                DarkModeEnabled = true,
+                StatsPollingInterval = 5000, // Обновление статистики каждые 5 сек
+                AppPath = "/jobs", // URL возврата
                 IgnoreAntiforgeryToken = true
             });
 
