@@ -4,6 +4,7 @@ using InvestLens.Data.Api.Extensions;
 using InvestLens.Data.Api.Services;
 using InvestLens.Data.DataContext;
 using InvestLens.Data.Repositories;
+using InvestLens.Shared.Extensions;
 using InvestLens.Shared.Helpers;
 using InvestLens.Shared.Services;
 using Serilog;
@@ -43,6 +44,8 @@ public static class Program
             builder.Services.AddScoped<ISecurityRepository, SecurityRepository>();
             builder.Services.AddScoped<IRefreshStatusRepository, RefreshStatusRepository>();
             builder.Services.AddScoped<IDataService, DataService>();
+
+            builder.Services.AddRedisClient(builder.Configuration);
 
             var app = builder.Build();
 
