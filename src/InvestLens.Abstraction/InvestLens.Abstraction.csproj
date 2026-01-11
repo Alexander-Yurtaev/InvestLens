@@ -9,6 +9,7 @@
   <ItemGroup Label="Serilog">
 	<PackageReference Include="Microsoft.Extensions.DependencyModel" />
 	<PackageReference Include="Polly" />
+	<PackageReference Include="RabbitMQ.Client" />
 	<PackageReference Include="Serilog.AspNetCore" />
   </ItemGroup>
 

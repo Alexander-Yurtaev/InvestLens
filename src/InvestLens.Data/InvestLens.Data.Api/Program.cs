@@ -1,11 +1,13 @@
 ﻿using InvestLens.Abstraction.Repositories;
 using InvestLens.Abstraction.Services;
 using InvestLens.Data.Api.Extensions;
+using InvestLens.Data.Api.Handlers;
 using InvestLens.Data.Api.Services;
 using InvestLens.Data.DataContext;
 using InvestLens.Data.Repositories;
 using InvestLens.Shared.Extensions;
 using InvestLens.Shared.Helpers;
+using InvestLens.Shared.MessageBus.Extensions;
 using InvestLens.Shared.Services;
 using Serilog;
 
@@ -46,6 +48,10 @@ public static class Program
             builder.Services.AddScoped<IDataService, DataService>();
 
             builder.Services.AddRedisClient(builder.Configuration);
+            builder.Services.AddRabbitMqClient(builder.Configuration);
+
+            // Регистрация обработчиков сообщений
+            builder.Services.AddScoped<SecurityRefreshEventHandler>();
 
             var app = builder.Build();
 
