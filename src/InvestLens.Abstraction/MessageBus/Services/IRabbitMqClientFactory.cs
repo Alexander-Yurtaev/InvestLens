@@ -1,4 +1,4 @@
-﻿namespace InvestLens.Abstraction.MessageBus;
+﻿namespace InvestLens.Abstraction.MessageBus.Services;
 
 public interface IRabbitMqClientFactory
 {

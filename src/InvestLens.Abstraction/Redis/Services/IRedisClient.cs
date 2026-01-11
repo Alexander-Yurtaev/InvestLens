@@ -1,4 +1,4 @@
-﻿namespace InvestLens.Abstraction.Services;
+﻿namespace InvestLens.Abstraction.Redis.Services;
 
 public interface IRedisClient
 {

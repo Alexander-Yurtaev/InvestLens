@@ -1,13 +1,16 @@
-﻿using InvestLens.Abstraction.Repositories;
+﻿using InvestLens.Abstraction.MessageBus.Services;
+using InvestLens.Abstraction.Repositories;
 using InvestLens.Abstraction.Services;
 using InvestLens.Data.Api.Extensions;
 using InvestLens.Data.Api.Handlers;
 using InvestLens.Data.Api.Services;
 using InvestLens.Data.DataContext;
 using InvestLens.Data.Repositories;
-using InvestLens.Shared.Extensions;
+using InvestLens.Shared.Data;
 using InvestLens.Shared.Helpers;
 using InvestLens.Shared.MessageBus.Extensions;
+using InvestLens.Shared.MessageBus.Models;
+using InvestLens.Shared.Redis.Extensions;
 using InvestLens.Shared.Services;
 using Serilog;
 
@@ -47,11 +50,12 @@ public static class Program
             builder.Services.AddScoped<IRefreshStatusRepository, RefreshStatusRepository>();
             builder.Services.AddScoped<IDataService, DataService>();
 
+            // Redis
             builder.Services.AddRedisClient(builder.Configuration);
-            builder.Services.AddRabbitMqClient(builder.Configuration);
 
-            // Регистрация обработчиков сообщений
-            builder.Services.AddScoped<SecurityRefreshEventHandler>();
+            // RabbitMQ
+            builder.Services.AddRabbitMqClient(builder.Configuration);
+            builder.Services.AddScoped<SecurityRefreshingEventHandler>();
 
             var app = builder.Build();
 
@@ -67,6 +71,12 @@ public static class Program
             app.UseHttpsRedirection();
 
             await EnsureDatabaseInitAsync(app);
+
+            var messageBus = app.Services.GetRequiredService<IMessageBusClient>();
+            await messageBus.SubscribeAsync<SecurityRefreshingMessage, SecurityRefreshingEventHandler>(
+                queueName: "securities-refresh-queue",
+                exchangeName: BusClientConstants.ExchangeName,
+                routingKey: BusClientConstants.SecuritiesRefreshingKey);
 
             app.MapGet("/", () =>
                 Results.Content(

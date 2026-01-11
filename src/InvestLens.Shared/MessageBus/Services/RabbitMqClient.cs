@@ -1,5 +1,4 @@
-﻿using InvestLens.Abstraction.MessageBus;
-using InvestLens.Abstraction.MessageBus.Models;
+﻿using InvestLens.Abstraction.MessageBus.Models;
 using InvestLens.Shared.MessageBus.Exceptions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -10,6 +9,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using InvestLens.Abstraction.MessageBus.Data;
+using InvestLens.Abstraction.MessageBus.Services;
 
 namespace InvestLens.Shared.MessageBus.Services;
 
@@ -141,7 +141,7 @@ public class RabbitMqClient : IMessageBusClient
             await _channel.BasicPublishAsync(
                 exchange: exchangeName,
                 routingKey: routingKey,
-                mandatory: false,
+                mandatory: true,
                 basicProperties: properties,
                 body: body,
                 cancellationToken: cancellationToken);

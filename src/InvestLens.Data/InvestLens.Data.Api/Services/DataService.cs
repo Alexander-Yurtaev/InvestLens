@@ -1,9 +1,10 @@
-﻿using InvestLens.Abstraction.MessageBus;
+﻿using InvestLens.Abstraction.MessageBus.Services;
 using InvestLens.Abstraction.Repositories;
 using InvestLens.Abstraction.Services;
-using InvestLens.Data.Api.Models;
 using InvestLens.Data.Entities;
 using InvestLens.Data.Repositories;
+using InvestLens.Shared.Data;
+using InvestLens.Shared.MessageBus.Models;
 
 namespace InvestLens.Data.Api.Services;
 
@@ -50,9 +51,8 @@ public class DataService : IDataService
         if (refreshStatus is null || (refreshStatus.RefreshDate.AddHours(expiredRefreshStatus) < DateTime.UtcNow))
         {
             var message = new SecurityRefreshMessage();
-            string routingKey = "securities.refresh";
 
-            await _messageBus.PublishAsync(message, ExchangeName, routingKey);
+            await _messageBus.PublishAsync(message, BusClientConstants.ExchangeName, BusClientConstants.SecuritiesRefreshKey);
         }   
     }
 }

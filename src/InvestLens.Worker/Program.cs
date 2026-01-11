@@ -1,9 +1,15 @@
 using Hangfire;
 using Hangfire.PostgreSql;
 using Hangfire.States;
+using InvestLens.Abstraction.MessageBus.Services;
+using InvestLens.Shared.Data;
 using InvestLens.Shared.Filters;
 using InvestLens.Shared.Helpers;
+using InvestLens.Shared.MessageBus.Extensions;
+using InvestLens.Shared.MessageBus.Models;
+using InvestLens.Shared.Redis.Extensions;
 using InvestLens.Worker.Filters;
+using InvestLens.Worker.Handlers;
 using InvestLens.Worker.Jobs;
 using InvestLens.Worker.Models;
 using InvestLens.Worker.Services;
@@ -97,6 +103,13 @@ public static class Program
                 });
             });
 
+            // Redis
+            builder.Services.AddRedisClient(builder.Configuration);
+
+            // RabbitMQ
+            builder.Services.AddRabbitMqClient(builder.Configuration);
+            builder.Services.AddScoped<SecurityRefreshEventHandler>();
+
             var app = builder.Build();
 
             // 3. Использование Serilog для логирования запросов
@@ -119,6 +132,12 @@ public static class Program
             await EnsureDatabaseInitAsync(app);
 
             app.MapHealthChecks("/health");
+
+            var messageBus = app.Services.GetRequiredService<IMessageBusClient>();
+            await messageBus.SubscribeAsync<SecurityRefreshMessage, SecurityRefreshEventHandler>(
+                queueName: "securities-refresh-queue",
+                exchangeName: BusClientConstants.ExchangeName,
+                routingKey: BusClientConstants.SecuritiesRefreshKey);
 
             #region UseHangfire
 

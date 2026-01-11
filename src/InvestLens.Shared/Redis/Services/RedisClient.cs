@@ -1,23 +1,38 @@
-﻿using System.Text.Json;
-using InvestLens.Abstraction.Data;
-using InvestLens.Abstraction.Services;
+﻿using InvestLens.Abstraction.Redis.Data;
+using InvestLens.Abstraction.Redis.Services;
+using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
+using System.Text.Json;
 
-namespace InvestLens.Shared.Services;
+namespace InvestLens.Shared.Redis.Services;
 
 public class RedisClient : IRedisClient, IDisposable
 {
     private readonly IRedisSettings _settings;
+    private readonly string _instanceName;
+    private readonly ILogger<RedisClient> _logger;
     private IConnectionMultiplexer _connectionMultiplexer = null!;
-    private readonly IDatabase _database;
+    private IDatabase _database;
     private bool _disposed;
     private readonly SemaphoreSlim _connectionLock = new(1, 1);
 
-    public RedisClient(IRedisSettings settings)
+    public static async Task<RedisClient> CreateAsync(IRedisSettings settings, string instanceName, ILogger<RedisClient> logger)
+    {
+        var client = new RedisClient(settings, instanceName, logger);
+        await client.InitializeAsync();
+        return client;
+    }
+
+    internal RedisClient(IRedisSettings settings, string instanceName, ILogger<RedisClient> logger)
     {
         _settings = settings ?? throw new ArgumentNullException(nameof(settings));
+        _instanceName = instanceName;
+        _logger = logger;
+    }
 
-        _database = GetDatabaseAsync().GetAwaiter().GetResult();
+    internal async Task InitializeAsync(CancellationToken cancellationToken = default)
+    {
+        _database = await GetDatabaseAsync();
     }
 
     public async Task<T?> GetAsync<T>(string key)
@@ -34,6 +49,7 @@ public class RedisClient : IRedisClient, IDisposable
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Failed to get key: {key}", key);
             throw new RedisException($"Failed to get key: {key}", ex);
         }
     }
@@ -49,6 +65,7 @@ public class RedisClient : IRedisClient, IDisposable
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Failed to set key: {key}", key);
             throw new RedisException($"Failed to set key: {key}", ex);
         }
     }
@@ -62,6 +79,7 @@ public class RedisClient : IRedisClient, IDisposable
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Failed to remove key: {key}", key);
             throw new RedisException($"Failed to remove key: {key}", ex);
         }
     }
@@ -75,6 +93,7 @@ public class RedisClient : IRedisClient, IDisposable
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Failed to check existence for key: {key}", key);
             throw new RedisException($"Failed to check existence for key: {key}", ex);
         }
     }
@@ -88,6 +107,7 @@ public class RedisClient : IRedisClient, IDisposable
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Failed to get TTL for key: {key}", key);
             throw new RedisException($"Failed to get TTL for key: {key}", ex);
         }
     }
@@ -101,6 +121,7 @@ public class RedisClient : IRedisClient, IDisposable
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Failed to set expiry for key: {key}", key);
             throw new RedisException($"Failed to set expiry for key: {key}", ex);
         }
     }
@@ -113,10 +134,11 @@ public class RedisClient : IRedisClient, IDisposable
                 _connectionMultiplexer.GetEndPoints().First());
 
             var keys = server.Keys(pattern: BuildKey(pattern));
-            return await Task.FromResult(keys.Select(k => k.ToString().Replace(_settings.InstanceName, "")));
+            return await Task.FromResult(keys.Select(k => k.ToString().Replace(_instanceName, "")));
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Failed to get keys with pattern: {pattern}", pattern);
             throw new RedisException($"Failed to get keys with pattern: {pattern}", ex);
         }
     }
@@ -130,6 +152,7 @@ public class RedisClient : IRedisClient, IDisposable
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Failed to increment key: {key}", key);
             throw new RedisException($"Failed to increment key: {key}", ex);
         }
     }
@@ -143,6 +166,7 @@ public class RedisClient : IRedisClient, IDisposable
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Failed to decrement key: {key}", key);
             throw new RedisException($"Failed to decrement key: {key}", ex);
         }
     }
@@ -156,6 +180,7 @@ public class RedisClient : IRedisClient, IDisposable
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Failed to add to set: {key}", key);
             throw new RedisException($"Failed to add to set: {key}", ex);
         }
     }
@@ -169,6 +194,7 @@ public class RedisClient : IRedisClient, IDisposable
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Failed to remove from set: {key}", key);
             throw new RedisException($"Failed to remove from set: {key}", ex);
         }
     }
@@ -183,6 +209,7 @@ public class RedisClient : IRedisClient, IDisposable
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Failed to get set: {key}", key);
             throw new RedisException($"Failed to get set: {key}", ex);
         }
     }
@@ -210,6 +237,7 @@ public class RedisClient : IRedisClient, IDisposable
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Failed to get multiple keys");
             throw new RedisException("Failed to get multiple keys", ex);
         }
     }
@@ -225,6 +253,7 @@ public class RedisClient : IRedisClient, IDisposable
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Failed to set multiple keys");
             throw new RedisException("Failed to set multiple keys", ex);
         }
     }
@@ -245,6 +274,7 @@ public class RedisClient : IRedisClient, IDisposable
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Failed to acquire lock for key: {key}", key);
             throw new RedisException($"Failed to acquire lock for key: {key}", ex);
         }
     }
@@ -258,6 +288,7 @@ public class RedisClient : IRedisClient, IDisposable
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Failed to release lock for key: {key}", key);
             throw new RedisException($"Failed to release lock for key: {key}", ex);
         }
     }
@@ -267,10 +298,11 @@ public class RedisClient : IRedisClient, IDisposable
         await _connectionLock.WaitAsync();
         try
         {
-            if (!_connectionMultiplexer.IsConnected)
+            if (_connectionMultiplexer?.IsConnected != true)
             {
-                _connectionMultiplexer = await ConnectionMultiplexer.ConnectAsync(GetConnectionString());
+                _connectionMultiplexer = await ConnectionMultiplexer.ConnectAsync(_settings.ConnectionString);
             }
+            _database = _connectionMultiplexer.GetDatabase(_settings.DefaultDatabase);
             return _database;
         }
         finally
@@ -293,13 +325,7 @@ public class RedisClient : IRedisClient, IDisposable
 
     #region Privaet Methods
 
-    private string BuildKey(string key) => $"{_settings.InstanceName}{key}";
-
-    private string GetConnectionString()
-    {
-        // redis://username:password@localhost:6379/0?connectTimeout=5000&ssl=true&allowAdmin=true
-        return $"redis://{_settings.Username}:{_settings.Password}@{_settings.Host}:6379/0?connectTimeout={_settings.Timeout}&ssl={_settings.Ssl}&allowAdmin={_settings.AllowAdmin}";
-    }
+    private string BuildKey(string key) => $"{_instanceName}{key}";
 
     #endregion Privaet Methods
 }

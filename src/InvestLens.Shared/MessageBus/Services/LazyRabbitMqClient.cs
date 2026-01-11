@@ -1,5 +1,5 @@
-﻿using InvestLens.Abstraction.MessageBus;
-using InvestLens.Abstraction.MessageBus.Models;
+﻿using InvestLens.Abstraction.MessageBus.Models;
+using InvestLens.Abstraction.MessageBus.Services;
 using RabbitMQ.Client;
 
 namespace InvestLens.Shared.MessageBus.Services;

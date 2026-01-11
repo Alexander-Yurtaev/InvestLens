@@ -1,25 +1,25 @@
-﻿using InvestLens.Abstraction.MessageBus;
+﻿using InvestLens.Abstraction.MessageBus.Services;
 using InvestLens.Abstraction.Repositories;
 using InvestLens.Abstraction.Services;
 using InvestLens.Data.Api.Converter;
-using InvestLens.Data.Api.Models;
+using InvestLens.Shared.MessageBus.Models;
 
 namespace InvestLens.Data.Api.Handlers;
 
-public class SecurityRefreshEventHandler : IMessageHandler<SecurityRefreshMessage>
+public class SecurityRefreshingEventHandler : IMessageHandler<SecurityRefreshingMessage>
 {
     private const string EntityName = "SECURITIES";
 
     private readonly IMoexClient _moexClient;
     private readonly ISecurityRepository _securityRepository;
     private readonly IRefreshStatusRepository _refreshStatusRepository;
-    private readonly ILogger<SecurityRefreshEventHandler> _logger;
+    private readonly ILogger<SecurityRefreshingEventHandler> _logger;
 
-    public SecurityRefreshEventHandler(
+    public SecurityRefreshingEventHandler(
         IMoexClient moexClient,
         ISecurityRepository securityRepository,
         IRefreshStatusRepository refreshStatusRepository,
-        ILogger<SecurityRefreshEventHandler> logger)
+        ILogger<SecurityRefreshingEventHandler> logger)
     {
         _moexClient = moexClient;
         _securityRepository = securityRepository;
@@ -27,7 +27,7 @@ public class SecurityRefreshEventHandler : IMessageHandler<SecurityRefreshMessag
         _logger = logger;
     }
 
-    public async Task<bool> HandleAsync(SecurityRefreshMessage message, CancellationToken cancellationToken = default)
+    public async Task<bool> HandleAsync(SecurityRefreshingMessage message, CancellationToken cancellationToken = default)
     {
         _logger.LogInformation("Получено поручение обновить список ценных бумаг.");
 

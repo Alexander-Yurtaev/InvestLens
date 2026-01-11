@@ -1,5 +1,6 @@
 ﻿using InvestLens.Abstraction.MessageBus;
 using InvestLens.Abstraction.MessageBus.Data;
+using InvestLens.Abstraction.MessageBus.Services;
 using InvestLens.Shared.MessageBus.Data;
 using Microsoft.Extensions.Logging;
 

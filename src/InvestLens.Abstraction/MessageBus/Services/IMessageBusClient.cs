@@ -1,7 +1,7 @@
 ﻿using InvestLens.Abstraction.MessageBus.Models;
 using RabbitMQ.Client;
 
-namespace InvestLens.Abstraction.MessageBus;
+namespace InvestLens.Abstraction.MessageBus.Services;
 
 public interface IMessageBusClient : IAsyncDisposable
 {
