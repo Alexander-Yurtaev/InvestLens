@@ -38,10 +38,10 @@ public class DataService : IDataService
 
     private async Task RefreshSecurities()
     {
-        var expiredRefreshStatusString = _configuration["EXPIRED_REFRESH_STATUS"];
+        var expiredRefreshStatusString = _configuration["ExpiredRefreshStatus"];
         if (string.IsNullOrEmpty(expiredRefreshStatusString))
         {
-            throw new InvalidDataException("EXPIRED_REFRESH_STATUS");
+            throw new InvalidDataException("ExpiredRefreshStatus");
         }
 
         var expiredRefreshStatus = int.Parse(expiredRefreshStatusString);

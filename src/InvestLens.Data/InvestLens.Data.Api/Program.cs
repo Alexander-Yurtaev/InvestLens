@@ -35,7 +35,7 @@ public static class Program
 
             builder.Services.AddScoped<IPollyService, PollyService>();
 
-            string moexBaseUrl = builder.Configuration["MOEX_BASE_URL"]!;
+            string moexBaseUrl = builder.Configuration["MoexBaseUrl"]!;
             builder.Services
                 .AddHttpClient("MoexClient", options => options.BaseAddress = new Uri(moexBaseUrl))
                 .AddPolicyHandler((provider, _) => provider.GetService<IPollyService>()!.GetRetryPolicy())
@@ -125,6 +125,6 @@ public static class Program
 
     private static void ValidateSettings(IConfiguration configuration)
     {
-        ArgumentException.ThrowIfNullOrEmpty(configuration["MOEX_BASE_URL"], "MOEX_BASE_URL");
+        ArgumentException.ThrowIfNullOrEmpty(configuration["MoexBaseUrl"], "MoexBaseUrl");
     }
 }

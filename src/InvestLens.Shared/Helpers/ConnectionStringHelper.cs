@@ -19,7 +19,7 @@ public static class ConnectionStringHelper
 
     public static void ValidateMigrationConfigurations(IConfiguration configuration)
     {
-        ArgumentException.ThrowIfNullOrEmpty(configuration["TARGET_MIGRATION"], "TARGET_MIGRATION");
+        ArgumentException.ThrowIfNullOrEmpty(configuration["TargetMigration"], "TargetMigration");
     }
 
     public static string GetMasterConnectionString(IConfiguration configuration)
@@ -75,7 +75,7 @@ public static class ConnectionStringHelper
 
     public static string? GetTargetMigration(IConfiguration configuration)
     {
-        return configuration["TARGET_MIGRATION"];
+        return configuration["TargetMigration"];
     }
 
     public static (string username, string password) GetServiceUserInfo(IConfiguration configuration)
