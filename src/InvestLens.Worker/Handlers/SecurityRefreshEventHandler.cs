@@ -69,7 +69,7 @@ public class SecurityRefreshEventHandler : IMessageHandler<SecurityRefreshMessag
         // 2. Отправить сообщение сервису InvestLens.Data о том, что необходимо обновить данные
         var refreshingMessage = new SecurityRefreshingMessage();
 
-        await _messageBus.PublishAsync(message, BusClientConstants.ExchangeName, BusClientConstants.SecuritiesRefreshingKey, cancellationToken);
+        await _messageBus.PublishAsync(new SecurityRefreshingMessage(), BusClientConstants.ExchangeName, BusClientConstants.SecuritiesRefreshingKey, cancellationToken);
         return true;
     }
 }

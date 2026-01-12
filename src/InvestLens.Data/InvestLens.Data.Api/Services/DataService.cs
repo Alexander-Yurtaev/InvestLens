@@ -10,7 +10,7 @@ namespace InvestLens.Data.Api.Services;
 
 public class DataService : IDataService
 {
-    private const string EntityName = "SECURITIES";
+    private const string EntityName = "SECURITY";
     private const string ExchangeName = "securities-exchange";
 
     private readonly IConfiguration _configuration;

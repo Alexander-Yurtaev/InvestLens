@@ -16,7 +16,7 @@ public class ConfigurableJobScheduler : IConfigurableJobScheduler
         IServiceProvider serviceProvider,
         ILogger<ConfigurableJobScheduler> logger)
     {
-        _jobsConfig = jobsConfig.Value ?? new HangfireJobsConfiguration();
+        _jobsConfig = jobsConfig.Value;
         _serviceProvider = serviceProvider;
         _logger = logger;
     }
@@ -94,7 +94,7 @@ public class ConfigurableJobScheduler : IConfigurableJobScheduler
         RecurringJob.AddOrUpdate(
             jobConfig.JobId,
             jobConfig.Queue,
-            () => ExecuteJob(jobConfig.ServiceType, jobConfig.MethodName),
+            () => ExecuteJob(jobConfig.JobId, jobConfig.ServiceType, jobConfig.MethodName),
             () => jobConfig.CronExpression,
             new RecurringJobOptions
             {
@@ -122,7 +122,7 @@ public class ConfigurableJobScheduler : IConfigurableJobScheduler
         RecurringJob.AddOrUpdate(
             jobConfig.JobId,
             jobConfig.Queue,
-            () => ExecuteJob(jobConfig.ServiceType, jobConfig.MethodName),
+            () => ExecuteJob(jobConfig.JobId, jobConfig.ServiceType, jobConfig.MethodName),
             () => jobConfig.CronExpression,
             new RecurringJobOptions
             {
@@ -130,18 +130,18 @@ public class ConfigurableJobScheduler : IConfigurableJobScheduler
             });
     }
 
-    private void ScheduleStartupJob(StartupJobConfig config)
+    private void ScheduleStartupJob(StartupJobConfig jobConfig)
     {
         BackgroundJob.Schedule(
-            () => ExecuteJob(config.ServiceType, config.MethodName),
-            TimeSpan.FromSeconds(config.DelaySeconds));
+            () => ExecuteJob(jobConfig.JobId, jobConfig.ServiceType, jobConfig.MethodName),
+            TimeSpan.FromSeconds(jobConfig.DelaySeconds));
     }
 
     /// <summary>
     /// Динамическое выполнение задачи по ее конфигурации
     /// </summary>
     [JobDisplayName("{0}")]
-    public async Task ExecuteJob(string serviceTypeName, string methodName)
+    public async Task ExecuteJob(string jobId, string serviceTypeName, string methodName)
     {
         try
         {
