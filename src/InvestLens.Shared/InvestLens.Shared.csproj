@@ -48,4 +48,8 @@
     <ProjectReference Include="..\InvestLens.Abstraction\InvestLens.Abstraction.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Data\" />
+  </ItemGroup>
+
 </Project>

@@ -2,17 +2,14 @@
 using InvestLens.Abstraction.Repositories;
 using InvestLens.Abstraction.Services;
 using InvestLens.Data.Entities;
-using InvestLens.Data.Repositories;
-using InvestLens.Shared.Data;
+using InvestLens.Shared.Constants;
+using InvestLens.Shared.Helpers;
 using InvestLens.Shared.MessageBus.Models;
 
 namespace InvestLens.Data.Api.Services;
 
 public class DataService : IDataService
 {
-    private const string EntityName = "SECURITY";
-    private const string ExchangeName = "securities-exchange";
-
     private readonly IConfiguration _configuration;
     private readonly ISecurityRepository _securityRepository;
     private readonly IRefreshStatusRepository _refreshStatusRepository;
@@ -47,11 +44,10 @@ public class DataService : IDataService
 
         var expiredRefreshStatus = int.Parse(expiredRefreshStatusString);
 
-        var refreshStatus = await _refreshStatusRepository.GetRefreshStatus(EntityName);
-        if (refreshStatus is null || (refreshStatus.RefreshDate.AddHours(expiredRefreshStatus) < DateTime.UtcNow))
+        var refreshStatus = await _refreshStatusRepository.GetRefreshStatus(DatabaseConstants.SecurityEntityName);
+        if (refreshStatus is null || !DateTimeHelper.IsRefreshed(refreshStatus.RefreshDate, expiredRefreshStatus))
         {
             var message = new SecurityRefreshMessage();
-
             await _messageBus.PublishAsync(message, BusClientConstants.ExchangeName, BusClientConstants.SecuritiesRefreshKey);
         }   
     }

@@ -4,8 +4,8 @@ namespace InvestLens.Shared.Helpers;
 
 public static class DateTimeHelper
 {
-    public static bool IsExpired(DateTime start, int expired)
+    public static bool IsRefreshed(DateTime start, int expired)
     {
-        return start.AddHours(expired) < DateTime.UtcNow;
+        return start.AddMinutes(expired) > DateTime.UtcNow;
     }
 }

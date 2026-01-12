@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel;
 using InvestLens.Abstraction.MessageBus.Services;
-using InvestLens.Shared.Data;
+using InvestLens.Shared.Constants;
 using InvestLens.Shared.MessageBus.Models;
 
 namespace InvestLens.Worker.Services;

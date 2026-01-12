@@ -2,7 +2,7 @@ using Hangfire;
 using Hangfire.PostgreSql;
 using Hangfire.States;
 using InvestLens.Abstraction.MessageBus.Services;
-using InvestLens.Shared.Data;
+using InvestLens.Shared.Constants;
 using InvestLens.Shared.Filters;
 using InvestLens.Shared.Helpers;
 using InvestLens.Shared.MessageBus.Extensions;

@@ -6,7 +6,7 @@ using InvestLens.Data.Api.Handlers;
 using InvestLens.Data.Api.Services;
 using InvestLens.Data.DataContext;
 using InvestLens.Data.Repositories;
-using InvestLens.Shared.Data;
+using InvestLens.Shared.Constants;
 using InvestLens.Shared.Helpers;
 using InvestLens.Shared.MessageBus.Extensions;
 using InvestLens.Shared.MessageBus.Models;

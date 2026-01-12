@@ -1,4 +1,4 @@
-﻿namespace InvestLens.Shared.Data;
+﻿namespace InvestLens.Shared.Constants;
 
 public static class BusClientConstants
 {
