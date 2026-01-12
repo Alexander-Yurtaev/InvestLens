@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Serilog;
+using Serilog.Formatting.Compact;
+using Serilog.Formatting.Json;
 
 namespace InvestLens.Shared.Helpers;
 
@@ -13,7 +15,11 @@ public static class SerilogHelper
             .Enrich.WithProperty("Environment", builder.Environment.EnvironmentName)
             .Enrich.FromLogContext()
             .WriteTo.Console()
-            .WriteTo.File("Logs/app-.log", rollingInterval: RollingInterval.Day)
+            .WriteTo.File(
+                new CompactJsonFormatter(),
+                "logs/log-.json",
+                rollingInterval: RollingInterval.Day,
+                retainedFileCountLimit: 7)
             .CreateLogger();
 
         return logger;
