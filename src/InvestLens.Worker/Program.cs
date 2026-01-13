@@ -8,6 +8,7 @@ using InvestLens.Shared.Helpers;
 using InvestLens.Shared.MessageBus.Extensions;
 using InvestLens.Shared.MessageBus.Models;
 using InvestLens.Shared.Redis.Extensions;
+using InvestLens.Shared.Validators;
 using InvestLens.Worker.Filters;
 using InvestLens.Worker.Handlers;
 using InvestLens.Worker.Jobs;
@@ -43,8 +44,8 @@ public static class Program
             builder.Services.AddOpenApi();
 
             // Добавляем Hangfire
-            ConnectionStringHelper.ValidateCommonConfigurations(builder.Configuration);
-            ConnectionStringHelper.ValidateUserConfigurations(builder.Configuration);
+            CommonValidator.CommonValidate(builder.Configuration);
+            CommonValidator.UserValidate(builder.Configuration);
 
             #region Registration of services
 
@@ -201,6 +202,8 @@ public static class Program
 
             app.UseHttpsRedirection();
 
+            await EnsureRabbitMqIsRunningAsync(app.Configuration);
+
             await app.RunAsync();
         }
         catch (Exception ex)
@@ -215,7 +218,7 @@ public static class Program
 
     private static async Task EnsureDatabaseInitAsync(WebApplication app)
     {
-        ConnectionStringHelper.ValidateCommonConfigurations(app.Configuration);
+        CommonValidator.CommonValidate(app.Configuration);
 
         try
         {
@@ -231,5 +234,51 @@ public static class Program
             Log.Fatal(ex, "Database initialization fatal");
             throw;
         }
+    }
+
+    private static async Task EnsureRabbitMqIsRunningAsync(IConfiguration configuration)
+    {
+        RabbitMqValidator.Validate(configuration);
+
+        Log.Information("Waiting for RabbitMQ at {RabbitMqHost}...", configuration["RABBITMQ_HOST"]);
+
+        var client = new System.Net.Http.HttpClient();
+        var request = CreateHttpRequest(configuration);
+
+        for (int i = 0; i < 60; i++)
+        {
+            try
+            {
+                var response = await client.SendAsync(request);
+                if (response.IsSuccessStatusCode)
+                {
+                    Log.Information("RabbitMQ is up!");
+                    break;
+                }
+            }
+            catch
+            {
+                // ignore
+            }
+
+            Log.Information($"Attempt {i + 1}/60: RabbitMQ not ready, waiting...");
+            await Task.Delay(2000);
+        }
+
+        client?.Dispose();
+    }
+
+    public static HttpRequestMessage CreateHttpRequest(IConfiguration configuration)
+    {
+        var rabbitMqHost = configuration["RABBITMQ_HOST"];
+        var username = configuration["RABBITMQ_USER"];
+        var password = configuration["RABBITMQ_PASSWORD"];
+
+        var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Get,
+            $"http://{rabbitMqHost}:15672/api/healthchecks/node");
+        var authToken = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes($"{username}:{password}"));
+        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", authToken);
+
+        return request;
     }
 }

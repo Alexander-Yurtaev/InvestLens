@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using InvestLens.Shared.Validators;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
@@ -11,10 +12,10 @@ public static class DatabaseHelper
 
     public static async Task EnsureDatabaseCreatedAsync(IConfiguration configuration, bool createUser=false)
     {
-        ConnectionStringHelper.ValidateCommonConfigurations(configuration);
+        CommonValidator.CommonValidate(configuration);
         if (createUser)
         {
-            ConnectionStringHelper.ValidateUserConfigurations(configuration);
+            CommonValidator.UserValidate(configuration);
         }
 
         // Создаем master connection string (к БД postgres)

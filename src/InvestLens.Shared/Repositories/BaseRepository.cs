@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 
 namespace InvestLens.Shared.Repositories;
 
-public abstract class BaseRepository<TEntity, TKey> : IBaseRepository<TEntity, TKey> where TEntity : BaseEntity<TKey>
+public abstract class BaseRepository<TEntity, TKey> : IBaseRepository<TEntity, TKey> where TEntity : BaseEntity<TKey> where TKey : struct
 {
     protected readonly DbContext Context;
     protected readonly ILogger<BaseRepository<TEntity, TKey>> Logger;

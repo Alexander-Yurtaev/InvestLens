@@ -12,6 +12,7 @@ using InvestLens.Shared.MessageBus.Extensions;
 using InvestLens.Shared.MessageBus.Models;
 using InvestLens.Shared.Redis.Extensions;
 using InvestLens.Shared.Services;
+using InvestLens.Shared.Validators;
 using Serilog;
 
 namespace InvestLens.Data.Api;
@@ -30,7 +31,7 @@ public static class Program
 
         try
         {
-            ValidateSettings(builder.Configuration);
+            MoexValidator.Validate(builder.Configuration);
 
             // Add services to the container.
             // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
@@ -102,7 +103,7 @@ public static class Program
 
     private static async Task EnsureDatabaseInitAsync(WebApplication app)
     {
-        ConnectionStringHelper.ValidateMigrationConfigurations(app.Configuration);
+        CommonValidator.MigrationValidate(app.Configuration);
 
         try
         {
@@ -131,10 +132,5 @@ public static class Program
             Log.Fatal(ex, "Database initialization fatal");
             throw;
         }
-    }
-
-    private static void ValidateSettings(IConfiguration configuration)
-    {
-        ArgumentException.ThrowIfNullOrEmpty(configuration["MoexBaseUrl"], "MoexBaseUrl");
     }
 }

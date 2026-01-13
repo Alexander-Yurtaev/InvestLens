@@ -7,6 +7,12 @@ services:
       dockerfile: src/InvestLens.Web/Dockerfile
     depends_on:
       - investlens.data.api
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   investlens.data.api:
     image: ${DOCKER_REGISTRY-}investlensdataapi
@@ -29,6 +35,12 @@ services:
       - postgres
       - redis
       - rabbitmq
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
 
   investlens.worker:
     image: ${DOCKER_REGISTRY-}investlensworker
@@ -50,10 +62,22 @@ services:
       - postgres
       - redis
       - rabbitmq
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
 
   postgres:
     image: postgres:15-alpine
     container_name: postgres_multi_db
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U investlens_user -d investlens"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   redis:
     image: redis:7-alpine
@@ -68,10 +92,11 @@ services:
       --save 60 10000
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
       interval: 10s
       timeout: 5s
-      retries: 3
+      retries: 5
+      start_period: 20s
 
   rabbitmq:
     image: rabbitmq:3-management-alpine
@@ -82,7 +107,8 @@ services:
       - RABBITMQ_DEFAULT_VHOST=${RABBITMQ_VHOST:-/}
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
       interval: 30s
       timeout: 10s
       retries: 5
+      start_period: 40s

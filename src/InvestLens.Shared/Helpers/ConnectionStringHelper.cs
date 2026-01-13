@@ -5,23 +5,6 @@ namespace InvestLens.Shared.Helpers;
 
 public static class ConnectionStringHelper
 {
-    public static void ValidateCommonConfigurations(IConfiguration configuration)
-    {
-        ArgumentException.ThrowIfNullOrEmpty(configuration["DB_HOST"], "DB_HOST");
-        ArgumentException.ThrowIfNullOrEmpty(configuration["POSTGRES_PASSWORD"], "POSTGRES_PASSWORD");
-    }
-
-    public static void ValidateUserConfigurations(IConfiguration configuration)
-    {
-        ArgumentException.ThrowIfNullOrEmpty(configuration["DB_USER"], "DB_USER");
-        ArgumentException.ThrowIfNullOrEmpty(configuration["DB_PASSWORD"], "DB_PASSWORD");
-    }
-
-    public static void ValidateMigrationConfigurations(IConfiguration configuration)
-    {
-        ArgumentException.ThrowIfNullOrEmpty(configuration["TargetMigration"], "TargetMigration");
-    }
-
     public static string GetMasterConnectionString(IConfiguration configuration)
     {
         NpgsqlConnectionStringBuilder builder = new()

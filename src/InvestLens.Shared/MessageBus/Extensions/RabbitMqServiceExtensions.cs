@@ -2,6 +2,7 @@
 using InvestLens.Abstraction.MessageBus.Services;
 using InvestLens.Shared.MessageBus.Data;
 using InvestLens.Shared.MessageBus.Services;
+using InvestLens.Shared.Validators;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -13,12 +14,14 @@ public static class RabbitMqServiceExtensions
         this IServiceCollection services,
         IConfiguration configuration)
     {
+        RabbitMqValidator.Validate(configuration);
+
         var rabbitMqSettings = configuration.GetSection("RabbitMqSettings").Get<RabbitMqSettings>() ??
                             throw new ArgumentNullException("RabbitMqSettings");
 
-        rabbitMqSettings.UserName = configuration["RABBITMQ_USER"] ?? "";
-        rabbitMqSettings.Password = configuration["RABBITMQ_PASSWORD"] ?? "";
-        rabbitMqSettings.HostName = configuration["RABBITMQ_HOST"] ?? "";
+        rabbitMqSettings.UserName = configuration["RABBITMQ_USER"]!;
+        rabbitMqSettings.Password = configuration["RABBITMQ_PASSWORD"]!;
+        rabbitMqSettings.HostName = configuration["RABBITMQ_HOST"]!;
 
         ValidateSettings(rabbitMqSettings);
 
