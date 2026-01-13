@@ -73,6 +73,8 @@ public static class Program
 
             await EnsureDatabaseInitAsync(app);
 
+            await RabbitMqHelper.EnsureRabbitMqIsRunningAsync(app.Configuration, CancellationToken.None);
+
             var messageBus = app.Services.GetRequiredService<IMessageBusClient>();
             await messageBus.SubscribeAsync<SecurityRefreshingMessage, SecurityRefreshingEventHandler>(
                 queueName: "securities-refresh-queue",

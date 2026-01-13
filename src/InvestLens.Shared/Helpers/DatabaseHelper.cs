@@ -1,14 +1,36 @@
 ﻿using InvestLens.Shared.Validators;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
+using Serilog;
 
 namespace InvestLens.Shared.Helpers;
 
 public static class DatabaseHelper
 {
     #region Create&Migrations
+
+    public static async Task EnsureDatabaseInitAsync(WebApplication app)
+    {
+        CommonValidator.CommonValidate(app.Configuration);
+
+        try
+        {
+            using var scope = app.Services.CreateScope();
+
+            // Создаем БД
+            await DatabaseHelper.EnsureDatabaseCreatedAsync(app.Configuration, true);
+
+            Log.Information("Database initialized successfully");
+        }
+        catch (Exception ex)
+        {
+            Log.Fatal(ex, "Database initialization fatal");
+            throw;
+        }
+    }
 
     public static async Task EnsureDatabaseCreatedAsync(IConfiguration configuration, bool createUser=false)
     {
