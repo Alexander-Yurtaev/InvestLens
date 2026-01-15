@@ -10,6 +10,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using InvestLens.Abstraction.MessageBus.Data;
 using InvestLens.Abstraction.MessageBus.Services;
+using InvestLens.Abstraction.Services;
 
 namespace InvestLens.Shared.MessageBus.Services;
 
@@ -18,27 +19,32 @@ public class RabbitMqClient : IMessageBusClient
     private IConnection _connection = null!;
     private IChannel _channel = null!;
     private readonly IRabbitMqSettings _settings;
+    private readonly IRabbitMqService _service;
     private readonly ILogger<RabbitMqClient> _logger;
     private readonly IServiceProvider _serviceProvider;
     private readonly ConcurrentDictionary<string, AsyncEventingBasicConsumer> _consumers;
     private readonly JsonSerializerOptions _jsonOptions;
     private readonly SemaphoreSlim _connectionLock = new(1, 1);
 
-    public static async Task<RabbitMqClient> CreateAsync(IRabbitMqSettings settings,
+    public static async Task<RabbitMqClient> CreateAsync(
+        IRabbitMqSettings settings,
+        IRabbitMqService service,
         ILogger<RabbitMqClient> logger,
         IServiceProvider serviceProvider)
     {
-        var client = new RabbitMqClient(settings, logger, serviceProvider);
+        var client = new RabbitMqClient(settings, service, logger, serviceProvider);
         await client.InitializeAsync();
         return client;
     }
 
     internal RabbitMqClient(
         IRabbitMqSettings settings,
+        IRabbitMqService service,
         ILogger<RabbitMqClient> logger,
         IServiceProvider serviceProvider)
     {
         _settings = settings;
+        _service = service;
         _logger = logger;
         _serviceProvider = serviceProvider;
         _consumers = new ConcurrentDictionary<string, AsyncEventingBasicConsumer>();
@@ -58,26 +64,7 @@ public class RabbitMqClient : IMessageBusClient
 
     internal async Task InitializeAsync(CancellationToken cancellationToken = default)
     {
-        var factory = new ConnectionFactory
-        {
-            HostName = _settings.HostName,
-            Port = _settings.Port,
-            UserName = _settings.UserName,
-            Password = _settings.Password,
-            VirtualHost = _settings.VirtualHost,
-            AutomaticRecoveryEnabled = true, // Автовосстановление
-            NetworkRecoveryInterval = TimeSpan.FromSeconds(10),
-            RequestedHeartbeat = TimeSpan.FromSeconds(60),
-            ContinuationTimeout = TimeSpan.FromSeconds(20),
-            HandshakeContinuationTimeout = TimeSpan.FromSeconds(20)
-        };
-
-        if (!string.IsNullOrEmpty(_settings.ClientName))
-        {
-            factory.ClientProvidedName = _settings.ClientName;
-        }
-
-        _connection = await factory.CreateConnectionAsync(cancellationToken);
+        _connection = await _service.GetConnection(_settings, cancellationToken);
         _channel = await _connection.CreateChannelAsync(cancellationToken: cancellationToken);
 
         // Настройка качества обслуживания (QoS)

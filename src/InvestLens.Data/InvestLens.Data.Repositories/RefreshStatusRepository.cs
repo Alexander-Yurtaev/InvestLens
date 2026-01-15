@@ -1,55 +1,63 @@
 ﻿using InvestLens.Abstraction.Repositories;
+using InvestLens.Abstraction.Services;
 using InvestLens.Data.DataContext;
 using InvestLens.Data.Entities;
 using InvestLens.Shared.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
+using RabbitMQ.Client.Exceptions;
 
-namespace InvestLens.Data.Repositories
+namespace InvestLens.Data.Repositories;
+
+public class RefreshStatusRepository : BaseRepository<RefreshStatus, Guid>, IRefreshStatusRepository
 {
-    public class RefreshStatusRepository : BaseRepository<RefreshStatus, Guid>, IRefreshStatusRepository
+    public RefreshStatusRepository(
+        InvestLensDataContext context, 
+        IPollyService pollyService,
+        ILogger<RefreshStatusRepository> logger) : base(context, pollyService, logger)
     {
-        public RefreshStatusRepository(InvestLensDataContext context, ILogger<RefreshStatusRepository> logger) : base(context, logger)
+    }
+
+    public async Task<RefreshStatus?> GetRefreshStatus(string entityName)
+    {
+        try
         {
+            // ToDo изменить System.Net.Sockets.SocketException на более конкретный тип.
+            var resilientPolicy = PollyService.GetResilientPolicy<System.Net.Sockets.SocketException>();
+            var refreshStatus = await resilientPolicy.ExecuteAsync(async () =>
+                await DbSet.AsNoTracking().FirstOrDefaultAsync(s => s.EntityName == entityName));
+            return refreshStatus;
         }
-
-        public async Task<RefreshStatus?> GetRefreshStatus(string entityName)
+        catch (Exception ex)
         {
-            try
-            {
-                var refreshStatus = await DbSet.AsNoTracking().FirstOrDefaultAsync(s => s.EntityName == entityName);
-                return refreshStatus;
-            }
-            catch (Exception ex)
-            {
-                Logger.LogError(ex, "Ошибка при получении RefreshStatus для EntityName: {EntityName}", entityName);
-                throw;
-            }
+            Logger.LogError(ex, "Ошибка при получении RefreshStatus для EntityName: {EntityName}", entityName);
+            throw;
         }
+    }
 
-        public async Task SetRefreshStatus(string entityName)
+    public async Task SetRefreshStatus(string entityName)
+    {
+        try
         {
-            try
+            var refreshStatus = await GetRefreshStatus(entityName);
+            if (refreshStatus is null)
             {
-                var refreshStatus = await DbSet.FirstOrDefaultAsync(s => s.EntityName == entityName);
-                if (refreshStatus is null)
-                {
-                    refreshStatus = new RefreshStatus(entityName);
-                    DbSet.Add(refreshStatus);
-                }
-                else
-                {
-                    refreshStatus.RefreshDate = DateTime.UtcNow;
-                }
+                refreshStatus = new RefreshStatus(entityName);
+                DbSet.Add(refreshStatus);
+            }
+            else
+            {
+                refreshStatus.RefreshDate = DateTime.UtcNow;
+            }
 
-                await Context.SaveChangesAsync();
-            }
-            catch (Exception ex)
-            {
-                Logger.LogError(ex, "Ошибка при сохранении RefreshStatus для EntityName: {EntityName}", entityName);
-                throw;
-            }
+            // ToDo изменить System.Net.Sockets.SocketException на более конкретный тип.
+            var resilientPolicy = PollyService.GetResilientPolicy<System.Net.Sockets.SocketException>();
+            await resilientPolicy.ExecuteAsync(async () => await Context.SaveChangesAsync());
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Ошибка при сохранении RefreshStatus для EntityName: {EntityName}", entityName);
+            throw;
         }
     }
 }

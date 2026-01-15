@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging;
 using Polly;
 using Polly.Extensions.Http;
+using Polly.Wrap;
 
 namespace InvestLens.Shared.Services;
 
@@ -14,7 +15,7 @@ public class PollyService : IPollyService
         _logger = logger;
     }
 
-    public IAsyncPolicy<HttpResponseMessage> GetRetryPolicy()
+    public IAsyncPolicy<HttpResponseMessage> GetHttpRetryPolicy()
     {
         return HttpPolicyExtensions
             .HandleTransientHttpError() // Обрабатывает 5xx и 408 ошибки
@@ -22,20 +23,20 @@ public class PollyService : IPollyService
             .WaitAndRetryAsync(
                 retryCount: 3,
                 sleepDurationProvider: retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)), // Экспоненциальная задержка
-                onRetry: (outcome, timespan, retryAttempt, context) =>
+                onRetry: (_, timespan, retryAttempt, _) =>
                 {
                     _logger.LogWarning($"Повторная попытка {retryAttempt} через {timespan.TotalSeconds} секунд...");
                 });
     }
 
-    public IAsyncPolicy<HttpResponseMessage> GetCircuitBreakerPolicy()
+    public IAsyncPolicy<HttpResponseMessage> GetHttpCircuitBreakerPolicy()
     {
         return HttpPolicyExtensions
             .HandleTransientHttpError()
             .CircuitBreakerAsync(
                 handledEventsAllowedBeforeBreaking: 5,
                 durationOfBreak: TimeSpan.FromSeconds(30),
-                onBreak: (outcome, breakDelay) =>
+                onBreak: (_, breakDelay) =>
                 {
                     _logger.LogWarning($"Circuit Breaker открыт на {breakDelay.TotalSeconds} секунд");
                 },
@@ -43,5 +44,45 @@ public class PollyService : IPollyService
                 {
                     _logger.LogWarning("Circuit Breaker сброшен");
                 });
+    }
+
+    public IAsyncPolicy<HttpResponseMessage> GetHttpResilientPolicy()
+    {
+        var retryPolicy = GetHttpRetryPolicy();
+        var circuitBreakerPolicy = GetHttpCircuitBreakerPolicy();
+        return Policy.WrapAsync(retryPolicy, circuitBreakerPolicy);
+    }
+
+    public AsyncPolicyWrap GetResilientPolicy<TException>() where TException: Exception
+    {
+        // 1. Создаем политики
+        var retryPolicy = Policy
+            .Handle<TException>()
+            .WaitAndRetryAsync(
+                retryCount: 3,
+                sleepDurationProvider: retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)),
+                onRetry: (_, timespan, retryCount, _) =>
+                {
+                    _logger.LogInformation($"Попытка {retryCount}. Ожидание {timespan.TotalSeconds} секунд...");
+                });
+
+        var circuitBreakerPolicy = Policy
+            .Handle<TException>()
+            .CircuitBreakerAsync(
+                exceptionsAllowedBeforeBreaking: 2,
+                durationOfBreak: TimeSpan.FromSeconds(30),
+                onBreak: (_, breakDelay) =>
+                {
+                    _logger.LogInformation($"Цепь разомкнута на {breakDelay.TotalSeconds} секунд!");
+                },
+                onReset: () =>
+                {
+                    _logger.LogInformation("Цепь восстановлена!");
+                });
+
+        // 2. Объединяем политики (сначала Retry, затем Circuit Breaker)
+        var resilientPolicy = Policy.WrapAsync(retryPolicy, circuitBreakerPolicy);
+
+        return resilientPolicy;
     }
 }

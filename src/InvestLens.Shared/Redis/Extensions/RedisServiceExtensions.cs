@@ -11,7 +11,7 @@ namespace InvestLens.Shared.Redis.Extensions;
 
 public static class RedisServiceExtensions
 {
-    public static IServiceCollection AddRedisClient(
+    public static (IServiceCollection, IRedisSettings) AddRedisSettings(
         this IServiceCollection services,
         IConfiguration configuration)
     {
@@ -27,19 +27,24 @@ public static class RedisServiceExtensions
         // Регистрация IRedisSettings
         services.AddSingleton<IRedisSettings>(_ => redisSettings);
 
+        return (services, redisSettings);
+    }
+
+    public static IServiceCollection AddRedisClient(this (IServiceCollection, IRedisSettings) owners)
+    {
         // Регистрация RedisClient
-        services.AddSingleton<IRedisClientFactory, RedisClientFactory>();
-        services.AddSingleton<IRedisClient, LazyRedisClient>(); // общий клиент
-        services.AddKeyedSingleton<IRedisClient, LazyRedisClientWithInstanceName>(redisSettings.InstanceName); // клиент для сервиса
+        owners.Item1.AddSingleton<IRedisClientFactory, RedisClientFactory>();
+        owners.Item1.AddSingleton<IRedisClient, LazyRedisClient>(); // общий клиент
+        owners.Item1.AddKeyedSingleton<IRedisClient, LazyRedisClientWithInstanceName>(owners.Item2.InstanceName); // клиент для сервиса
 
         // Регистрация распределенного кэша
-        services.AddStackExchangeRedisCache(options =>
+        owners.Item1.AddStackExchangeRedisCache(options =>
         {
-            options.Configuration = redisSettings.ConnectionString;
-            options.InstanceName = redisSettings.InstanceName; // кэш для сервиса
+            options.Configuration = owners.Item2.ConnectionString;
+            options.InstanceName = owners.Item2.InstanceName; // кэш для сервиса
         });
 
-        return services;
+        return owners.Item1;
     }
 
     private static void ValidateSettings(RedisSettings redisSettings)

@@ -5,11 +5,12 @@ FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
 WORKDIR /app
 EXPOSE 8080
 EXPOSE 8081
+EXPOSE 8082
 
-# Установите curl для health check
+# РЈСЃС‚Р°РЅРѕРІРёС‚Рµ curl РґР»СЏ health check
 RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 
-# Только после установки curl переключаемся на non-root пользователя
+# РўРѕР»СЊРєРѕ РїРѕСЃР»Рµ СѓСЃС‚Р°РЅРѕРІРєРё curl РїРµСЂРµРєР»СЋС‡Р°РµРјСЃСЏ РЅР° non-root РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ
 USER $APP_UID
 
 # This stage is used to build the service project

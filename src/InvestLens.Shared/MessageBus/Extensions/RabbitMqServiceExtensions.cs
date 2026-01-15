@@ -10,14 +10,12 @@ namespace InvestLens.Shared.MessageBus.Extensions;
 
 public static class RabbitMqServiceExtensions
 {
-    public static IServiceCollection AddRabbitMqClient(
-        this IServiceCollection services,
-        IConfiguration configuration)
+    public static (IServiceCollection, IRabbitMqSettings) AddRabbitMqSettings(this IServiceCollection services, IConfiguration configuration)
     {
         RabbitMqValidator.Validate(configuration);
 
         var rabbitMqSettings = configuration.GetSection("RabbitMqSettings").Get<RabbitMqSettings>() ??
-                            throw new ArgumentNullException("RabbitMqSettings");
+                               throw new ArgumentNullException("RabbitMqSettings");
 
         rabbitMqSettings.UserName = configuration["RABBITMQ_USER"]!;
         rabbitMqSettings.Password = configuration["RABBITMQ_PASSWORD"]!;
@@ -28,11 +26,16 @@ public static class RabbitMqServiceExtensions
         // Регистрация IRedisSettings
         services.AddSingleton<IRabbitMqSettings>(_ => rabbitMqSettings);
 
-        // Регистрация RabbitMqClient
-        services.AddSingleton<IRabbitMqClientFactory, RabbitMqClientFactory>();
-        services.AddSingleton<IMessageBusClient, LazyRabbitMqClient>();
+        return (services, rabbitMqSettings);
+    }
 
-        return services;
+    public static IServiceCollection AddRabbitMqClient(this (IServiceCollection, IRabbitMqSettings) owners)
+    {
+        // Регистрация RabbitMqClient
+        owners.Item1.AddSingleton<IRabbitMqClientFactory, RabbitMqClientFactory>();
+        owners.Item1.AddSingleton<IMessageBusClient, LazyRabbitMqClient>();
+
+        return owners.Item1;
     }
 
     private static void ValidateSettings(IRabbitMqSettings rabbitMqSettings)

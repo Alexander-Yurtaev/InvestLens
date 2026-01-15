@@ -1,0 +1,54 @@
+﻿/* Кастомные стили для Health Checks UI */
+.health-checks-overview .card {
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+}
+
+.health-checks-overview .card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+}
+
+.health-check-panel .panel-heading {
+    border-radius: 8px 8px 0 0;
+}
+
+.badge-healthy {
+    background-color: #28a745 !important;
+}
+
+.badge-unhealthy {
+    background-color: #dc3545 !important;
+}
+
+.badge-degraded {
+    background-color: #ffc107 !important;
+    color: #212529;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .health-checks-overview .card {
+        margin-bottom: 15px;
+    }
+}
+
+/* Анимации */
+@keyframes pulse {
+    0% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.7;
+    }
+
+    100% {
+        opacity: 1;
+    }
+}
+
+.health-check-status.pending {
+    animation: pulse 1.5s infinite;
+}

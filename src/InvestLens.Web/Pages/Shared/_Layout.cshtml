@@ -4,7 +4,6 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - Invest Lens</title>
-    <script type="importmap"></script>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/InvestLens.Web.styles.css" asp-append-version="true" />
@@ -25,28 +24,38 @@
                             <a class="nav-link text-dark" asp-area="" asp-page="/Index">Home</a>
                         </li>
                         <li class="nav-item">
+                            <a class="nav-link text-dark" href="/health-ui">Health Dashboard</a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link text-dark" href="https://localhost:5011">Data service</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link text-dark" href="https://localhost:5021">Worker service</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-dark" href="https://localhost:5021/health">Worker service - health</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" href="https://localhost:5021/jobs">Worker service - hangfire</a>
-                        </li>
-                        <li class="nav-item">
                             <a class="nav-link text-dark" href="http://localhost:15672/">RabbitMQ</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/Privacy">Privacy</a>
                         </li>
                     </ul>
                 </div>
             </div>
         </nav>
     </header>
+
+    <!-- Health Status Banner -->
+    <div id="health-status-banner" class="container mb-3">
+        <div class="alert alert-info">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <strong>System Status:</strong>
+                    <span id="system-status">Checking...</span>
+                </div>
+                <div>
+                    <a href="/health-ui" class="btn btn-sm btn-primary">View Health Dashboard</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="container">
         <main role="main" class="pb-3">
             @RenderBody()
@@ -55,13 +64,57 @@
 
     <footer class="border-top footer text-muted">
         <div class="container">
-            &copy; 2026 - Invest Lens - <a asp-area="" asp-page="/Privacy">Privacy</a>
+            &copy; 2026 - Invest Lens -
+            <a asp-area="" asp-page="/Privacy">Privacy</a> |
+            <a href="/health-ui">System Health</a>
         </div>
     </footer>
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+
+    <script>
+        // Автоматически проверяем статус системы
+        $(document).ready(function() {
+            checkSystemHealth();
+
+            // Проверяем каждые 30 секунд
+            setInterval(checkSystemHealth, 30000);
+        });
+
+        function checkSystemHealth() {
+            $.ajax({
+                url: '/health',
+                type: 'GET',
+                success: function(data) {
+                    var status = data.status;
+                    var banner = $('#health-status-banner .alert');
+                    var statusText = $('#system-status');
+
+                    if (status === 'Healthy') {
+                        banner.removeClass('alert-info alert-warning alert-danger')
+                              .addClass('alert-success');
+                        statusText.text('All Systems Operational ✓');
+                    } else if (status === 'Degraded') {
+                        banner.removeClass('alert-info alert-success alert-danger')
+                              .addClass('alert-warning');
+                        statusText.text('Some Issues Detected ⚠');
+                    } else {
+                        banner.removeClass('alert-info alert-success alert-warning')
+                              .addClass('alert-danger');
+                        statusText.text('System Issues ❌');
+                    }
+                },
+                error: function() {
+                    $('#health-status-banner .alert')
+                        .removeClass('alert-info alert-success alert-warning')
+                        .addClass('alert-danger');
+                    $('#system-status').text('Cannot reach health endpoint');
+                }
+            });
+        }
+    </script>
 
     @await RenderSectionAsync("Scripts", required: false)
 </body>

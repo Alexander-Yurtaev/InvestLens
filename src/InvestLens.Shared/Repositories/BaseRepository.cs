@@ -1,19 +1,27 @@
 ﻿using InvestLens.Abstraction.Repositories;
+using InvestLens.Abstraction.Services;
 using InvestLens.Data.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Polly.Wrap;
 
 namespace InvestLens.Shared.Repositories;
 
 public abstract class BaseRepository<TEntity, TKey> : IBaseRepository<TEntity, TKey> where TEntity : BaseEntity<TKey> where TKey : struct
 {
     protected readonly DbContext Context;
+    protected readonly IPollyService PollyService;
+    protected AsyncPolicyWrap ResilientPolicy;
     protected readonly ILogger<BaseRepository<TEntity, TKey>> Logger;
     protected readonly DbSet<TEntity> DbSet;
 
-    protected BaseRepository(DbContext context, ILogger<BaseRepository<TEntity, TKey>> logger)
+    protected BaseRepository(DbContext context, IPollyService pollyService, ILogger<BaseRepository<TEntity, TKey>> logger)
     {
         Context = context;
+        PollyService = pollyService;
+        // ToDo изменить System.Net.Sockets.SocketException на более конкретный тип.
+        ResilientPolicy = PollyService.GetResilientPolicy<System.Net.Sockets.SocketException>();
+
         DbSet = context.Set<TEntity>();
         Logger = logger;
     }
@@ -27,19 +35,19 @@ public abstract class BaseRepository<TEntity, TKey> : IBaseRepository<TEntity, T
                 var savedEntity = await Get(entity.Id);
                 if (savedEntity is not null)
                 {
-                    DbSet.Update(entity);
+                    await ResilientPolicy.ExecuteAsync(async () => await Task.FromResult(DbSet.Update(entity)));
                 }
                 else
                 {
-                    DbSet.Add(entity);
+                    await ResilientPolicy.ExecuteAsync(async () => await Task.FromResult(DbSet.Add(entity)));
                 }
             }
             else
             {
-                DbSet.Add(entity);
+                await ResilientPolicy.ExecuteAsync(async () => await Task.FromResult(DbSet.Add(entity)));
             }
-                
-            await Context.SaveChangesAsync();
+
+            await ResilientPolicy.ExecuteAsync(async () => await Context.SaveChangesAsync());
             return entity;
         }
         catch (Exception ex)
@@ -60,20 +68,24 @@ public abstract class BaseRepository<TEntity, TKey> : IBaseRepository<TEntity, T
                     var savedEntity = await Get(entity.Id);
                     if (savedEntity is not null)
                     {
-                        DbSet.Update(entity);
+                        await ResilientPolicy.ExecuteAsync(async () => await Task.FromResult(DbSet.Update(entity)));
                     }
                     else
                     {
-                        DbSet.Add(entity);
+                        await ResilientPolicy.ExecuteAsync(async () => await Task.FromResult(DbSet.Add(entity)));
                     }
                 }
             }
             else
             {
-                DbSet.AddRange(entities);
+                await ResilientPolicy.ExecuteAsync(async () =>
+                {
+                    DbSet.AddRange(entities);
+                    await Task.CompletedTask;
+                });
             }
 
-            await Context.SaveChangesAsync();
+            await ResilientPolicy.ExecuteAsync(async () => await Context.SaveChangesAsync());
             return entities;
         }
         catch (Exception ex)
@@ -87,7 +99,7 @@ public abstract class BaseRepository<TEntity, TKey> : IBaseRepository<TEntity, T
     {
         try
         {
-            var entities = await DbSet.AsNoTracking().ToListAsync();
+            var entities = await ResilientPolicy.ExecuteAsync(async () => await DbSet.AsNoTracking().ToListAsync());
             return entities;
         }
         catch (Exception ex)
@@ -120,8 +132,12 @@ public abstract class BaseRepository<TEntity, TKey> : IBaseRepository<TEntity, T
     {
         try
         {
-            DbSet.Update(entity);
-            await Context.SaveChangesAsync();
+            await ResilientPolicy.ExecuteAsync(async () =>
+            {
+                DbSet.Update(entity);
+                await Task.CompletedTask;
+            });
+            await ResilientPolicy.ExecuteAsync(async () => await Context.SaveChangesAsync());
             return entity;
         }
         catch (Exception ex)
@@ -136,8 +152,12 @@ public abstract class BaseRepository<TEntity, TKey> : IBaseRepository<TEntity, T
         try
         {
             var entity = await Find(id, true);
-            DbSet.Remove(entity!);
-            await Context.SaveChangesAsync();
+            await ResilientPolicy.ExecuteAsync(async () =>
+            {
+                DbSet.Remove(entity!);
+                await Task.CompletedTask;
+            });
+            await ResilientPolicy.ExecuteAsync(async () => await Context.SaveChangesAsync());
         }
         catch (KeyNotFoundException ex)
         {
@@ -155,15 +175,11 @@ public abstract class BaseRepository<TEntity, TKey> : IBaseRepository<TEntity, T
 
     private async Task<TEntity?> Find(TKey id, bool throwIfNotFound = false)
     {
-        var entity = await DbSet.FindAsync(id);
-
-        if (entity is null && throwIfNotFound)
-        {
-            Logger.LogWarning("Сущность не найдена с Id: {Id}", id);
-            throw new KeyNotFoundException($"Entity not found.");
-        }
-
-        return entity;
+        var entity = await ResilientPolicy.ExecuteAsync(async () => await DbSet.FindAsync(id));
+        if (entity is not null || !throwIfNotFound) return entity;
+        
+        Logger.LogWarning("Сущность не найдена с Id: {Id}", id);
+        throw new KeyNotFoundException($"Entity not found.");
     }
 
     #endregion Private Methods

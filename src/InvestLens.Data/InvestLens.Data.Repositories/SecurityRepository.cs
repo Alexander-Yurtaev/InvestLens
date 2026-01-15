@@ -1,4 +1,5 @@
 ﻿using InvestLens.Abstraction.Repositories;
+using InvestLens.Abstraction.Services;
 using InvestLens.Data.DataContext;
 using InvestLens.Data.Entities;
 using InvestLens.Shared.Repositories;
@@ -9,7 +10,7 @@ namespace InvestLens.Data.Repositories;
 
 public class SecurityRepository : BaseRepository<Security, Guid>, ISecurityRepository
 {
-    public SecurityRepository(InvestLensDataContext context, ILogger<SecurityRepository> logger) : base(context, logger)
+    public SecurityRepository(InvestLensDataContext context, IPollyService pollyService, ILogger<SecurityRepository> logger) : base(context, pollyService, logger)
     {
     }
 
@@ -19,23 +20,38 @@ public class SecurityRepository : BaseRepository<Security, Guid>, ISecurityRepos
         {
             if (orUpdate)
             {
-                var id = (await DbSet.AsNoTracking().FirstOrDefaultAsync(s => s.SecId == entity.SecId))?.Id;
+                var entityFromDb = await ResilientPolicy.ExecuteAsync(async () =>
+                    await DbSet.AsNoTracking().FirstOrDefaultAsync(s => s.SecId == entity.SecId));
+
+                var id = entityFromDb?.Id;
                 if (id.HasValue)
                 {
                     entity.Id = id.Value;
-                    DbSet.Update(entity);
+                    await ResilientPolicy.ExecuteAsync(async () =>
+                    {
+                        DbSet.Update(entity);
+                        await Task.CompletedTask;
+                    });
                 }
                 else
                 {
-                    DbSet.Add(entity);
+                    await ResilientPolicy.ExecuteAsync(async () =>
+                    {
+                        DbSet.Add(entity);
+                        await Task.CompletedTask;
+                    });
                 }
             }
             else
             {
-                DbSet.Add(entity);
+                await ResilientPolicy.ExecuteAsync(async () =>
+                {
+                    DbSet.Add(entity);
+                    await Task.CompletedTask;
+                });
             }
 
-            await Context.SaveChangesAsync();
+            await ResilientPolicy.ExecuteAsync(async () => await Context.SaveChangesAsync());
             return entity;
         }
         catch (Exception ex)
@@ -53,24 +69,39 @@ public class SecurityRepository : BaseRepository<Security, Guid>, ISecurityRepos
             {
                 foreach (var entity in entities)
                 {
-                    var id = (await DbSet.AsNoTracking().FirstOrDefaultAsync(s => s.SecId == entity.SecId))?.Id;
+                    var entityFromDb = await ResilientPolicy.ExecuteAsync(async () =>
+                        await DbSet.AsNoTracking().FirstOrDefaultAsync(s => s.SecId == entity.SecId));
+
+                    var id = entityFromDb?.Id;
                     if (id.HasValue)
                     {
                         entity.Id = id.Value;
-                        DbSet.Update(entity);
+                        await ResilientPolicy.ExecuteAsync(async () =>
+                        {
+                            DbSet.Update(entity);
+                            await Task.CompletedTask;
+                        });
                     }
                     else
                     {
-                        DbSet.Add(entity);
+                        await ResilientPolicy.ExecuteAsync(async () =>
+                        {
+                            DbSet.Add(entity);
+                            await Task.CompletedTask;
+                        });
                     }
                 }
             }
             else
             {
-                DbSet.AddRange(entities);
+                await ResilientPolicy.ExecuteAsync(async () =>
+                {
+                    DbSet.AddRange(entities);
+                    await Task.CompletedTask;
+                });
             }
 
-            await Context.SaveChangesAsync();
+            await ResilientPolicy.ExecuteAsync(async () => await Context.SaveChangesAsync());
             return entities;
         }
         catch (Exception ex)

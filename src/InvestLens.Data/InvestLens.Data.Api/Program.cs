@@ -1,4 +1,7 @@
-﻿using InvestLens.Abstraction.MessageBus.Services;
+﻿using HealthChecks.UI.Client;
+using InvestLens.Abstraction.MessageBus.Data;
+using InvestLens.Abstraction.MessageBus.Services;
+using InvestLens.Abstraction.Redis.Data;
 using InvestLens.Abstraction.Repositories;
 using InvestLens.Abstraction.Services;
 using InvestLens.Data.Api.Extensions;
@@ -13,6 +16,7 @@ using InvestLens.Shared.MessageBus.Models;
 using InvestLens.Shared.Redis.Extensions;
 using InvestLens.Shared.Services;
 using InvestLens.Shared.Validators;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Serilog;
 
 namespace InvestLens.Data.Api;
@@ -37,13 +41,14 @@ public static class Program
             // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
             builder.Services.AddOpenApi();
 
-            builder.Services.AddScoped<IPollyService, PollyService>();
+            builder.Services.AddSingleton<IPollyService, PollyService>();
+            builder.Services.AddSingleton<IRabbitMqService, RabbitMqService>();
 
             string moexBaseUrl = builder.Configuration["MoexBaseUrl"]!;
             builder.Services
                 .AddHttpClient("MoexClient", options => options.BaseAddress = new Uri(moexBaseUrl))
-                .AddPolicyHandler((provider, _) => provider.GetService<IPollyService>()!.GetRetryPolicy())
-                .AddPolicyHandler((provider, _) => provider.GetService<IPollyService>()!.GetCircuitBreakerPolicy());
+                .AddPolicyHandler((provider, _) => provider.GetService<IPollyService>()!.GetHttpRetryPolicy())
+                .AddPolicyHandler((provider, _) => provider.GetService<IPollyService>()!.GetHttpCircuitBreakerPolicy());
 
             builder.Services.AddInvestLensDatabaseInfrastructure(builder.Configuration);
             builder.Services.AddScoped<IMoexClient, MoexClient>();
@@ -52,11 +57,21 @@ public static class Program
             builder.Services.AddScoped<IDataService, DataService>();
 
             // Redis
-            builder.Services.AddRedisClient(builder.Configuration);
+            builder.Services.AddRedisSettings(builder.Configuration).AddRedisClient();
 
             // RabbitMQ
-            builder.Services.AddRabbitMqClient(builder.Configuration);
+            builder.Services.AddRabbitMqSettings(builder.Configuration).AddRabbitMqClient();
             builder.Services.AddScoped<SecurityRefreshingEventHandler>();
+
+            builder.Services.AddHealthChecks()
+                .AddNpgSql(ConnectionStringHelper.GetTargetConnectionString(builder.Configuration))
+                .AddRedis(sp => sp.GetService<IRedisSettings>()?.ConnectionString ?? "")
+                .AddRabbitMQ(async sp =>
+                {
+                    var settings = sp.GetService<IRabbitMqSettings>()!;
+                    var service = sp.GetService<IRabbitMqService>()!;
+                    return await service.GetConnection(settings, CancellationToken.None);
+                });
 
             var app = builder.Build();
 
@@ -73,13 +88,20 @@ public static class Program
 
             await EnsureDatabaseInitAsync(app);
 
-            await RabbitMqHelper.EnsureRabbitMqIsRunningAsync(app.Configuration, CancellationToken.None);
+            var rabbitMqService = app.Services.GetService<IRabbitMqService>()!;
+            await rabbitMqService.EnsureRabbitMqIsRunningAsync(app.Configuration, CancellationToken.None);
 
             var messageBus = app.Services.GetRequiredService<IMessageBusClient>();
             await messageBus.SubscribeAsync<SecurityRefreshingMessage, SecurityRefreshingEventHandler>(
                 queueName: "securities-refresh-queue",
                 exchangeName: BusClientConstants.ExchangeName,
                 routingKey: BusClientConstants.SecuritiesRefreshingKey);
+
+            app.MapHealthChecks("/health", new HealthCheckOptions
+            {
+                Predicate = _ => true,
+                ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+            });
 
             app.MapGet("/", () =>
                 Results.Content(
