@@ -42,6 +42,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{A6408FA0-0
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InvestLens.Data.Shared", "src\InvestLens.Data.Shared\InvestLens.Data.Shared.csproj", "{31FE5B7A-35A7-C8A0-E340-2E01B6A1962A}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{1F31DE00-D30B-4271-872D-FA83C56414A6}"
+	ProjectSection(SolutionItems) = preProject
+		scripts\generate-certificates.bat = scripts\generate-certificates.bat
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

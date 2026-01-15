@@ -12,6 +12,7 @@ namespace InvestLens.Data.Api.Handlers;
 public class SecurityRefreshingEventHandler : IMessageHandler<SecurityRefreshingMessage>
 {
     private readonly IMoexClient _moexClient;
+    private readonly IPollyService _pollyService;
     private readonly IRedisClient _redisClient;
     private readonly ISecurityRepository _securityRepository;
     private readonly IRefreshStatusRepository _refreshStatusRepository;
@@ -19,12 +20,14 @@ public class SecurityRefreshingEventHandler : IMessageHandler<SecurityRefreshing
 
     public SecurityRefreshingEventHandler(
         IMoexClient moexClient,
+        IPollyService pollyService,
         IRedisClient redisClient,
         ISecurityRepository securityRepository,
         IRefreshStatusRepository refreshStatusRepository,
         ILogger<SecurityRefreshingEventHandler> logger)
     {
         _moexClient = moexClient;
+        _pollyService = pollyService;
         _redisClient = redisClient;
         _securityRepository = securityRepository;
         _refreshStatusRepository = refreshStatusRepository;
@@ -50,7 +53,10 @@ public class SecurityRefreshingEventHandler : IMessageHandler<SecurityRefreshing
 
     private async Task RefreshSecurities()
     {
-        var securitiesRefreshStatus = await _redisClient.GetAsync<SecuritiesRefreshState?>(RedisKeys.SecuritiesRefreshStatusRedisKey);
+        // ToDo исправить на актуальный Exception.
+        var resilientPolicy = _pollyService.GetResilientPolicy<Exception>();
+        var securitiesRefreshStatus = await resilientPolicy.ExecuteAsync(async () =>
+            await _redisClient.GetAsync<SecuritiesRefreshState?>(RedisKeys.SecuritiesRefreshStatusRedisKey));
         if (securitiesRefreshStatus is null)
         {
             _logger.LogError("В Redis отсутствует информация и SecuritiesRefreshStatus.");

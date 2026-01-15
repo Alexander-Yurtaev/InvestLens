@@ -11,6 +11,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+	<PackageReference Include="AspNetCore.HealthChecks.Uris" />
 	<PackageReference Include="IdentityModel" />
   </ItemGroup>
 

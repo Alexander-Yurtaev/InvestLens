@@ -4,6 +4,7 @@
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
   <ItemGroup>
+    <PackageVersion Include="AspNetCore.HealthChecks.Uris" Version="9.0.0" />
     <PackageVersion Include="IdentityModel" Version="5.2.0" />
     <PackageVersion Include="IdentityModel.OidcClient" Version="5.2.1" />
   </ItemGroup>

@@ -39,7 +39,7 @@ public class SecuritiesService : ISecuritiesService
         try
         {
             await RefreshSecuritiesAsync();
-            _logger.LogInformation("Обновление списка ценных бумаг при инициализации приложения завершен.");
+            _logger.LogInformation("Обновление списка ценных бумаг при инициализации приложения завершено.");
         }
         catch (Exception ex)
         {

@@ -1,5 +1,4 @@
 ﻿using HealthChecks.UI.Client;
-using InvestLens.Abstraction.MessageBus.Data;
 using InvestLens.Abstraction.Redis.Data;
 using InvestLens.Abstraction.Services;
 using InvestLens.Shared.Helpers;
@@ -8,6 +7,7 @@ using InvestLens.Shared.Redis.Extensions;
 using InvestLens.Shared.Services;
 using InvestLens.Shared.Validators;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Serilog;
 
 namespace InvestLens.Web;
@@ -32,23 +32,18 @@ public static class Program
             RabbitMqValidator.Validate(builder.Configuration);
             builder.Services.AddRedisSettings(builder.Configuration);
             builder.Services.AddRabbitMqSettings(builder.Configuration);
-            builder.Services.AddRabbitMqSettings(builder.Configuration);
 
             builder.Services.AddSingleton<IPollyService, PollyService>();
             builder.Services.AddSingleton<IRabbitMqService, RabbitMqService>();
 
             builder.Services.AddHealthChecks()
-                .AddNpgSql(ConnectionStringHelper.GetTargetConnectionString(builder.Configuration),
-                    name: "PostgreSQL", tags: ["database", "infrastructure"])
-                .AddRedis(sp => sp.GetService<IRedisSettings>()?.ConnectionString ?? "",
-                    name: "Redis", tags: ["cache", "infrastructure"])
-                .AddRabbitMQ(async sp =>
-                    {
-                        var settings = sp.GetService<IRabbitMqSettings>()!;
-                        var service = sp.GetService<IRabbitMqService>()!;
-                        return await service.GetConnection(settings, CancellationToken.None);
-                    },
-                    name: "RabbitMQ", tags: ["queue", "infrastructure"]);
+                .AddUrlGroup(new Uri("https://investlens.worker:8081/health"),
+                    httpMethod: HttpMethod.Get,
+                    name: "Worker Service", tags: ["worker", "job"])
+                .AddUrlGroup(new Uri("https://investlens.data.api:8081/health"),
+                    httpMethod: HttpMethod.Get,
+                    name: "Data API", tags: ["data", "api"])
+                ;
 
             // Добавляем Health Checks UI с хранилищем в PostgreSQL
             CommonValidator.CommonValidate(builder.Configuration);
@@ -57,17 +52,15 @@ public static class Program
             builder.Services.AddHealthChecksUI(setup =>
                 {
                     setup.SetHeaderText("InvestLens - System Health Dashboard");
-                    setup.AddHealthCheckEndpoint("InvestLens System", "/health");
-                    setup.AddHealthCheckEndpoint("Data API", "https://localhost:5011/health");
-                    setup.AddHealthCheckEndpoint("Worker Service", "https://localhost:5021/health");
+                    setup.AddHealthCheckEndpoint("InvestLens System", "http://localhost:8080/health");
+                    setup.AddHealthCheckEndpoint("Data API", "https://investlens.data.api:8081/health");
+                    setup.AddHealthCheckEndpoint("Worker Service", "https://investlens.worker:8081/health");
 
                     // Настройка интервала опроса
                     setup.SetEvaluationTimeInSeconds(30);
                     setup.SetApiMaxActiveRequests(3);
                 })
                 .AddInMemoryStorage();
-            //.AddPostgreSqlStorage(ConnectionStringHelper.GetTargetConnectionString(builder.Configuration));
-
 
             var app = builder.Build();
 
@@ -83,6 +76,12 @@ public static class Program
             }
 
             app.UseHttpsRedirection();
+
+            // Для исключения health checks из HTTPS редиректа
+            app.UseWhen(context => !context.Request.Path.StartsWithSegments("/health"), appBuilder =>
+            {
+                appBuilder.UseHttpsRedirection();
+            });
 
             app.UseRouting();
 

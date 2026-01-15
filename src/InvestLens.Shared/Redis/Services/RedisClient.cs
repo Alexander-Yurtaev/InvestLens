@@ -3,11 +3,13 @@ using InvestLens.Abstraction.Redis.Services;
 using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
 using System.Text.Json;
+using InvestLens.Abstraction.Services;
 
 namespace InvestLens.Shared.Redis.Services;
 
 public class RedisClient : IRedisClient, IDisposable
 {
+    private readonly IPollyService _pollyService;
     private readonly IRedisSettings _settings;
     private readonly string _instanceName;
     private readonly ILogger<RedisClient> _logger;
@@ -16,15 +18,16 @@ public class RedisClient : IRedisClient, IDisposable
     private bool _disposed;
     private readonly SemaphoreSlim _connectionLock = new(1, 1);
 
-    public static async Task<RedisClient> CreateAsync(IRedisSettings settings, string instanceName, ILogger<RedisClient> logger)
+    public static async Task<RedisClient> CreateAsync(IPollyService pollyService, IRedisSettings settings, string instanceName, ILogger<RedisClient> logger)
     {
-        var client = new RedisClient(settings, instanceName, logger);
+        var client = new RedisClient(pollyService, settings, instanceName, logger);
         await client.InitializeAsync();
         return client;
     }
 
-    internal RedisClient(IRedisSettings settings, string instanceName, ILogger<RedisClient> logger)
+    internal RedisClient(IPollyService pollyService, IRedisSettings settings, string instanceName, ILogger<RedisClient> logger)
     {
+        _pollyService = pollyService;
         _settings = settings ?? throw new ArgumentNullException(nameof(settings));
         _instanceName = instanceName;
         _logger = logger;
@@ -39,8 +42,9 @@ public class RedisClient : IRedisClient, IDisposable
     {
         try
         {
+            var resilientPolicy = _pollyService.GetResilientPolicy<Exception>();
             var redisKey = BuildKey(key);
-            var value = await _database.StringGetAsync(redisKey);
+            var value = await resilientPolicy.ExecuteAsync(async() => await _database.StringGetAsync(redisKey));
 
             if (!value.HasValue)
                 return default;
@@ -61,7 +65,9 @@ public class RedisClient : IRedisClient, IDisposable
             var redisKey = BuildKey(key);
             var serializedValue = JsonSerializer.Serialize(value);
 
-            await _database.StringSetAsync(redisKey, serializedValue, expiry, When.Always);
+            var resilientPolicy = _pollyService.GetResilientPolicy<Exception>();
+
+            await resilientPolicy.ExecuteAsync(async() => await _database.StringSetAsync(redisKey, serializedValue, expiry, When.Always));
         }
         catch (Exception ex)
         {
@@ -75,7 +81,9 @@ public class RedisClient : IRedisClient, IDisposable
         try
         {
             var redisKey = BuildKey(key);
-            return await _database.KeyDeleteAsync(redisKey);
+            var resilientPolicy = _pollyService.GetResilientPolicy<Exception>();
+
+            return await resilientPolicy.ExecuteAsync(async () =>  await _database.KeyDeleteAsync(redisKey));
         }
         catch (Exception ex)
         {
@@ -89,7 +97,8 @@ public class RedisClient : IRedisClient, IDisposable
         try
         {
             var redisKey = BuildKey(key);
-            return await _database.KeyExistsAsync(redisKey);
+            var resilientPolicy = _pollyService.GetResilientPolicy<Exception>();
+            return await resilientPolicy.ExecuteAsync(async () => await _database.KeyExistsAsync(redisKey));
         }
         catch (Exception ex)
         {
@@ -103,7 +112,8 @@ public class RedisClient : IRedisClient, IDisposable
         try
         {
             var redisKey = BuildKey(key);
-            return await _database.KeyTimeToLiveAsync(redisKey);
+            var resilientPolicy = _pollyService.GetResilientPolicy<Exception>();
+            return await resilientPolicy.ExecuteAsync(async () => await _database.KeyTimeToLiveAsync(redisKey));
         }
         catch (Exception ex)
         {
@@ -117,7 +127,8 @@ public class RedisClient : IRedisClient, IDisposable
         try
         {
             var redisKey = BuildKey(key);
-            return await _database.KeyExpireAsync(redisKey, expiry);
+            var resilientPolicy = _pollyService.GetResilientPolicy<Exception>();
+            return await resilientPolicy.ExecuteAsync(async () => await _database.KeyExpireAsync(redisKey, expiry));
         }
         catch (Exception ex)
         {
@@ -130,8 +141,7 @@ public class RedisClient : IRedisClient, IDisposable
     {
         try
         {
-            var server = _connectionMultiplexer.GetServer(
-                _connectionMultiplexer.GetEndPoints().First());
+            var server = _connectionMultiplexer.GetServer(_connectionMultiplexer.GetEndPoints().First());
 
             var keys = server.Keys(pattern: BuildKey(pattern));
             return await Task.FromResult(keys.Select(k => k.ToString().Replace(_instanceName, "")));
@@ -204,8 +214,12 @@ public class RedisClient : IRedisClient, IDisposable
         try
         {
             var redisKey = BuildKey(key);
-            var values = await _database.SetMembersAsync(redisKey);
-            return values.Select(v => v.ToString()).ToHashSet();
+            var resilientPolicy = _pollyService.GetResilientPolicy<Exception>();
+            return await resilientPolicy.ExecuteAsync(async () =>
+            {
+                var values = await _database.SetMembersAsync(redisKey);
+                return values.Select(v => v.ToString()).ToHashSet();
+            });
         }
         catch (Exception ex)
         {
@@ -220,7 +234,8 @@ public class RedisClient : IRedisClient, IDisposable
         {
             var keyArray = keys as string[] ?? keys.ToArray();
             var redisKeys = keyArray.Select(k => (RedisKey)BuildKey(k)).ToArray();
-            var values = await _database.StringGetAsync(redisKeys);
+            var resilientPolicy = _pollyService.GetResilientPolicy<Exception>();
+            var values = await resilientPolicy.ExecuteAsync(async () => await _database.StringGetAsync(redisKeys));
 
             var result = new Dictionary<string, T?>();
             for (int i = 0; i < keyArray.Length; i++)
@@ -265,12 +280,13 @@ public class RedisClient : IRedisClient, IDisposable
             var lockKey = $"lock:{BuildKey(key)}";
             var token = Guid.NewGuid().ToString();
 
-            return await _database.StringSetAsync(
+            var resilientPolicy = _pollyService.GetResilientPolicy<Exception>();
+            return await resilientPolicy.ExecuteAsync(async () => await _database.StringSetAsync(
                 lockKey,
                 token,
                 expiry,
                 When.NotExists,
-                CommandFlags.DemandMaster);
+                CommandFlags.DemandMaster));
         }
         catch (Exception ex)
         {
@@ -283,8 +299,12 @@ public class RedisClient : IRedisClient, IDisposable
     {
         try
         {
-            var lockKey = $"lock:{BuildKey(key)}";
-            await _database.KeyDeleteAsync(lockKey);
+            var resilientPolicy = _pollyService.GetResilientPolicy<Exception>();
+            await resilientPolicy.ExecuteAsync(async () =>
+            {
+                var lockKey = $"lock:{BuildKey(key)}";
+                return await _database.KeyDeleteAsync(lockKey);
+            });
         }
         catch (Exception ex)
         {

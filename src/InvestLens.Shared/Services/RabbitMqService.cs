@@ -22,9 +22,8 @@ public class RabbitMqService : IRabbitMqService
 
     public async Task EnsureRabbitMqIsRunningAsync(IConfiguration configuration, CancellationToken cancellation)
     {
+        HttpClient client = null!;
         await EnsureCheckLock.WaitAsync(cancellation);
-        var client = new HttpClient();
-        var resilientPolicy = _pollyService.GetHttpResilientPolicy();
 
         try
         {
@@ -32,33 +31,14 @@ public class RabbitMqService : IRabbitMqService
 
             _logger.LogInformation("Waiting for RabbitMQ at {RabbitMqHost}...", configuration["RABBITMQ_HOST"]);
 
-            for (int i = 0; i < 60; i++)
+            var resilientPolicy = _pollyService.GetHttpResilientPolicy();
+            client = new HttpClient();
+
+            await resilientPolicy.ExecuteAsync(async () =>
             {
-                try
-                {
-                    var request = CreateHttpRequest(configuration);
-
-                    var response =
-                        await resilientPolicy.ExecuteAsync(async () => await client.SendAsync(request, cancellation));
-                    
-                    if (response.IsSuccessStatusCode)
-                    {
-                        _logger.LogInformation("RabbitMQ is up!");
-                        break;
-                    }
-                }
-                catch (HttpRequestException)
-                {
-                    // ignore
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Failed while check RabbitMQ.");
-                }
-
-                _logger.LogInformation($"Attempt {i + 1}/60: RabbitMQ not ready, waiting...");
-                await Task.Delay(2000, cancellation);
-            }
+                var request = CreateHttpRequest(configuration);
+                return await client.SendAsync(request, cancellation);
+            });
         }
         catch (Exception ex)
         {
