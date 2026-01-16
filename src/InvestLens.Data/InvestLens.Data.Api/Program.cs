@@ -6,6 +6,7 @@ using InvestLens.Abstraction.Repositories;
 using InvestLens.Abstraction.Services;
 using InvestLens.Data.Api.Extensions;
 using InvestLens.Data.Api.Handlers;
+using InvestLens.Data.Api.Models.Settings;
 using InvestLens.Data.Api.Services;
 using InvestLens.Data.DataContext;
 using InvestLens.Data.Repositories;
@@ -35,18 +36,25 @@ public static class Program
 
         try
         {
-            MoexValidator.Validate(builder.Configuration);
+            // Common
+            var commonSettings = builder.Services.AddCommonSettings(builder.Configuration);
 
             // Add services to the container.
             // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
             builder.Services.AddOpenApi();
 
+            builder.Services.AddGrpc();
+
             builder.Services.AddSingleton<IPollyService, PollyService>();
             builder.Services.AddSingleton<IRabbitMqService, RabbitMqService>();
 
-            string moexBaseUrl = builder.Configuration["MoexBaseUrl"]!;
+            string moexBaseUrl = commonSettings.MoexBaseUrl;
             builder.Services
                 .AddHttpClient("MoexClient", options => options.BaseAddress = new Uri(moexBaseUrl))
+                .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+                {
+                    ServerCertificateCustomValidationCallback = (_, _, _, _) => true
+                })
                 .AddPolicyHandler((provider, _) => provider.GetService<IPollyService>()!.GetHttpRetryPolicy())
                 .AddPolicyHandler((provider, _) => provider.GetService<IPollyService>()!.GetHttpCircuitBreakerPolicy());
 
@@ -103,14 +111,11 @@ public static class Program
                 ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
             });
 
-            app.MapGet("/", () =>
-                Results.Content(
-                    "<html><body>" +
-                    "<a href='securities'>securities</a>" +
-                    "</body></html>",
-                    "text/html"
-                ));
+            app.MapGet("/", () => "Data Service");
+
             app.MapGet("/securities", (IDataService dataService) => dataService.GetSecurities());
+
+            app.MapGrpcService<SecurityGrpcService>();
 
             await app.RunAsync();
         }
@@ -127,8 +132,6 @@ public static class Program
 
     private static async Task EnsureDatabaseInitAsync(WebApplication app)
     {
-        CommonValidator.MigrationValidate(app.Configuration);
-
         try
         {
             using var scope = app.Services.CreateScope();
@@ -137,7 +140,12 @@ public static class Program
             await DatabaseHelper.EnsureDatabaseCreatedAsync(app.Configuration, true);
 
             // 2.2 Получаем целевую миграцию
-            var targetMigration = ConnectionStringHelper.GetTargetMigration(app.Configuration);
+            var commonSettings = app.Services.GetService<ICommonSettings>();
+            if (commonSettings is null)
+            {
+                throw new ArgumentException("CommonSettings must be initialized.");
+            }
+            var targetMigration = commonSettings.TargetMigration;
 
             // 2.3 Применяем миграции
             if (string.IsNullOrEmpty(targetMigration))

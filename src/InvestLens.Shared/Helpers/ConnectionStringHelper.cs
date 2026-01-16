@@ -56,11 +56,6 @@ public static class ConnectionStringHelper
         return configuration["DB_NAME"]!;
     }
 
-    public static string? GetTargetMigration(IConfiguration configuration)
-    {
-        return configuration["TargetMigration"];
-    }
-
     public static (string username, string password) GetServiceUserInfo(IConfiguration configuration)
     {
         var username = configuration["DB_USER"]!;

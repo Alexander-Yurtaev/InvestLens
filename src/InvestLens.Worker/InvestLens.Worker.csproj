@@ -21,6 +21,7 @@
 	<PackageReference Include="AspNetCore.HealthChecks.UI.PostgreSQL.Storage" />
 	<PackageReference Include="Hangfire.AspNetCore" />
 	<PackageReference Include="Hangfire.PostgreSql" />
+	<PackageReference Include="KubernetesClient" />
 	<PackageReference Include="Microsoft.AspNetCore.OpenApi" />
 	<PackageReference Include="Microsoft.Extensions.Options" />
 	<PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" />

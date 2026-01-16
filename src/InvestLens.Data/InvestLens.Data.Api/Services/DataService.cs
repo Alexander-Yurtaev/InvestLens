@@ -1,6 +1,7 @@
 ﻿using InvestLens.Abstraction.MessageBus.Services;
 using InvestLens.Abstraction.Repositories;
 using InvestLens.Abstraction.Services;
+using InvestLens.Data.Api.Models.Settings;
 using InvestLens.Data.Entities;
 using InvestLens.Shared.Constants;
 using InvestLens.Shared.Helpers;
@@ -10,18 +11,18 @@ namespace InvestLens.Data.Api.Services;
 
 public class DataService : IDataService
 {
-    private readonly IConfiguration _configuration;
+    private readonly ICommonSettings _commonSettings;
     private readonly ISecurityRepository _securityRepository;
     private readonly IRefreshStatusRepository _refreshStatusRepository;
     private readonly IMessageBusClient _messageBus;
 
     public DataService(
-        IConfiguration configuration,
+        ICommonSettings commonSettings,
         ISecurityRepository securityRepository,
         IRefreshStatusRepository refreshStatusRepository,
         IMessageBusClient messageBus)
     {
-        _configuration = configuration;
+        _commonSettings = commonSettings;
         _securityRepository = securityRepository;
         _refreshStatusRepository = refreshStatusRepository;
         _messageBus = messageBus;
@@ -36,16 +37,8 @@ public class DataService : IDataService
 
     private async Task RefreshSecurities()
     {
-        var expiredRefreshStatusString = _configuration["ExpiredRefreshStatus"];
-        if (string.IsNullOrEmpty(expiredRefreshStatusString))
-        {
-            throw new InvalidDataException("ExpiredRefreshStatus");
-        }
-
-        var expiredRefreshStatus = int.Parse(expiredRefreshStatusString);
-
         var refreshStatus = await _refreshStatusRepository.GetRefreshStatus(DatabaseConstants.SecurityEntityName);
-        if (refreshStatus is null || !DateTimeHelper.IsRefreshed(refreshStatus.RefreshDate, expiredRefreshStatus))
+        if (refreshStatus is null || !DateTimeHelper.IsRefreshed(refreshStatus.RefreshDate, _commonSettings.ExpiredRefreshStatusMinutes))
         {
             var message = new SecurityRefreshMessage();
             await _messageBus.PublishAsync(message, BusClientConstants.ExchangeName, BusClientConstants.SecuritiesRefreshKey);

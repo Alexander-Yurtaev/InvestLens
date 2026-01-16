@@ -14,6 +14,7 @@ using InvestLens.Shared.MessageBus.Models;
 using InvestLens.Shared.Redis.Extensions;
 using InvestLens.Shared.Services;
 using InvestLens.Shared.Validators;
+using InvestLens.Worker.Extensions;
 using InvestLens.Worker.Filters;
 using InvestLens.Worker.Handlers;
 using InvestLens.Worker.Jobs;
@@ -53,6 +54,9 @@ public static class Program
             CommonValidator.CommonValidate(builder.Configuration);
             CommonValidator.UserValidate(builder.Configuration);
 
+            // Job
+            builder.Services.AddJobSettings(builder.Configuration);
+
             #region Registration of services
 
             // 1. Регистрация сервисов
@@ -75,7 +79,7 @@ public static class Program
                 {
                     options.UseNpgsqlConnection(hangfireConnectionString);
                 },
-                new Hangfire.PostgreSql.PostgreSqlStorageOptions
+                new PostgreSqlStorageOptions
                 {
                     QueuePollInterval = TimeSpan.FromSeconds(15), // Как часто проверять очередь
                     DistributedLockTimeout = TimeSpan.FromMinutes(5),

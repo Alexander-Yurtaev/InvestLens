@@ -1,5 +1,4 @@
-﻿using InvestLens.Shared.MessageBus.Data;
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 
 namespace InvestLens.Shared.Validators;
 
@@ -15,10 +14,5 @@ public static class CommonValidator
     {
         ArgumentException.ThrowIfNullOrEmpty(configuration["DB_USER"], "DB_USER");
         ArgumentException.ThrowIfNullOrEmpty(configuration["DB_PASSWORD"], "DB_PASSWORD");
-    }
-
-    public static void MigrationValidate(IConfiguration configuration)
-    {
-        ArgumentException.ThrowIfNullOrEmpty(configuration["TargetMigration"], "TargetMigration");
     }
 }

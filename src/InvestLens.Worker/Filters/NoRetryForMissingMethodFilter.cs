@@ -1,29 +1,30 @@
 ﻿using Hangfire.States;
 using Hangfire.Common;
+using InvestLens.Worker.Models.Settings;
 
 namespace InvestLens.Worker.Filters;
 
 public class NoRetryForSpecificExceptionsFilter : JobFilterAttribute, IElectStateFilter
 {
     private readonly HashSet<Type> _exceptionsToSkip;
-    private readonly IConfiguration _configuration;
+    private readonly IJobSettings _jobSettings;
     private readonly ILogger<NoRetryForSpecificExceptionsFilter> _logger;
 
     public NoRetryForSpecificExceptionsFilter(
-        IConfiguration configuration,
+        IJobSettings jobSettings,
         Type[] exceptionsToSkip,
         ILogger<NoRetryForSpecificExceptionsFilter> logger)
     {
         _exceptionsToSkip = new HashSet<Type>(exceptionsToSkip);
-        _configuration = configuration;
+        _jobSettings = jobSettings;
         _logger = logger;
         Order = -1; // Самый высокий приоритет
     }
 
     public NoRetryForSpecificExceptionsFilter(
-        IConfiguration configuration,
+        IJobSettings jobSettings,
         ILogger<NoRetryForSpecificExceptionsFilter> logger) : this(
-        configuration,
+        jobSettings,
     [
         typeof(MissingMethodException), typeof(MissingMemberException), typeof(TypeLoadException),
         typeof(FileNotFoundException)
@@ -59,7 +60,7 @@ public class NoRetryForSpecificExceptionsFilter : JobFilterAttribute, IElectStat
             };
 
             // Важно: Устанавливаем параметр RetryCount в максимум
-            var maxRetryCount = int.Parse(_configuration["Hangfire:MaxRetryCount"] ?? "10");
+            var maxRetryCount = _jobSettings.MaxRetryCount;
             context.SetJobParameter("RetryCount", maxRetryCount);
         }
         else

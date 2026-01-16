@@ -15,6 +15,7 @@
     <PackageReference Include="AspNetCore.HealthChecks.Rabbitmq" />
     <PackageReference Include="AspNetCore.HealthChecks.Redis" />
     <PackageReference Include="AspNetCore.HealthChecks.UI.Client" />
+    <PackageReference Include="Grpc.AspNetCore" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" />
     <PackageReference Include="Microsoft.Extensions.DependencyModel" />
@@ -36,6 +37,10 @@
     <ProjectReference Include="..\..\InvestLens.Shared\InvestLens.Shared.csproj" />
     <ProjectReference Include="..\InvestLens.Data.DataContext\InvestLens.Data.DataContext.csproj" />
     <ProjectReference Include="..\InvestLens.Data.Repositories\InvestLens.Data.Repositories.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+	<Protobuf Include="..\..\InvestLens.Data.Shared\Proto\Api\securities.proto" GrpcServices="Server" Link="Protos\securities.proto" />
   </ItemGroup>
 
 </Project>

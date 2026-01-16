@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+package securities.api.v1;
+
+option csharp_namespace = "InvestLens.Data.Securities.Service";
+
+import "google/protobuf/wrappers.proto";
+
+service SecurityServices {
+    rpc GetSecurities (GetSecuritiesRequest) returns (GetSecuritiesResponse);
+}
+
+message GetSecuritiesRequest {
+    // Можно добавить параметры для фильтрации/пагинации в будущем
+}
+
+message GetSecuritiesResponse {
+    repeated Security securities = 1;
+}
+
+message Security {
+    google.protobuf.StringValue id = 1;
+    google.protobuf.StringValue sec_id = 2;
+    google.protobuf.StringValue short_name = 3;
+    google.protobuf.StringValue reg_number = 4;
+    google.protobuf.StringValue name = 5;
+    google.protobuf.StringValue isin = 6;
+    google.protobuf.BoolValue is_traded = 7;
+    google.protobuf.Int32Value emitent_id = 8;
+    google.protobuf.StringValue emitent_title = 9;
+    google.protobuf.StringValue emitent_inn = 10;
+    google.protobuf.StringValue emitent_okpo = 11;
+    google.protobuf.StringValue type = 12;
+    google.protobuf.StringValue group = 13;
+    google.protobuf.StringValue primary_board_id = 14;
+    google.protobuf.StringValue marketprice_board_id = 15;
+}

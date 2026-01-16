@@ -7,6 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Serilog.AspNetCore" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\InvestLens.Abstraction\InvestLens.Abstraction.csproj" />
     <ProjectReference Include="..\InvestLens.Data.DataContext\InvestLens.Data.DataContext.csproj" />
   </ItemGroup>

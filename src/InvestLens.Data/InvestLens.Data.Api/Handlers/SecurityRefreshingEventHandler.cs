@@ -36,17 +36,17 @@ public class SecurityRefreshingEventHandler : IMessageHandler<SecurityRefreshing
 
     public async Task<bool> HandleAsync(SecurityRefreshingMessage message, CancellationToken cancellationToken = default)
     {
-        _logger.LogInformation("Получено поручение обновить список ценных бумаг.");
+        _logger.LogInformation("Получено поручение обновить список ценных бумаг: {MessageId} от {MessageCreatedAt}.", message.MessageId, message.CreatedAt);
 
         try
         {
             await RefreshSecurities();
-            _logger.LogInformation("Cписок ценных бумаг обновлен.");
+            _logger.LogInformation("Cписок ценных бумаг обновлен: {MessageId} от {MessageCreatedAt}.", message.MessageId, message.CreatedAt);
             return true;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Ошибка при обновлении списка ценных бумаг.");
+            _logger.LogError(ex, "Ошибка при обновлении списка ценных бумаг: {MessageId} от {MessageCreatedAt}.", message.MessageId, message.CreatedAt);
             return false;
         }
     }

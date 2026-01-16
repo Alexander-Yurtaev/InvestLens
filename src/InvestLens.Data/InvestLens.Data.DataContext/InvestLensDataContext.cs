@@ -101,7 +101,7 @@ public class InvestLensDataContext : DbContext
             security.Property(s => s.PrimaryBoardId)
                 .HasColumnName("primaryprice_boardid")
                 .HasMaxLength(12)
-                .IsRequired();
+                .IsRequired(false);
 
             security.Property(s => s.MarketpriceBoardId)
                 .HasColumnName("marketprice_boardid")

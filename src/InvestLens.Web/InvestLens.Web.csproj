@@ -12,6 +12,12 @@
 
   <ItemGroup>
 	<PackageReference Include="AspNetCore.HealthChecks.Uris" />
+	<PackageReference Include="Google.Protobuf" />
+	<PackageReference Include="Grpc.Net.Client" />
+	<PackageReference Include="Grpc.Tools">
+	  <PrivateAssets>all</PrivateAssets>
+	  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+	</PackageReference>
 	<PackageReference Include="IdentityModel" />
   </ItemGroup>
 
@@ -33,7 +39,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\InvestLens.Data\InvestLens.Data.Api\InvestLens.Data.Api.csproj" />
     <ProjectReference Include="..\InvestLens.Shared\InvestLens.Shared.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+	<Protobuf Include="..\InvestLens.Data.Shared\Proto\Api\securities.proto" GrpcServices="Client" Link="Protos\securities.proto" />
   </ItemGroup>
 
 </Project>

@@ -1,13 +1,12 @@
 ﻿using HealthChecks.UI.Client;
-using InvestLens.Abstraction.Redis.Data;
 using InvestLens.Abstraction.Services;
 using InvestLens.Shared.Helpers;
 using InvestLens.Shared.MessageBus.Extensions;
 using InvestLens.Shared.Redis.Extensions;
 using InvestLens.Shared.Services;
 using InvestLens.Shared.Validators;
+using InvestLens.Web.Services;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
-using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Serilog;
 
 namespace InvestLens.Web;
@@ -36,14 +35,15 @@ public static class Program
             builder.Services.AddSingleton<IPollyService, PollyService>();
             builder.Services.AddSingleton<IRabbitMqService, RabbitMqService>();
 
+            builder.Services.AddScoped<ISecurityGrpcClientService, SecurityGrpcClientService>();
+
             builder.Services.AddHealthChecks()
                 .AddUrlGroup(new Uri("https://investlens.worker:8081/health"),
                     httpMethod: HttpMethod.Get,
                     name: "Worker Service", tags: ["worker", "job"])
                 .AddUrlGroup(new Uri("https://investlens.data.api:8081/health"),
                     httpMethod: HttpMethod.Get,
-                    name: "Data API", tags: ["data", "api"])
-                ;
+                    name: "Data API", tags: ["data", "api"]);
 
             // Добавляем Health Checks UI с хранилищем в PostgreSQL
             CommonValidator.CommonValidate(builder.Configuration);

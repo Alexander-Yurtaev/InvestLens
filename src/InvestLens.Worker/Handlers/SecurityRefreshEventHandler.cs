@@ -5,6 +5,7 @@ using InvestLens.Shared.Helpers;
 using InvestLens.Shared.MessageBus.Models;
 using InvestLens.Shared.Redis.Enums;
 using InvestLens.Shared.Redis.Models;
+using InvestLens.Worker.Models.Settings;
 
 namespace InvestLens.Worker.Handlers;
 
@@ -12,18 +13,18 @@ public class SecurityRefreshEventHandler : IMessageHandler<SecurityRefreshMessag
 {
     private readonly IRedisClient _redisClient;
     private readonly IMessageBusClient _messageBus;
-    private readonly IConfiguration _configuration;
+    private readonly IJobSettings _jobSettings;
     private readonly ILogger<SecurityRefreshEventHandler> _logger;
 
     public SecurityRefreshEventHandler(
         IRedisClient redisClient,
         IMessageBusClient messageBus,
-        IConfiguration configuration,
+        IJobSettings jobSettings,
         ILogger<SecurityRefreshEventHandler> logger)
     {
         _redisClient = redisClient;
         _messageBus = messageBus;
-        _configuration = configuration;
+        _jobSettings = jobSettings;
         _logger = logger;
     }
 
@@ -43,8 +44,7 @@ public class SecurityRefreshEventHandler : IMessageHandler<SecurityRefreshMessag
 
             if (securitiesRefreshStatus.FinishedAt is not null) // указана дата завершения
             {
-                var delayBetweenRefresh = int.Parse(_configuration["DelayBetweenRefresh"] ?? "0");
-                if (DateTimeHelper.IsRefreshed(securitiesRefreshStatus.FinishedAt.Value, delayBetweenRefresh)) // задача недавно завершилась
+                if (DateTimeHelper.IsRefreshed(securitiesRefreshStatus.FinishedAt.Value, _jobSettings.DelayBetweenRefresh)) // задача недавно завершилась
                 {
                     _logger.LogInformation("Списк ценных бумаг был обновлен недавно. Повторный запуск отменяется.");
                     return true;
