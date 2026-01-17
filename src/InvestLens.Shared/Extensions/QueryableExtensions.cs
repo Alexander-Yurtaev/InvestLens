@@ -16,8 +16,8 @@ public static class QueryableExtensions
         return query;
     }
 
-    public static IQueryable<TEntity> OrderByEx<TEntity, TKey>(this IQueryable<TEntity> query,
-        Func<IQueryable<TEntity>, string, IQueryable<TEntity>> sortCause, string? sort)
+    public static IEnumerable<TEntity> OrderByEx<TEntity, TKey>(this IEnumerable<TEntity> query,
+        Func<IEnumerable<TEntity>, string, IEnumerable<TEntity>> sortCause, string? sort)
         where TEntity : BaseEntity<TKey> where TKey : struct
     {
         if (!string.IsNullOrEmpty(sort))

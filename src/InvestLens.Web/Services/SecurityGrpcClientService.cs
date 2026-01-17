@@ -1,4 +1,5 @@
 ﻿using Grpc.Net.Client;
+using InvestLens.Abstraction.DTOs;
 using InvestLens.Abstraction.Services;
 using InvestLens.Data.Securities.Service;
 using Security = InvestLens.Data.Entities.Security;
@@ -16,7 +17,7 @@ public class SecurityGrpcClientService : ISecurityGrpcClientService
         _logger = logger;
     }
 
-    public async Task<IEnumerable<Security>> GetSecuritiesAsync(int page, int pageSize, string? sort = "", string? filter = "")
+    public async Task<SecuritiesDto> GetSecuritiesAsync(int page, int pageSize, string? sort = "", string? filter = "")
     {
         try
         {
@@ -27,9 +28,13 @@ public class SecurityGrpcClientService : ISecurityGrpcClientService
             using var channel = GrpcChannel.ForAddress(grpcServiceAddress);
             var client = new SecurityServices.SecurityServicesClient(channel);
 
+            var result = new SecuritiesDto();
             var response = await client.GetSecuritiesAsync(new GetSecuritiesRequest { Page = page, PageSize = pageSize, Sort = sort, Filter = filter });
-
-            return response.Data.Select(s => new Security
+            result.Page = response.Page;
+            result.PageSize = response.PageSize;
+            result.TotalPages = response.TotalPages;
+            result.TotalItems = response.TotlaItems;
+            result.Data = response.Data.Select(s => new Security
             {
                 Id = Guid.Parse(s.Id),
                 SecId = s.SecId ?? string.Empty,
@@ -46,7 +51,9 @@ public class SecurityGrpcClientService : ISecurityGrpcClientService
                 Group = s.Group ?? string.Empty,
                 PrimaryBoardId = s.PrimaryBoardId ?? string.Empty,
                 MarketpriceBoardId = s.MarketpriceBoardId ?? string.Empty
-            });
+            }).ToList();
+
+            return result;
         }
         catch (Exception ex)
         {

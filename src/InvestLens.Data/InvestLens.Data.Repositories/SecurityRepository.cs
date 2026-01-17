@@ -117,7 +117,7 @@ public class SecurityRepository : BaseRepository<Security, Guid>, ISecurityRepos
         return result.Data;
     }
 
-    protected override IQueryable<Security> GetSortAction(IQueryable<Security> query, string sort)
+    protected override IEnumerable<Security> GetSortAction(IEnumerable<Security> query, string sort)
     {
         if (string.IsNullOrEmpty(sort)) return query;
         
@@ -147,11 +147,13 @@ public class SecurityRepository : BaseRepository<Security, Guid>, ISecurityRepos
         {
             return query.OrderBy(s => s.Group);
         }
-        else
+
+        if (sort == nameof(Security.IsTraded).ToLower())
         {
-            return query;
+            return query.OrderBy(s => s.IsTraded);
         }
 
+        return query;
     }
 
     protected override IQueryable<Security> GetWhereCause(IQueryable<Security> query, string filter)

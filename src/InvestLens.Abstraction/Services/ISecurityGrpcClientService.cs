@@ -1,8 +1,8 @@
-﻿using InvestLens.Data.Entities;
+﻿using InvestLens.Abstraction.DTOs;
 
 namespace InvestLens.Abstraction.Services;
 
 public interface ISecurityGrpcClientService
 {
-    Task<IEnumerable<Security>> GetSecuritiesAsync(int page, int pageSize, string? sort = "", string? filter = "");
+    Task<SecuritiesDto> GetSecuritiesAsync(int page, int pageSize, string? sort = "", string? filter = "");
 }

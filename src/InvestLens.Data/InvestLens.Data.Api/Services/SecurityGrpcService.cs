@@ -22,7 +22,14 @@ public class SecurityGrpcService : SecurityServices.SecurityServicesBase
         try
         {
             var securities = await _dataService.GetSecurities(request.Page, request.PageSize, request.Sort, request.Filter);
-            var response = new GetSecuritiesResponse();
+            var response = new GetSecuritiesResponse
+            {
+                Page = securities.Page,
+                PageSize = securities.PageSize,
+                TotalPages = securities.TotalPages,
+                TotlaItems = securities.TotalItems
+            };
+
             response.Data.AddRange(securities.Data.Select(s => new Security
             {
                 Id = s.Id.ToString(),

@@ -5,7 +5,6 @@ using InvestLens.Shared.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Polly.Wrap;
-using System.Linq;
 
 namespace InvestLens.Shared.Repositories;
 
@@ -117,21 +116,20 @@ public abstract class BaseRepository<TEntity, TKey> : IBaseRepository<TEntity, T
         {
             var entities = await ResilientPolicy.ExecuteAsync(async () =>
             {
-                var totalItems = await DbSet.CountAsync();
-                var query = DbSet
-                    .Filter<TEntity, TKey>(GetWhereCause, filter)
+                var items = await DbSet.AsNoTracking().Filter<TEntity, TKey>(GetWhereCause, filter).ToListAsync();
+                var query = items
                     .OrderByEx<TEntity, TKey>(GetSortAction, sort)
                     .Skip((page - 1) * pageSize)
                     .Take(pageSize);
 
-                var items = await query.AsNoTracking().ToListAsync();
+                var data = query.ToList();
                 var result = new GetResult<TEntity, TKey>
                 {
                     Page = page,
                     PageSize = pageSize,
-                    TotalPages = (int)Math.Ceiling((double)totalItems / pageSize),
-                    TotalItems = totalItems,
-                    Data = items
+                    TotalPages = (int)Math.Ceiling((double)items.Count / pageSize),
+                    TotalItems = items.Count,
+                    Data = data
                 };
 
                 return result;
@@ -145,7 +143,7 @@ public abstract class BaseRepository<TEntity, TKey> : IBaseRepository<TEntity, T
         }
     }
 
-    protected virtual IQueryable<TEntity> GetSortAction(IQueryable<TEntity> query, string sort)
+    protected virtual IEnumerable<TEntity> GetSortAction(IEnumerable<TEntity> query, string sort)
     {
         return query;
     }
