@@ -11,11 +11,18 @@ service SecurityServices {
 }
 
 message GetSecuritiesRequest {
-    // Можно добавить параметры для фильтрации/пагинации в будущем
+    int32 page = 1;
+    int32 pageSize = 2;
+    google.protobuf.StringValue sort = 3;
+    google.protobuf.StringValue filter = 4;
 }
 
 message GetSecuritiesResponse {
-    repeated Security securities = 1;
+    int32 page = 1;
+    int32 pageSize = 2;
+    int32 totalPages = 3;
+    int32 totlaItems = 4;
+    repeated Security data = 5;
 }
 
 message Security {

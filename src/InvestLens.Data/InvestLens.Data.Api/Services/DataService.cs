@@ -29,10 +29,10 @@ public class DataService : IDataService
     }
 
 
-    public async Task<List<Security>> GetSecurities()
+    public async Task<IGetResult<Security, Guid>> GetSecurities(int page, int pageSize, string? sort = "", string? filter = "")
     {
         await RefreshSecurities();
-        return await _securityRepository.Get();
+        return await _securityRepository.Get(page, pageSize, sort, filter);
     }
 
     private async Task RefreshSecurities()

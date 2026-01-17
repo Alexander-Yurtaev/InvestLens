@@ -110,4 +110,59 @@ public class SecurityRepository : BaseRepository<Security, Guid>, ISecurityRepos
             throw;
         }
     }
+
+    public override async Task<List<Security>> Get()
+    {
+        var result = await Get(1, 10);
+        return result.Data;
+    }
+
+    protected override IQueryable<Security> GetSortAction(IQueryable<Security> query, string sort)
+    {
+        if (string.IsNullOrEmpty(sort)) return query;
+        
+        sort = sort.ToLower();
+
+        if (sort == nameof(Security.SecId).ToLower())
+        {
+            return query.OrderBy(s => s.SecId);
+        }
+
+        if (sort == nameof(Security.Name).ToLower())
+        {
+            return query.OrderBy(s => s.Name);
+        }
+        
+        if (sort == nameof(Security.ShortName).ToLower())
+        {
+            return query.OrderBy(s => s.ShortName);
+        }
+
+        if (sort == nameof(Security.Type).ToLower())
+        {
+            return query.OrderBy(s => s.Type);
+        }
+
+        if (sort == nameof(Security.Group).ToLower())
+        {
+            return query.OrderBy(s => s.Group);
+        }
+        else
+        {
+            return query;
+        }
+
+    }
+
+    protected override IQueryable<Security> GetWhereCause(IQueryable<Security> query, string filter)
+    {
+        if (!string.IsNullOrEmpty(filter))
+        {
+            filter = filter.ToUpper();
+            query = query.Where(s => s.SecId.Contains(filter) ||
+                                     s.Name.ToUpper().Contains(filter) ||
+                                     s.ShortName.ToUpper().Contains(filter));
+        }
+        return query;
+    }
 }

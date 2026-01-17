@@ -1,9 +1,11 @@
 ﻿using InvestLens.Abstraction.Repositories;
 using InvestLens.Abstraction.Services;
 using InvestLens.Data.Entities;
+using InvestLens.Shared.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Polly.Wrap;
+using System.Linq;
 
 namespace InvestLens.Shared.Repositories;
 
@@ -95,7 +97,7 @@ public abstract class BaseRepository<TEntity, TKey> : IBaseRepository<TEntity, T
         }
     }
 
-    public async Task<List<TEntity>> Get()
+    public virtual async Task<List<TEntity>> Get()
     {
         try
         {
@@ -109,7 +111,51 @@ public abstract class BaseRepository<TEntity, TKey> : IBaseRepository<TEntity, T
         }
     }
 
-    public async Task<TEntity?> Get(TKey id)
+    public virtual async Task<IGetResult<TEntity, TKey>> Get(int page, int pageSize, string? sort = "", string? filter = "")
+    {
+        try
+        {
+            var entities = await ResilientPolicy.ExecuteAsync(async () =>
+            {
+                var totalItems = await DbSet.CountAsync();
+                var query = DbSet
+                    .Filter<TEntity, TKey>(GetWhereCause, filter)
+                    .OrderByEx<TEntity, TKey>(GetSortAction, sort)
+                    .Skip((page - 1) * pageSize)
+                    .Take(pageSize);
+
+                var items = await query.AsNoTracking().ToListAsync();
+                var result = new GetResult<TEntity, TKey>
+                {
+                    Page = page,
+                    PageSize = pageSize,
+                    TotalPages = (int)Math.Ceiling((double)totalItems / pageSize),
+                    TotalItems = totalItems,
+                    Data = items
+                };
+
+                return result;
+            });
+            return entities;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Ошибка при получении списка сущностей");
+            throw;
+        }
+    }
+
+    protected virtual IQueryable<TEntity> GetSortAction(IQueryable<TEntity> query, string sort)
+    {
+        return query;
+    }
+
+    protected virtual IQueryable<TEntity> GetWhereCause(IQueryable<TEntity> query, string filter)
+    {
+        return query;
+    }
+
+    public virtual async Task<TEntity?> Get(TKey id)
     {
         try
         {
@@ -128,7 +174,7 @@ public abstract class BaseRepository<TEntity, TKey> : IBaseRepository<TEntity, T
         }
     }
 
-    public async Task<TEntity> Update(TEntity entity)
+    public virtual async Task<TEntity> Update(TEntity entity)
     {
         try
         {
@@ -147,7 +193,7 @@ public abstract class BaseRepository<TEntity, TKey> : IBaseRepository<TEntity, T
         }
     }
 
-    public async Task Delete(TKey id)
+    public virtual async Task Delete(TKey id)
     {
         try
         {

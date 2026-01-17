@@ -1,7 +1,8 @@
-using System.ComponentModel;
 using InvestLens.Abstraction.Services;
 using InvestLens.Data.Entities;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using System.ComponentModel;
 using System.Reflection;
 
 namespace InvestLens.Web.Pages;
@@ -21,10 +22,20 @@ public class SecuritiesModel : PageModel
         _logger = logger;
     }
 
-    public async Task OnGet()
+    public async Task<IActionResult> OnGet(
+        [FromQuery(Name = "p")] int page,
+        [FromQuery(Name = "size")] int pageSize,
+        [FromQuery(Name = "sort")] string? sort,
+        [FromQuery(Name = "filter")] string? filter
+        )
     {
+        page = page < 1 ? 1 : page;
+        pageSize = pageSize < 1 ? 10 : pageSize;
+
         Columns = GetColumns();
-        Securities = (await _service.GetSecuritiesAsync()).ToList();
+        Securities = (await _service.GetSecuritiesAsync(page, pageSize, sort, filter)).ToList();
+
+        return Page();
     }
 
     #region Private Methods

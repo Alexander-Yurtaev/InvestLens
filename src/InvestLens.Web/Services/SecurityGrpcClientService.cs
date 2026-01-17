@@ -16,7 +16,7 @@ public class SecurityGrpcClientService : ISecurityGrpcClientService
         _logger = logger;
     }
 
-    public async Task<IEnumerable<Security>> GetSecuritiesAsync()
+    public async Task<IEnumerable<Security>> GetSecuritiesAsync(int page, int pageSize, string? sort = "", string? filter = "")
     {
         try
         {
@@ -27,9 +27,9 @@ public class SecurityGrpcClientService : ISecurityGrpcClientService
             using var channel = GrpcChannel.ForAddress(grpcServiceAddress);
             var client = new SecurityServices.SecurityServicesClient(channel);
 
-            var response = await client.GetSecuritiesAsync(new GetSecuritiesRequest());
+            var response = await client.GetSecuritiesAsync(new GetSecuritiesRequest { Page = page, PageSize = pageSize, Sort = sort, Filter = filter });
 
-            return response.Securities.Select(s => new Security
+            return response.Data.Select(s => new Security
             {
                 Id = Guid.Parse(s.Id),
                 SecId = s.SecId ?? string.Empty,

@@ -16,7 +16,6 @@ using InvestLens.Shared.MessageBus.Extensions;
 using InvestLens.Shared.MessageBus.Models;
 using InvestLens.Shared.Redis.Extensions;
 using InvestLens.Shared.Services;
-using InvestLens.Shared.Validators;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Serilog;
 
@@ -113,7 +112,7 @@ public static class Program
 
             app.MapGet("/", () => "Data Service");
 
-            app.MapGet("/securities", (IDataService dataService) => dataService.GetSecurities());
+            app.MapGet("/securities", (IDataService dataService) => dataService.GetSecurities(1, 10));
 
             app.MapGrpcService<SecurityGrpcService>();
 

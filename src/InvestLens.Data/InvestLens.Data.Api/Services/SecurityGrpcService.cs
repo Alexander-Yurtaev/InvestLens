@@ -21,9 +21,9 @@ public class SecurityGrpcService : SecurityServices.SecurityServicesBase
     {
         try
         {
-            var securities = await _dataService.GetSecurities();
+            var securities = await _dataService.GetSecurities(request.Page, request.PageSize, request.Sort, request.Filter);
             var response = new GetSecuritiesResponse();
-            response.Securities.AddRange(securities.Select(s => new Security
+            response.Data.AddRange(securities.Data.Select(s => new Security
             {
                 Id = s.Id.ToString(),
                 SecId = s.SecId,

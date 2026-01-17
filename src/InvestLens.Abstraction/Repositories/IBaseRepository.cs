@@ -10,6 +10,8 @@ public interface IBaseRepository<TEntity, TKey> where TEntity : BaseEntity<TKey>
 
     Task<List<TEntity>> Get();
 
+    Task<IGetResult<TEntity, TKey>> Get(int page, int pageSize, string? sort, string? filter);
+
     Task<TEntity?> Get(TKey id);
 
     Task<TEntity> Update(TEntity entity);
