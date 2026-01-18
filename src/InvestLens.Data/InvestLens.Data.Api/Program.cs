@@ -49,7 +49,7 @@ public static class Program
 
             string moexBaseUrl = commonSettings.MoexBaseUrl;
             builder.Services
-                .AddHttpClient("MoexClient", options => options.BaseAddress = new Uri(moexBaseUrl))
+                .AddHttpClient<IMoexClient, MoexClient>(client => client.BaseAddress = new Uri(moexBaseUrl))
                 .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
                 {
                     ServerCertificateCustomValidationCallback = (_, _, _, _) => true
@@ -58,7 +58,6 @@ public static class Program
                 .AddPolicyHandler((provider, _) => provider.GetService<IPollyService>()!.GetHttpCircuitBreakerPolicy());
 
             builder.Services.AddInvestLensDatabaseInfrastructure(builder.Configuration);
-            builder.Services.AddScoped<IMoexClient, MoexClient>();
             builder.Services.AddScoped<ISecurityRepository, SecurityRepository>();
             builder.Services.AddScoped<IRefreshStatusRepository, RefreshStatusRepository>();
             builder.Services.AddScoped<IDataService, DataService>();

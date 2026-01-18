@@ -10,10 +10,10 @@ public class MoexClient : IMoexClient
     private readonly ILogger<MoexClient> _logger;
     private readonly HttpClient _httpClient;
 
-    public MoexClient(IHttpClientFactory factory, ILogger<MoexClient> logger)
+    public MoexClient(HttpClient httpClient, ILogger<MoexClient> logger)
     {
         _logger = logger;
-        _httpClient = factory.CreateClient("MoexClient");
+        _httpClient = httpClient;
     }
 
     /// <summary>
