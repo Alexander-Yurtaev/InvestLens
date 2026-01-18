@@ -10,20 +10,29 @@
     <DockerComposeProjectPath>..\..\..\docker-compose.dcproj</DockerComposeProjectPath>
   </PropertyGroup>
 
+  <ItemGroup Label="HealthChecks">
+	<PackageReference Include="AspNetCore.HealthChecks.NpgSql" />
+	<PackageReference Include="AspNetCore.HealthChecks.Rabbitmq" />
+	<PackageReference Include="AspNetCore.HealthChecks.Redis" />
+	<PackageReference Include="AspNetCore.HealthChecks.UI.Client" />
+  </ItemGroup>
+
+  <ItemGroup Label="Npgsql">
+	<PackageReference Include="Npgsql" />
+	<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+  </ItemGroup>
+
+  <ItemGroup Label="Polly">
+	<PackageReference Include="Microsoft.Extensions.Http.Polly" />
+	<PackageReference Include="Polly" />
+  </ItemGroup>
+
   <ItemGroup>
-    <PackageReference Include="AspNetCore.HealthChecks.NpgSql" />
-    <PackageReference Include="AspNetCore.HealthChecks.Rabbitmq" />
-    <PackageReference Include="AspNetCore.HealthChecks.Redis" />
-    <PackageReference Include="AspNetCore.HealthChecks.UI.Client" />
     <PackageReference Include="Grpc.AspNetCore" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" />
     <PackageReference Include="Microsoft.Extensions.DependencyModel" />
-    <PackageReference Include="Microsoft.Extensions.Http.Polly" />
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" />
-    <PackageReference Include="Npgsql" />
-    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
-    <PackageReference Include="Polly" />
   </ItemGroup>
 
   <ItemGroup Label="Serilog">

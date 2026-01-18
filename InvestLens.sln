@@ -47,6 +47,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{1F31
 		scripts\generate-certificates.bat = scripts\generate-certificates.bat
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InvestLens.TelegramBot", "src\InvestLens.TelegramBot\InvestLens.TelegramBot.csproj", "{A0153B2D-021B-4C5A-A88B-3EAD0112DB3D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -97,6 +99,10 @@ Global
 		{31FE5B7A-35A7-C8A0-E340-2E01B6A1962A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{31FE5B7A-35A7-C8A0-E340-2E01B6A1962A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{31FE5B7A-35A7-C8A0-E340-2E01B6A1962A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A0153B2D-021B-4C5A-A88B-3EAD0112DB3D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A0153B2D-021B-4C5A-A88B-3EAD0112DB3D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A0153B2D-021B-4C5A-A88B-3EAD0112DB3D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A0153B2D-021B-4C5A-A88B-3EAD0112DB3D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -113,6 +119,7 @@ Global
 		{79E37A13-FE23-4B63-B95E-F5468C2778AE} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{35DEA1BA-B40D-4AEB-B6EB-0A3F27B08F2A} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{31FE5B7A-35A7-C8A0-E340-2E01B6A1962A} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{A0153B2D-021B-4C5A-A88B-3EAD0112DB3D} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {F09F387B-F917-4C4C-993B-B2E123B73E68}

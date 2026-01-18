@@ -62,6 +62,13 @@ services:
       - type: bind
         source: C:\docker-certs\invest-lens
         target: /etc/ssl/certs
+
+  investlens.telegrambot:
+    environment:
+      - DOTNET_ENVIRONMENT=Development
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
+      - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
   
   postgres:
     env_file:
