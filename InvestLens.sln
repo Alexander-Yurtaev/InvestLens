@@ -37,7 +37,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InvestLens.Abstraction", "s
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{A6408FA0-0BD2-4160-A3F2-B767A4929F36}"
 	ProjectSection(SolutionItems) = preProject
+		docs\iss.moex\links.md = docs\iss.moex\links.md
 		docs\migrations.md = docs\migrations.md
+		docs\iss.moex\Программный интерфейс ISS.pdf = docs\iss.moex\Программный интерфейс ISS.pdf
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InvestLens.Data.Shared", "src\InvestLens.Data.Shared\InvestLens.Data.Shared.csproj", "{31FE5B7A-35A7-C8A0-E340-2E01B6A1962A}"
