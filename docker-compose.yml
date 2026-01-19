@@ -113,4 +113,3 @@ services:
       - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD:-rabbitmq}
       - RABBITMQ_DEFAULT_VHOST=${RABBITMQ_VHOST:-/}
     restart: unless-stopped
-
