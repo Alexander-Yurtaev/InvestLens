@@ -82,7 +82,6 @@ public class TelegramNotificationService : ITelegramNotificationService
 
             response.EnsureSuccessStatusCode();
             _logger.LogDebug("Telegram notification sent successfully");
-            return;
         }
         catch (Exception ex)
         {

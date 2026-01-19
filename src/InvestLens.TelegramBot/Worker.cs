@@ -2,6 +2,7 @@ using InvestLens.Abstraction.Services;
 
 namespace InvestLens.TelegramBot
 {
+    [Obsolete("This is an example class.")]
     public class Worker : BackgroundService
     {
         private readonly ITelegramNotificationService _telegramService;

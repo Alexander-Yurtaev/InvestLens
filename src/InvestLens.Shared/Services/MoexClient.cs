@@ -59,7 +59,6 @@ public class MoexClient : IMoexClient
 
             data.AddRange(response.Securities.Data);
             start += limit;
-            if (start > 2000) break;
         }
 
         var finishDate = DateTime.UtcNow;

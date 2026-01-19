@@ -1,19 +1,23 @@
-﻿using System.ComponentModel;
-using InvestLens.Abstraction.MessageBus.Services;
+﻿using InvestLens.Abstraction.MessageBus.Services;
+using InvestLens.Abstraction.Services;
 using InvestLens.Shared.Constants;
 using InvestLens.Shared.MessageBus.Models;
+using InvestLens.Shared.Redis.Models;
+using System.ComponentModel;
 
 namespace InvestLens.Worker.Services;
 
 public class SecuritiesService : ISecuritiesService
 {
     private readonly IMessageBusClient _messageBusClient;
+    private readonly IPollyService _pollyService;
     private readonly ILogger<SecuritiesService> _logger;
     private readonly CancellationToken _cancellationToken;
 
-    public SecuritiesService(IMessageBusClient messageBusClient, ILogger<SecuritiesService> logger)
+    public SecuritiesService(IMessageBusClient messageBusClient, IPollyService pollyService, ILogger<SecuritiesService> logger)
     {
         _messageBusClient = messageBusClient;
+        _pollyService = pollyService;
         _logger = logger;
         _cancellationToken = CancellationToken.None;
     }
@@ -52,7 +56,15 @@ public class SecuritiesService : ISecuritiesService
 
     private async Task RefreshSecuritiesAsync()
     {
-        await _messageBusClient.PublishAsync(new SecurityRefreshingMessage(), BusClientConstants.ExchangeName, BusClientConstants.SecuritiesRefreshingKey, _cancellationToken);
+        // ToDo исправить на актуальный Exception.
+        var resilientPolicy = _pollyService.GetResilientPolicy<Exception>();
+        var securitiesRefreshStatus = await resilientPolicy.ExecuteAndCaptureAsync(async () =>
+        {
+            await _messageBusClient.PublishAsync(new SecurityRefreshingMessage(),
+                                                 BusClientConstants.SecuritiesExchangeName, 
+                                                 BusClientConstants.SecuritiesRefreshingKey,
+                                                 _cancellationToken);
+        });
     }
 
     #endregion Private Methods

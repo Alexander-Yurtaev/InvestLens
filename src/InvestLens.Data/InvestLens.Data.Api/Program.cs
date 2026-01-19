@@ -47,9 +47,8 @@ public static class Program
             builder.Services.AddSingleton<IPollyService, PollyService>();
             builder.Services.AddSingleton<IRabbitMqService, RabbitMqService>();
 
-            string moexBaseUrl = commonSettings.MoexBaseUrl;
             builder.Services
-                .AddHttpClient<IMoexClient, MoexClient>(client => client.BaseAddress = new Uri(moexBaseUrl))
+                .AddHttpClient<IMoexClient, MoexClient>(client => client.BaseAddress = new Uri(commonSettings.MoexBaseUrl))
                 .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
                 {
                     ServerCertificateCustomValidationCallback = (_, _, _, _) => true
@@ -94,13 +93,16 @@ public static class Program
 
             await EnsureDatabaseInitAsync(app);
 
-            var rabbitMqService = app.Services.GetService<IRabbitMqService>()!;
-            await rabbitMqService.EnsureRabbitMqIsRunningAsync(app.Configuration, CancellationToken.None);
+            using (var scope = app.Services.CreateScope())
+            {
+                var rabbitMqService = scope.ServiceProvider.GetService<IRabbitMqService>()!;
+                await rabbitMqService.EnsureRabbitMqIsRunningAsync(app.Configuration, CancellationToken.None);
+            }
 
             var messageBus = app.Services.GetRequiredService<IMessageBusClient>();
             await messageBus.SubscribeAsync<SecurityRefreshingMessage, SecurityRefreshingEventHandler>(
-                queueName: "securities-refresh-queue",
-                exchangeName: BusClientConstants.ExchangeName,
+                queueName: BusClientConstants.SecretesRefreshQueue,
+                exchangeName: BusClientConstants.SecuritiesExchangeName,
                 routingKey: BusClientConstants.SecuritiesRefreshingKey);
 
             app.MapHealthChecks("/health", new HealthCheckOptions

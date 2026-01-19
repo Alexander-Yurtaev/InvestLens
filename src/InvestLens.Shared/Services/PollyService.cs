@@ -60,7 +60,7 @@ public class PollyService : IPollyService
             .Handle<TException>()
             .WaitAndRetryAsync(
                 retryCount: 3,
-                sleepDurationProvider: retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)),
+                sleepDurationProvider: retryAttempt => TimeSpan.FromSeconds(10*retryAttempt),
                 onRetry: (_, timespan, retryCount, _) =>
                 {
                     _logger.LogInformation($"Попытка {retryCount}. Ожидание {timespan.TotalSeconds} секунд...");
@@ -69,7 +69,7 @@ public class PollyService : IPollyService
         var circuitBreakerPolicy = Policy
             .Handle<TException>()
             .CircuitBreakerAsync(
-                exceptionsAllowedBeforeBreaking: 2,
+                exceptionsAllowedBeforeBreaking: 3,
                 durationOfBreak: TimeSpan.FromSeconds(30),
                 onBreak: (_, breakDelay) =>
                 {

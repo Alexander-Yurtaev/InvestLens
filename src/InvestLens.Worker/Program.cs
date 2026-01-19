@@ -182,8 +182,8 @@ public static class Program
 
             var messageBus = app.Services.GetRequiredService<IMessageBusClient>();
             await messageBus.SubscribeAsync<SecurityRefreshMessage, SecurityRefreshEventHandler>(
-                queueName: "securities-refresh-queue",
-                exchangeName: BusClientConstants.ExchangeName,
+                queueName: BusClientConstants.SecretesRefreshQueue,
+                exchangeName: BusClientConstants.SecuritiesExchangeName,
                 routingKey: BusClientConstants.SecuritiesRefreshKey);
 
             #region UseHangfire

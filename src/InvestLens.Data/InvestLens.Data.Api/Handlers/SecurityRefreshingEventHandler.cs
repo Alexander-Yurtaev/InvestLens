@@ -14,6 +14,7 @@ public class SecurityRefreshingEventHandler : IMessageHandler<SecurityRefreshing
     private readonly IMoexClient _moexClient;
     private readonly IPollyService _pollyService;
     private readonly IRedisClient _redisClient;
+    private readonly IMessageBusClient _messageBus;
     private readonly ISecurityRepository _securityRepository;
     private readonly IRefreshStatusRepository _refreshStatusRepository;
     private readonly ILogger<SecurityRefreshingEventHandler> _logger;
@@ -22,6 +23,7 @@ public class SecurityRefreshingEventHandler : IMessageHandler<SecurityRefreshing
         IMoexClient moexClient,
         IPollyService pollyService,
         IRedisClient redisClient,
+        IMessageBusClient messageBus,
         ISecurityRepository securityRepository,
         IRefreshStatusRepository refreshStatusRepository,
         ILogger<SecurityRefreshingEventHandler> logger)
@@ -29,6 +31,7 @@ public class SecurityRefreshingEventHandler : IMessageHandler<SecurityRefreshing
         _moexClient = moexClient;
         _pollyService = pollyService;
         _redisClient = redisClient;
+        _messageBus = messageBus;
         _securityRepository = securityRepository;
         _refreshStatusRepository = refreshStatusRepository;
         _logger = logger;
@@ -59,16 +62,21 @@ public class SecurityRefreshingEventHandler : IMessageHandler<SecurityRefreshing
             await _redisClient.GetAsync<SecuritiesRefreshState?>(RedisKeys.SecuritiesRefreshStatusRedisKey));
         if (securitiesRefreshStatus is null)
         {
-            _logger.LogError("В Redis отсутствует информация и SecuritiesRefreshStatus.");
+            _logger.LogError("В Redis отсутствует информация о SecuritiesRefreshStatus.");
             return;
         }
 
         //
         securitiesRefreshStatus.Start();
-        await _redisClient.SetAsync<SecuritiesRefreshState?>(RedisKeys.SecuritiesRefreshStatusRedisKey, securitiesRefreshStatus, TimeSpan.FromHours(24));
+        await _redisClient.SetAsync<SecuritiesRefreshState?>(RedisKeys.SecuritiesRefreshStatusRedisKey,
+            securitiesRefreshStatus, TimeSpan.FromHours(24));
+
+        var operationId = Guid.NewGuid().ToString();
+        DateTime startedAt = DateTime.UtcNow;
 
         try
         {
+            await SendStartMessage(operationId, startedAt, CancellationToken.None);
             // 1. Получаем данные от MOEX
             var securitiesResponse = await _moexClient.GetSecurities();
             if (securitiesResponse is null || securitiesResponse.Securities.Data.Length == 0)
@@ -88,15 +96,65 @@ public class SecurityRefreshingEventHandler : IMessageHandler<SecurityRefreshing
             //
             securitiesRefreshStatus.Finish();
             await _redisClient.SetAsync<SecuritiesRefreshState?>(RedisKeys.SecuritiesRefreshStatusRedisKey, securitiesRefreshStatus, TimeSpan.FromHours(24));
+
+            await SendCompleteMessage(operationId, startedAt, securities.Count, CancellationToken.None);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Ошибка при обновлении данных.");
+
+            await SendErrorMessage(operationId, startedAt, ex, CancellationToken.None);
 
             securitiesRefreshStatus.Reset();
             await _redisClient.SetAsync<SecuritiesRefreshState?>(RedisKeys.SecuritiesRefreshStatusRedisKey, securitiesRefreshStatus, TimeSpan.FromHours(24));
 
             throw;
         }
+    }
+
+    private async Task SendStartMessage(string operationId, DateTime startedAt, CancellationToken cancellationToken)
+    {
+        var message = new StartMessage(operationId)
+        {
+            CreatedAt = startedAt,
+            Details = "Началась загрузка списка ценных бумаг на MOEX."
+        };
+        // ToDo исправить на актуальный Exception.
+        var resilientPolicy = _pollyService.GetResilientPolicy<Exception>();
+        await resilientPolicy.ExecuteAndCaptureAsync(async () =>
+        {
+            await _messageBus.PublishAsync(message, BusClientConstants.TelegramExchangeName,
+                BusClientConstants.TelegramStartKey, cancellationToken);
+        });
+    }
+
+    private async Task SendCompleteMessage(string operationId, DateTime startedAt, int count, CancellationToken cancellationToken)
+    {
+        var message = new CompleteMessage(operationId)
+        {
+            CreatedAt = startedAt,
+            FinishedAt = DateTime.UtcNow,
+            Count = count
+        };
+        // ToDo исправить на актуальный Exception.
+        var resilientPolicy = _pollyService.GetResilientPolicy<Exception>();
+        await resilientPolicy.ExecuteAndCaptureAsync(async () =>
+        {
+            await _messageBus.PublishAsync(message, BusClientConstants.TelegramExchangeName,
+                BusClientConstants.TelegramCompleteKey, cancellationToken);
+        });
+    }
+
+    private async Task SendErrorMessage(string operationId, DateTime startedAt, Exception exception,
+        CancellationToken cancellationToken)
+    {
+        // ToDo исправить на актуальный Exception.
+        var resilientPolicy = _pollyService.GetResilientPolicy<Exception>();
+        await resilientPolicy.ExecuteAndCaptureAsync(async () =>
+        {
+            var message = new ErrorMessage(operationId, DateTime.UtcNow, exception) { CreatedAt = startedAt };
+            await _messageBus.PublishAsync(message, BusClientConstants.TelegramExchangeName,
+                BusClientConstants.TelegramErrorKey, cancellationToken);
+        });
     }
 }

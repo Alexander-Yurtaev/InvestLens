@@ -1,7 +1,5 @@
 services:
   investlens.web:
-    env_file: 
-        - src/InvestLens.Web/.env
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_HTTP_PORTS=8080
@@ -22,8 +20,6 @@ services:
         target: /etc/ssl/certs
   
   investlens.data.api:
-    env_file: 
-      - src/InvestLens.Data/InvestLens.Data.Api/.env
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_HTTP_PORTS=8080
@@ -43,8 +39,6 @@ services:
         target: /etc/ssl/certs
 
   investlens.worker:
-    env_file: 
-      - src/InvestLens.Worker/.env
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_HTTP_PORTS=8080
@@ -71,8 +65,6 @@ services:
       - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
   
   postgres:
-    env_file:
-      - .env
     environment:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:

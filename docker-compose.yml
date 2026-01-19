@@ -2,6 +2,8 @@ services:
   investlens.web:
     image: ${DOCKER_REGISTRY-}investlensweb
     container_name: investlens.web
+    env_file: 
+      - src/InvestLens.Web/.env
     environment:
       - DB_HOST=postgres_multi_db
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
@@ -22,6 +24,8 @@ services:
   investlens.data.api:
     image: ${DOCKER_REGISTRY-}investlensdataapi
     container_name: investlens.data.api
+    env_file: 
+      - src/InvestLens.Data/InvestLens.Data.Api/.env
     environment:
       - DB_HOST=postgres_multi_db
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
@@ -44,6 +48,8 @@ services:
   investlens.worker:
     image: ${DOCKER_REGISTRY-}investlensworker
     container_name: investlens.worker
+    env_file: 
+      - src/InvestLens.Worker/.env
     environment:
       - DB_HOST=postgres_multi_db
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
@@ -65,6 +71,15 @@ services:
   investlens.telegrambot:
     image: ${DOCKER_REGISTRY-}investlenstelegrambot
     container_name: investlens.telegrambot
+    env_file: 
+      - src/InvestLens.TelegramBot/.env
+    environment:
+      - BOT_TOKEN=${BOT_TOKEN}
+      - CHAT_ID=${CHAT_ID}
+      - RABBITMQ_HOST=investlens_rabbitmq
+      - RABBITMQ_USER=${RABBITMQ_USER}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+      - RABBITMQ_VHOST=${RABBITMQ_VHOST}
     build:
       context: .
       dockerfile: src/InvestLens.TelegramBot/Dockerfile
@@ -72,10 +87,14 @@ services:
   postgres:
     image: postgres:15-alpine
     container_name: postgres_multi_db
+    env_file:
+      - .env
 
   redis:
     image: redis:7-alpine
     container_name: investlens_redis
+    env_file:
+      - .env
     command: >
       redis-server
       --appendonly yes
@@ -89,6 +108,8 @@ services:
   rabbitmq:
     image: rabbitmq:3-management-alpine
     container_name: investlens_rabbitmq
+    env_file:
+      - .env
     environment:
       - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER:-rabbitmq}
       - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD:-rabbitmq}
