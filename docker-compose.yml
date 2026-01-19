@@ -74,8 +74,6 @@ services:
     env_file: 
       - src/InvestLens.TelegramBot/.env
     environment:
-      # - BOT_TOKEN=${BOT_TOKEN}
-      # - CHAT_ID=${CHAT_ID}
       - RABBITMQ_HOST=investlens_rabbitmq
       - RABBITMQ_USER=${RABBITMQ_USER}
       - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
