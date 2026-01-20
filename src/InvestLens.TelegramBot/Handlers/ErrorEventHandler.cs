@@ -6,10 +6,10 @@ namespace InvestLens.TelegramBot.Handlers;
 
 public class ErrorEventHandler : IMessageHandler<ErrorMessage>
 {
-    private readonly ITelegramNotificationService _telegramService;
+    private readonly ITelegramService _telegramService;
     private readonly ILogger<ErrorEventHandler> _logger;
 
-    public ErrorEventHandler(ITelegramNotificationService telegramService, ILogger<ErrorEventHandler> logger)
+    public ErrorEventHandler(ITelegramService telegramService, ILogger<ErrorEventHandler> logger)
     {
         _telegramService = telegramService;
         _logger = logger;

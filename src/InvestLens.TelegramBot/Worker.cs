@@ -5,10 +5,10 @@ namespace InvestLens.TelegramBot
     [Obsolete("This is an example class.")]
     public class Worker : BackgroundService
     {
-        private readonly ITelegramNotificationService _telegramService;
+        private readonly ITelegramService _telegramService;
         private readonly ILogger<Worker> _logger;
 
-        public Worker(ITelegramNotificationService telegramService, ILogger<Worker> logger)
+        public Worker(ITelegramService telegramService, ILogger<Worker> logger)
         {
             _telegramService = telegramService;
             _logger = logger;

@@ -1,65 +1,108 @@
+using InvestLens.Abstraction.Redis.Data;
+using InvestLens.Abstraction.Redis.Services;
 using InvestLens.Abstraction.Services;
+using InvestLens.Data.Shared.Redis;
+using InvestLens.Shared.Constants;
+using InvestLens.TelegramBot.Data;
 
-namespace InvestLens.TelegramBot
+namespace InvestLens.TelegramBot;
+
+public class InvestLensBot : BackgroundService
 {
-    public class InvestLensBot : BackgroundService
+    private const string NextUpdateIdKey = "NextUpdateId";
+
+    private readonly ITelegramService _telegramService;
+    private readonly IRedisClient _redisClient;
+    private readonly IRedisClient _redisClientForInstance;
+    private readonly ILogger<InvestLensBot> _logger;
+
+    public InvestLensBot(
+        IRedisSettings redisSettings,
+        ITelegramService telegramService,
+        IServiceProvider serviceProvider,
+        ILogger<InvestLensBot> logger)
     {
-        private readonly ITelegramNotificationService _telegramService;
-        private readonly ILogger<InvestLensBot> _logger;
+        _redisClient = serviceProvider.GetService<IRedisClient>()!;
+        _redisClientForInstance = serviceProvider.GetKeyedService<IRedisClient>(redisSettings.InstanceName)!;
+        _telegramService = telegramService;
+        _logger = logger;
+    }
 
-        public InvestLensBot(ITelegramNotificationService telegramService, ILogger<InvestLensBot> logger)
-        {
-            _telegramService = telegramService;
-            _logger = logger;
-        }
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        await InitAsync();
 
-        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+        while (!stoppingToken.IsCancellationRequested)
         {
-            while (!stoppingToken.IsCancellationRequested)
+            try
             {
-                var operationId = Guid.NewGuid().ToString();
-
-                try
-                {
-                    // Уведомление о начале
-                    _logger.LogInformation("Запуск длинной операции обработки данных {OperationId}", operationId);
-                    await _telegramService.NotifyOperationStartAsync(
-                        operationId,
-                        "Запуск длинной операции обработки данных",
-                        stoppingToken);
-
-                    var startTime = DateTime.UtcNow;
-
-                    // Долгая операция
-                    await PerformLongOperation(operationId, stoppingToken);
-
-                    var duration = DateTime.UtcNow - startTime;
-
-                    // Уведомление об окончании
-                    _logger.LogInformation("Операция успешно завершена {OperationId}", operationId);
-                    await _telegramService.NotifyOperationCompleteAsync(
-                        operationId,
-                        "Операция успешно завершена",
-                        duration,
-                        stoppingToken);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Ошибка при выполнении длинной операции {OperationId}", operationId);
-                    await _telegramService.NotifyErrorAsync($"Длинная операция {operationId}", ex, stoppingToken);
-                }
-
-                _logger.LogInformation("Операция завершена {OperationId}", operationId);
-                await _telegramService.NotifyAsync($"Операция завершена {operationId}", stoppingToken);
-
-                break;
+                await GetUpdatesOperation(stoppingToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Ошибка при проверке сообщений в чат-боте.");
+                await _telegramService.NotifyErrorAsync("Ошибка при проверке сообщений в чат-боте.", ex, stoppingToken);
             }
         }
+    }
 
-        private async Task PerformLongOperation(string operationId, CancellationToken cancellationToken)
+    private async Task InitAsync()
+    {
+        // NextUpdateId
+        var isExists = await _redisClientForInstance.ExistsAsync(NextUpdateIdKey);
+        if (!isExists)
         {
-            // Имитация длительной операции
-            await Task.Delay(TimeSpan.FromMinutes(5), cancellationToken);
+            await _redisClientForInstance.SetAsync(NextUpdateIdKey, new UpdateData());
+        }
+    }
+
+    private async Task GetUpdatesOperation(CancellationToken cancellationToken)
+    {
+        // 1. Получить из Redis nextUpdateId
+        var updateData = await _redisClientForInstance.GetAsync<UpdateData>(NextUpdateIdKey) ?? new UpdateData();
+
+        // 2. Получить из Telegram данные
+        var response = await _telegramService.GetUpdatesAsync(updateData.NextUpdateId, cancellationToken);
+
+        // 3. Обработать полученные данные
+        if (response is null)
+        {
+            _logger.LogWarning("От Telegram не пришли данные.");
+        }
+        else if (!response.Ok)
+        {
+            _logger.LogWarning("От Telegram получена ошибка: {ErrorCode} - {Description}", response.ErrorCode, response.Description);
+        }
+        else
+        {
+            foreach (var result in response.Result)
+            {
+                switch (result.Message.Text)
+                {
+                    case "/info.securities":
+                        await InfoOperation(cancellationToken);
+                        break;
+                }
+
+                updateData.NextUpdateId = result.UpdateId + 1;
+
+                // 4. Обновить nextUpdateId в Redis
+                await _redisClientForInstance.SetAsync(NextUpdateIdKey, updateData);
+            }
+        }
+    }
+
+    private async Task InfoOperation(CancellationToken cancellationToken)
+    {
+        // получить из Redis статус загрузки Securities
+        var jobStatus = await _redisClient.GetAsync<JobStatus>(RedisKeys.JobStatusKey);
+        if (jobStatus is null)
+        {
+            await _telegramService.NotifyInfoAsync("Статус", "Нет статуса.", cancellationToken);
+        }
+        else
+        {
+            await _telegramService.NotifyInfoAsync(jobStatus.Title, jobStatus.Message, cancellationToken);
         }
     }
 }

@@ -1,14 +1,17 @@
-using DotNetEnv.Configuration;
+﻿using DotNetEnv.Configuration;
 using InvestLens.Abstraction.MessageBus.Services;
 using InvestLens.Abstraction.Services;
 using InvestLens.Shared.Constants;
 using InvestLens.Shared.MessageBus.Extensions;
 using InvestLens.Shared.MessageBus.Models;
+using InvestLens.Shared.Redis.Extensions;
 using InvestLens.Shared.Services;
 using InvestLens.Shared.Validators;
 using InvestLens.TelegramBot.Handlers;
 using InvestLens.TelegramBot.Models;
 using InvestLens.TelegramBot.Services;
+using Serilog;
+using ErrorEventHandler = InvestLens.TelegramBot.Handlers.ErrorEventHandler;
 
 namespace InvestLens.TelegramBot;
 
@@ -30,42 +33,50 @@ public static class Program
             options.ChatId = builder.Configuration["CHAT_ID"]!;
         });
 
-        builder.Services.AddSingleton<IPollyService, PollyService>();
-        builder.Services.AddSingleton<IRabbitMqService, RabbitMqService>();
+        try
+        {
+            builder.Services.AddSingleton<IPollyService, PollyService>();
+            builder.Services.AddSingleton<IRabbitMqService, RabbitMqService>();
 
-        builder.Services.AddHttpClient<ITelegramNotificationService, TelegramNotificationService>()
-            .ConfigureHttpClient(client =>
-            {
-                client.BaseAddress = new Uri("https://api.telegram.org/");
-            })
-            .AddPolicyHandler((provider, _) => provider.GetService<IPollyService>()!.GetHttpRetryPolicy())
-            .AddPolicyHandler((provider, _) => provider.GetService<IPollyService>()!.GetHttpCircuitBreakerPolicy());
+            builder.Services.AddHttpClient<ITelegramService, TelegramService>()
+                .ConfigureHttpClient(client => { client.BaseAddress = new Uri("https://api.telegram.org/"); })
+                .AddPolicyHandler((provider, _) => provider.GetService<IPollyService>()!.GetHttpRetryPolicy())
+                .AddPolicyHandler((provider, _) => provider.GetService<IPollyService>()!.GetHttpCircuitBreakerPolicy());
 
-        // RabbitMQ
-        builder.Services.AddRabbitMqSettings(builder.Configuration).AddRabbitMqClient();
-        builder.Services.AddScoped<InformationEventHandler>();
-        builder.Services.AddScoped<Handlers.ErrorEventHandler>();
+            // Redis
+            builder.Services.AddRedisSettings(builder.Configuration).AddRedisClient();
 
-        //builder.Services.AddHostedService<Worker>();
+            // RabbitMQ
+            builder.Services.AddRabbitMqSettings(builder.Configuration).AddRabbitMqClient();
+            builder.Services.AddScoped<InformationEventHandler>();
+            builder.Services.AddScoped<ErrorEventHandler>();
 
-        var host = builder.Build();
+            builder.Services.AddHostedService<InvestLensBot>();
 
-        var messageBus = host.Services.GetRequiredService<IMessageBusClient>();
-        await messageBus.SubscribeAsync<StartMessage, InformationEventHandler>(
-            queueName: BusClientConstants.TelegramStartQueue,
-            exchangeName: BusClientConstants.TelegramExchangeName,
-            routingKey: BusClientConstants.TelegramStartKey);
+            var host = builder.Build();
 
-        await messageBus.SubscribeAsync<CompleteMessage, InformationEventHandler>(
-            queueName: BusClientConstants.TelegramCompleteQueue,
-            exchangeName: BusClientConstants.TelegramExchangeName,
-            routingKey: BusClientConstants.TelegramCompleteKey);
+            var messageBus = host.Services.GetRequiredService<IMessageBusClient>();
+            await messageBus.SubscribeAsync<StartMessage, InformationEventHandler>(
+                queueName: BusClientConstants.TelegramStartQueue,
+                exchangeName: BusClientConstants.TelegramExchangeName,
+                routingKey: BusClientConstants.TelegramStartKey);
 
-        await messageBus.SubscribeAsync<ErrorMessage, Handlers.ErrorEventHandler>(
-            queueName: BusClientConstants.TelegramErrorQueue,
-            exchangeName: BusClientConstants.TelegramExchangeName,
-            routingKey: BusClientConstants.TelegramErrorKey);
+            await messageBus.SubscribeAsync<CompleteMessage, InformationEventHandler>(
+                queueName: BusClientConstants.TelegramCompleteQueue,
+                exchangeName: BusClientConstants.TelegramExchangeName,
+                routingKey: BusClientConstants.TelegramCompleteKey);
 
-        await host.RunAsync();
+            await messageBus.SubscribeAsync<ErrorMessage, ErrorEventHandler>(
+                queueName: BusClientConstants.TelegramErrorQueue,
+                exchangeName: BusClientConstants.TelegramExchangeName,
+                routingKey: BusClientConstants.TelegramErrorKey);
+
+            await host.RunAsync();
+        }
+        catch (Exception ex)
+        {
+            Log.Fatal(ex, "Приложение остановлено из‑за исключения");
+            throw;
+        }
     }
 }

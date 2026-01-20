@@ -74,6 +74,9 @@ services:
     env_file: 
       - src/InvestLens.TelegramBot/.env
     environment:
+      - REDIS_HOST=investlens_redis
+      - REDIS_USER=${REDIS_USER}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
       - RABBITMQ_HOST=investlens_rabbitmq
       - RABBITMQ_USER=${RABBITMQ_USER}
       - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
@@ -81,6 +84,10 @@ services:
     build:
       context: .
       dockerfile: src/InvestLens.TelegramBot/Dockerfile
+    depends_on:
+      - postgres
+      - redis
+      - rabbitmq
 
   postgres:
     image: postgres:15-alpine
