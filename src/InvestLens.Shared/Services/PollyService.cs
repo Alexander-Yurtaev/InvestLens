@@ -1,9 +1,10 @@
-﻿using System.Net.Sockets;
-using InvestLens.Abstraction.Services;
+﻿using InvestLens.Abstraction.Services;
 using Microsoft.Extensions.Logging;
 using Polly;
 using Polly.Extensions.Http;
-using Polly.Wrap;
+using RabbitMQ.Client.Exceptions;
+using StackExchange.Redis;
+using System.Net.Sockets;
 
 namespace InvestLens.Shared.Services;
 
@@ -16,32 +17,43 @@ public class PollyService : IPollyService
         _logger = logger;
     }
 
+    // HTTP политики
     public IAsyncPolicy<HttpResponseMessage> GetHttpRetryPolicy()
     {
         return HttpPolicyExtensions
-            .HandleTransientHttpError() // Обрабатывает 5xx и 408 ошибки
+            .HandleTransientHttpError()
             .OrResult(msg => msg.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
             .WaitAndRetryAsync(
                 retryCount: 3,
-                sleepDurationProvider: retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)), // Экспоненциальная задержка
-                onRetry: (_, timespan, retryAttempt, _) =>
+                sleepDurationProvider: retryAttempt =>
+                    TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)),
+                onRetry: (result, timespan, retryAttempt, _) =>
                 {
-                    _logger.LogWarning($"Повторная попытка {retryAttempt} через {timespan.TotalSeconds} секунд...");
+                    _logger.LogWarning(
+                        "HTTP Retry {RetryAttempt} after {Seconds}s. Status: {StatusCode}",
+                        retryAttempt, timespan.TotalSeconds,
+                        result.Result?.StatusCode ?? 0);
                 });
     }
 
-    public IAsyncPolicy<HttpResponseMessage> GetRabbitMqRetryPolicy()
+    // RabbitMQ политики
+    public AsyncPolicy GetRabbitMqRetryPolicy()
     {
-        return HttpPolicyExtensions
-            .HandleTransientHttpError() // Обрабатывает 5xx и 408 ошибки
+        return Policy
+            .Handle<BrokerUnreachableException>()
             .Or<SocketException>()
-            .OrResult(msg => msg.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
+            .Or<TimeoutException>()
+            .Or<OperationInterruptedException>()
             .WaitAndRetryAsync(
-                retryCount: 3,
-                sleepDurationProvider: retryAttempt => TimeSpan.FromSeconds(10 * retryAttempt), // Экспоненциальная задержка
-                onRetry: (_, timespan, retryAttempt, _) =>
+                retryCount: 5,
+                sleepDurationProvider: retryAttempt =>
+                    TimeSpan.FromSeconds(5 * retryAttempt), // 5, 10, 15, 20, 25 сек
+                onRetry: (exception, timespan, retryAttempt, _) =>
                 {
-                    _logger.LogWarning($"Повторная попытка {retryAttempt} через {timespan.TotalSeconds} секунд...");
+                    _logger.LogWarning(
+                        exception,
+                        "RabbitMQ Retry {RetryAttempt} after {Seconds}s",
+                        retryAttempt, timespan.TotalSeconds);
                 });
     }
 
@@ -50,62 +62,181 @@ public class PollyService : IPollyService
         return HttpPolicyExtensions
             .HandleTransientHttpError()
             .CircuitBreakerAsync(
-                handledEventsAllowedBeforeBreaking: 5,
+                handledEventsAllowedBeforeBreaking: 5, // Увеличил с 3 до 5
                 durationOfBreak: TimeSpan.FromSeconds(30),
-                onBreak: (_, breakDelay) =>
+                onBreak: (result, breakDelay) =>
                 {
-                    _logger.LogWarning($"Circuit Breaker открыт на {breakDelay.TotalSeconds} секунд");
+                    _logger.LogError(
+                        "HTTP Circuit Breaker открыт на {Seconds}s. Status: {StatusCode}",
+                        breakDelay.TotalSeconds,
+                        result.Result?.StatusCode ?? 0);
                 },
                 onReset: () =>
                 {
-                    _logger.LogWarning("Circuit Breaker сброшен");
+                    _logger.LogInformation("HTTP Circuit Breaker сброшен");
+                },
+                onHalfOpen: () =>
+                {
+                    _logger.LogInformation("HTTP Circuit Breaker в Half-Open состоянии");
                 });
     }
 
+    public AsyncPolicy GetRabbitMqCircuitBreakerPolicy()
+    {
+        return Policy
+            .Handle<BrokerUnreachableException>()
+            .Or<SocketException>()
+            .Or<TimeoutException>()
+            .Or<OperationInterruptedException>()
+            .CircuitBreakerAsync(
+                exceptionsAllowedBeforeBreaking: 15, // Должно быть > retryCount!
+                durationOfBreak: TimeSpan.FromSeconds(60),
+                onBreak: (exception, breakDelay) =>
+                {
+                    _logger.LogError(
+                        exception,
+                        "RabbitMQ Circuit Breaker открыт на {Seconds}s",
+                        breakDelay.TotalSeconds);
+                },
+                onReset: () =>
+                {
+                    _logger.LogInformation("RabbitMQ Circuit Breaker сброшен");
+                },
+                onHalfOpen: () =>
+                {
+                    _logger.LogInformation("RabbitMQ Circuit Breaker в Half-Open состоянии");
+                });
+    }
+
+    // Комбинированные политики с правильным порядком
     public IAsyncPolicy<HttpResponseMessage> GetHttpResilientPolicy()
     {
         var retryPolicy = GetHttpRetryPolicy();
         var circuitBreakerPolicy = GetHttpCircuitBreakerPolicy();
+
         return Policy.WrapAsync(retryPolicy, circuitBreakerPolicy);
     }
 
-    public IAsyncPolicy<HttpResponseMessage> GetRabbitMqResilientPolicy()
+    public AsyncPolicy GetRabbitMqResilientPolicy()
     {
         var retryPolicy = GetRabbitMqRetryPolicy();
-        var circuitBreakerPolicy = GetHttpCircuitBreakerPolicy();
+        var circuitBreakerPolicy = GetRabbitMqCircuitBreakerPolicy();
+
         return Policy.WrapAsync(retryPolicy, circuitBreakerPolicy);
     }
 
-    public AsyncPolicyWrap GetResilientPolicy<TException>() where TException: Exception
+    // Универсальный метод с правильными настройками
+    public AsyncPolicy GetResilientPolicy<TException>(
+        int retryCount = 5,
+        int circuitBreakerThreshold = 10)
+        where TException : Exception
     {
-        // 1. Создаем политики
         var retryPolicy = Policy
             .Handle<TException>()
             .WaitAndRetryAsync(
-                retryCount: 3,
-                sleepDurationProvider: retryAttempt => TimeSpan.FromSeconds(10*retryAttempt),
-                onRetry: (_, timespan, retryCount, _) =>
+                retryCount: retryCount,
+                sleepDurationProvider: retryAttempt =>
+                    TimeSpan.FromSeconds(5 * retryAttempt),
+                onRetry: (exception, timespan, rc, _) =>
                 {
-                    _logger.LogInformation($"Попытка {retryCount}. Ожидание {timespan.TotalSeconds} секунд...");
+                    _logger.LogWarning(
+                        exception,
+                        "Попытка {RetryCount} после исключения {ExceptionType}. Ожидание {Seconds} секунд...",
+                        rc, typeof(TException).Name, timespan.TotalSeconds);
                 });
 
         var circuitBreakerPolicy = Policy
             .Handle<TException>()
             .CircuitBreakerAsync(
-                exceptionsAllowedBeforeBreaking: 3,
+                exceptionsAllowedBeforeBreaking: circuitBreakerThreshold,
                 durationOfBreak: TimeSpan.FromSeconds(30),
-                onBreak: (_, breakDelay) =>
+                onBreak: (exception, breakDelay) =>
                 {
-                    _logger.LogInformation($"Цепь разомкнута на {breakDelay.TotalSeconds} секунд!");
+                    _logger.LogError(
+                        exception,
+                        "Цепь разомкнута на {Seconds} секунд после исключения {ExceptionType}!",
+                        breakDelay.TotalSeconds, typeof(TException).Name);
                 },
                 onReset: () =>
                 {
-                    _logger.LogInformation("Цепь восстановлена!");
+                    _logger.LogInformation("Цепь для {ExceptionType} восстановлена!", typeof(TextReader).Name);
+                },
+                onHalfOpen: () =>
+                {
+                    _logger.LogInformation("Цепь для {ExceptionType} в состоянии тестирования...", typeof(TException).Name);
                 });
 
-        // 2. Объединяем политики (сначала Retry, затем Circuit Breaker)
-        var resilientPolicy = Policy.WrapAsync(retryPolicy, circuitBreakerPolicy);
+        return Policy.WrapAsync(retryPolicy, circuitBreakerPolicy);
+    }
 
-        return resilientPolicy;
+    // Дополнительно: политика с экспоненциальными backoff для RabbitMQ
+    public AsyncPolicy GetRabbitMqExponentialBackoffPolicy()
+    {
+        return Policy
+            .Handle<BrokerUnreachableException>()
+            .Or<SocketException>()
+            .Or<TimeoutException>()
+            .WaitAndRetryAsync(
+                retryCount: 6,
+                sleepDurationProvider: retryAttempt =>
+                    TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)), // 2, 4, 8, 16, 32, 64 сек
+                onRetry: (_, timespan, retryAttempt, _) =>
+                {
+                    _logger.LogWarning(
+                        "RabbitMQ: Попытка {Attempt} через {Seconds}s",
+                        retryAttempt, timespan.TotalSeconds);
+                })
+            .WrapAsync(
+                Policy
+                    .Handle<BrokerUnreachableException>()
+                    .Or<SocketException>()
+                    .Or<TimeoutException>()
+                    .CircuitBreakerAsync(
+                        exceptionsAllowedBeforeBreaking: 12,
+                        durationOfBreak: TimeSpan.FromMinutes(2)));
+    }
+
+    public AsyncPolicy GetRedisResilientPolicy()
+    {
+        var retryPolicy = Policy
+            .Handle<RedisException>() // Если у вас есть такой тип
+            .Or<TimeoutException>()
+            .Or<SocketException>()
+            .WaitAndRetryAsync(
+                retryCount: 3, // Redis обычно быстрый - меньше попыток
+                sleepDurationProvider: retryAttempt =>
+                    TimeSpan.FromMilliseconds(100 * retryAttempt), // Быстрые retry
+                onRetry: (exception, timespan, retryAttempt, _) =>
+                {
+                    _logger.LogWarning(
+                        exception,
+                        "Redis Retry {RetryAttempt} after {Milliseconds}ms",
+                        retryAttempt, timespan.TotalMilliseconds);
+                });
+
+        var circuitBreakerPolicy = Policy
+            .Handle<RedisException>()
+            .Or<TimeoutException>()
+            .Or<SocketException>()
+            .CircuitBreakerAsync(
+                exceptionsAllowedBeforeBreaking: 5,
+                durationOfBreak: TimeSpan.FromSeconds(10), // Короткое время для Redis
+                onBreak: (exception, breakDelay) =>
+                {
+                    _logger.LogError(
+                        exception,
+                        "Redis Circuit Breaker opened for {Seconds}s",
+                        breakDelay.TotalSeconds);
+                },
+                onReset: () =>
+                {
+                    _logger.LogInformation("Redis Circuit Breaker reset");
+                },
+                onHalfOpen: () =>
+                {
+                    _logger.LogInformation("Redis Circuit Breaker half-open");
+                });
+
+        return Policy.WrapAsync(circuitBreakerPolicy, retryPolicy);
     }
 }

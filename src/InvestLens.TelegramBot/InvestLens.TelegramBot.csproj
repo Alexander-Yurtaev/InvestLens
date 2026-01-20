@@ -7,6 +7,7 @@
     <UserSecretsId>dotnet-InvestLens.TelegramBot-f973f20e-423d-442c-8562-e363d84107a3</UserSecretsId>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     <DockerfileContext>..\..</DockerfileContext>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
 
   <ItemGroup>

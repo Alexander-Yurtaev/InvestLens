@@ -2,8 +2,6 @@
 using InvestLens.Abstraction.Services;
 using InvestLens.Shared.Constants;
 using InvestLens.Shared.MessageBus.Models;
-using InvestLens.Shared.Redis.Models;
-using System.ComponentModel;
 
 namespace InvestLens.Worker.Services;
 
@@ -58,7 +56,7 @@ public class SecuritiesService : ISecuritiesService
     {
         // ToDo исправить на актуальный Exception.
         var resilientPolicy = _pollyService.GetResilientPolicy<Exception>();
-        var securitiesRefreshStatus = await resilientPolicy.ExecuteAndCaptureAsync(async () =>
+        await resilientPolicy.ExecuteAndCaptureAsync(async () =>
         {
             await _messageBusClient.PublishAsync(new SecurityRefreshingMessage(),
                                                  BusClientConstants.SecuritiesExchangeName, 

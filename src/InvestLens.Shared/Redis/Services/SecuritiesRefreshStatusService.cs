@@ -4,18 +4,18 @@ using InvestLens.Abstraction.Redis.Services;
 using InvestLens.Abstraction.Services;
 using InvestLens.Shared.Constants;
 using InvestLens.Shared.Redis.Models;
-using Polly.Wrap;
+using Polly;
 
 namespace InvestLens.Shared.Redis.Services;
 
 public class SecuritiesRefreshStatusService : ISecuritiesRefreshStatusService
 {
     private readonly IRedisClient _redisClient;
-    private readonly AsyncPolicyWrap _resilientPolicy;
+    private readonly AsyncPolicy _resilientPolicy;
 
     public SecuritiesRefreshStatusService(IPollyService pollyService, IRedisClient redisClient)
     {
-        _resilientPolicy = pollyService.GetResilientPolicy<Exception>();
+        _resilientPolicy = pollyService.GetRedisResilientPolicy();
         _redisClient = redisClient;
     }
 

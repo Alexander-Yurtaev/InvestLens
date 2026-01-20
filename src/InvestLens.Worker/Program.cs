@@ -50,6 +50,8 @@ public static class Program
             // Add services to the container.
             builder.Services.AddOpenApi();
 
+            builder.Services.AddSingleton<IPollyService, PollyService>();
+
             // Добавляем Hangfire
             CommonValidator.CommonValidate(builder.Configuration);
             CommonValidator.UserValidate(builder.Configuration);
@@ -138,6 +140,8 @@ public static class Program
                 {
                     setup.SetHeaderText("Worker Service Health");
                     setup.SetEvaluationTimeInSeconds(30);
+
+                    setup.DisableDatabaseMigrations();
                 })
                 .AddInMemoryStorage();
 
@@ -277,7 +281,7 @@ public static class Program
                 }
 
                 // Тест 3: Попытка подключения к разным портам
-                var portsToTest = new[] { 8080, 8081, 80, 443 };
+                int[] portsToTest = [8080, 8081, 80, 443];
 
                 foreach (var port in portsToTest)
                 {

@@ -4,7 +4,7 @@ using InvestLens.Data.Entities;
 using InvestLens.Shared.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Polly.Wrap;
+using Polly;
 
 namespace InvestLens.Shared.Repositories;
 
@@ -12,7 +12,7 @@ public abstract class BaseRepository<TEntity, TKey> : IBaseRepository<TEntity, T
 {
     protected readonly DbContext Context;
     protected readonly IPollyService PollyService;
-    protected AsyncPolicyWrap ResilientPolicy;
+    protected AsyncPolicy ResilientPolicy;
     protected readonly ILogger<BaseRepository<TEntity, TKey>> Logger;
     protected readonly DbSet<TEntity> DbSet;
 

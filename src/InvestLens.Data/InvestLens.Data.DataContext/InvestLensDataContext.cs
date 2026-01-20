@@ -9,8 +9,9 @@ public class InvestLensDataContext : DbContext
 {
     private readonly IConfiguration _configuration;
 
-    public InvestLensDataContext(DbContextOptions<InvestLensDataContext> options) : base(options)
+    public InvestLensDataContext(DbContextOptions<InvestLensDataContext> options, IConfiguration configuration) : base(options)
     {
+        _configuration = configuration;
     }
 
     public DbSet<Security> Security { get; set; }
@@ -49,7 +50,7 @@ public class InvestLensDataContext : DbContext
                 .HasColumnName("shortname")
                 .HasMaxLength(189)
                 .HasDefaultValue("")
-                .IsRequired(true);
+                .IsRequired();
 
             security.Property(s => s.RegNumber)
                 .HasColumnName("regnumber")

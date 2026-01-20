@@ -5,23 +5,23 @@ namespace InvestLens.Data.Shared.Responses;
 public record SecuritiesResponse
 {
     [JsonPropertyName("securities")]
-    public Securities Securities { get; set; }
+    public required Securities Securities { get; set; }
 }
 
 public record Securities
 {
     [JsonPropertyName("columns")]
-    public string[] Columns { get; set; }
+    public required string[] Columns { get; set; }
 
     [JsonPropertyName("metadata")]
-    public Dictionary<string, ColumnMetadata> Metadata { get; set; }
+    public required Dictionary<string, ColumnMetadata> Metadata { get; set; }
 
     [JsonPropertyName("data")]
-    public object[][] Data { get; set; }
+    public required object[][] Data { get; set; }
 }
 
 public record ColumnMetadata
 {
     [JsonPropertyName("type")]
-    public string Type { get; set; }
+    public required string Type { get; set; }
 }

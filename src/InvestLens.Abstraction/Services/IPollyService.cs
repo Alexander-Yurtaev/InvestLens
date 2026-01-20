@@ -6,8 +6,18 @@ namespace InvestLens.Abstraction.Services;
 public interface IPollyService
 {
     IAsyncPolicy<HttpResponseMessage> GetHttpRetryPolicy();
+    AsyncPolicy GetRabbitMqRetryPolicy();
     IAsyncPolicy<HttpResponseMessage> GetHttpCircuitBreakerPolicy();
+    AsyncPolicy GetRabbitMqCircuitBreakerPolicy();
     IAsyncPolicy<HttpResponseMessage> GetHttpResilientPolicy();
-    IAsyncPolicy<HttpResponseMessage> GetRabbitMqRetryPolicy();
-    AsyncPolicyWrap GetResilientPolicy<TException>() where TException : Exception;
+    AsyncPolicy GetRabbitMqResilientPolicy();
+
+    AsyncPolicy GetResilientPolicy<TException>(
+        int retryCount = 5,
+        int circuitBreakerThreshold = 10)
+        where TException : Exception;
+
+    AsyncPolicy GetRabbitMqExponentialBackoffPolicy();
+
+    AsyncPolicy GetRedisResilientPolicy();
 }

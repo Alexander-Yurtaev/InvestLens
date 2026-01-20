@@ -1,10 +1,13 @@
-﻿using InvestLens.Shared.Validators;
+﻿using InvestLens.Abstraction.Services;
+using InvestLens.Shared.Validators;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
 using Serilog;
+using System.Net.Sockets;
+using Polly;
 
 namespace InvestLens.Shared.Helpers;
 
@@ -16,23 +19,67 @@ public static class DatabaseHelper
     {
         CommonValidator.CommonValidate(app.Configuration);
 
+        Log.Information("Starting database initialization...");
+
         try
         {
             using var scope = app.Services.CreateScope();
+            var pollyService = scope.ServiceProvider.GetService<IPollyService>()!;
 
-            // Создаем БД
-            await DatabaseHelper.EnsureDatabaseCreatedAsync(app.Configuration, true);
+            // 1. Ждем доступность PostgreSQL
+            await WaitForPostgresAsync(app.Configuration);
+
+            // 2. Создаем БД и пользователя
+            await EnsureDatabaseCreatedAsync(pollyService, app.Configuration, true);
 
             Log.Information("Database initialized successfully");
         }
         catch (Exception ex)
         {
-            Log.Fatal(ex, "Database initialization fatal");
+            Log.Fatal(ex, "Database initialization failed");
             throw;
         }
     }
 
-    public static async Task EnsureDatabaseCreatedAsync(IConfiguration configuration, bool createUser=false)
+    public static async Task WaitForPostgresAsync(IConfiguration configuration)
+    {
+        var masterConnectionString = ConnectionStringHelper.GetMasterConnectionString(configuration);
+
+        var waitPolicy = Policy
+            .Handle<NpgsqlException>()
+            .Or<SocketException>()
+            .WaitAndRetryAsync(
+                retryCount: 40, // До 40 попыток (~3-4 минуты)
+                sleepDurationProvider: _ => TimeSpan.FromSeconds(5),
+                onRetry: (exception, retryAttempt, _, _) =>
+                {
+                    Log.Warning(
+                        "Waiting for PostgreSQL ({RetryAttempt}/40): {Message}",
+                        retryAttempt, exception.Message);
+                });
+
+        Log.Information("Waiting for PostgreSQL to become available...");
+
+        await waitPolicy.ExecuteAsync(async () =>
+        {
+            await using var connection = new NpgsqlConnection(masterConnectionString);
+            await connection.OpenAsync();
+
+            // Проверяем, что PostgreSQL полностью запущен
+            await using var cmd = new NpgsqlCommand("SELECT 1", connection);
+            var result = await cmd.ExecuteScalarAsync();
+
+            if (result?.ToString() != "1")
+            {
+                throw new InvalidOperationException("PostgreSQL is not fully initialized");
+            }
+
+            Log.Information("PostgreSQL is ready");
+        });
+    }
+
+    public static async Task EnsureDatabaseCreatedAsync(IPollyService pollyService, IConfiguration configuration,
+        bool createUser = false)
     {
         CommonValidator.CommonValidate(configuration);
         if (createUser)
@@ -42,8 +89,27 @@ public static class DatabaseHelper
 
         // Создаем master connection string (к БД postgres)
         string masterConnectionString = ConnectionStringHelper.GetMasterConnectionString(configuration);
+
+        // Создаем политику retry для подключения
+        var retryPolicy = Policy
+            .Handle<NpgsqlException>()
+            .Or<SocketException>()
+            .WaitAndRetryAsync(
+                retryCount: 20,
+                sleepDurationProvider: _ => TimeSpan.FromSeconds(3),
+                onRetry: (exception, _, retryAttempt, _) =>
+                {
+                    Log.Warning(
+                        "Database connection retry {RetryAttempt}/20: {Message}",
+                        retryAttempt, exception.Message);
+                });
+
         await using var masterConnection = new NpgsqlConnection(masterConnectionString);
-        await masterConnection.OpenAsync();
+
+        await retryPolicy.ExecuteAsync(async () =>
+        {
+            await masterConnection.OpenAsync();
+        });
 
         // Проверяем существование базы данных
         var databaseName = ConnectionStringHelper.GetDatabaseName(configuration);

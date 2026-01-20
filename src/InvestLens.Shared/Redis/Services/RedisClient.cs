@@ -14,7 +14,7 @@ public class RedisClient : IRedisClient, IDisposable
     private readonly string _instanceName;
     private readonly ILogger<RedisClient> _logger;
     private IConnectionMultiplexer _connectionMultiplexer = null!;
-    private IDatabase _database;
+    private IDatabase _database = null!;
     private bool _disposed;
     private readonly SemaphoreSlim _connectionLock = new(1, 1);
 
@@ -318,7 +318,7 @@ public class RedisClient : IRedisClient, IDisposable
         await _connectionLock.WaitAsync();
         try
         {
-            if (_connectionMultiplexer?.IsConnected != true)
+            if (!_connectionMultiplexer.IsConnected)
             {
                 _connectionMultiplexer = await ConnectionMultiplexer.ConnectAsync(_settings.ConnectionString);
             }

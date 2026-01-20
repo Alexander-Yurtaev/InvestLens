@@ -55,8 +55,7 @@ public static class Program
                 {
                     ServerCertificateCustomValidationCallback = (_, _, _, _) => true
                 })
-                .AddPolicyHandler((provider, _) => provider.GetService<IPollyService>()!.GetHttpRetryPolicy())
-                .AddPolicyHandler((provider, _) => provider.GetService<IPollyService>()!.GetHttpCircuitBreakerPolicy());
+                .AddPolicyHandler((provider, _) => provider.GetRequiredService<IPollyService>().GetHttpResilientPolicy());
 
             builder.Services.AddInvestLensDatabaseInfrastructure(builder.Configuration);
             builder.Services.AddScoped<ISecurityRepository, SecurityRepository>();
@@ -140,18 +139,22 @@ public static class Program
         {
             using var scope = app.Services.CreateScope();
 
-            // 2.1 Создаем БД и пользователя
-            await DatabaseHelper.EnsureDatabaseCreatedAsync(app.Configuration, true);
+            // 1. Сначала ждем доступность PostgreSQL
+            await DatabaseHelper.WaitForPostgresAsync(app.Configuration);
 
-            // 2.2 Получаем целевую миграцию
+            // 2. Создаем БД и пользователя
+            var pollyService = scope.ServiceProvider.GetService<IPollyService>()!;
+            await DatabaseHelper.EnsureDatabaseCreatedAsync(pollyService, app.Configuration, true);
+
+            // 3. Получаем целевую миграцию
             var commonSettings = app.Services.GetService<ICommonSettings>();
             if (commonSettings is null)
             {
                 throw new ArgumentException("CommonSettings must be initialized.");
             }
-            var targetMigration = commonSettings.TargetMigration;
 
-            // 2.3 Применяем миграции
+            // 4. Применяем миграции
+            var targetMigration = commonSettings.TargetMigration;
             if (string.IsNullOrEmpty(targetMigration))
             {
                 await DatabaseHelper.ApplyMigrationsAsync<InvestLensDataContext>(scope.ServiceProvider);

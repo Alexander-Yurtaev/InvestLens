@@ -45,10 +45,10 @@ public static class Program
                     httpMethod: HttpMethod.Get,
                     name: "Data API", tags: ["data", "api"]);
 
-            // Добавляем Health Checks UI с хранилищем в PostgreSQL
             CommonValidator.CommonValidate(builder.Configuration);
             CommonValidator.UserValidate(builder.Configuration);
-            await EnsureDatabaseInitAsync(builder.Configuration);
+
+            // Добавляем Health Checks UI с хранилищем в PostgreSQL
             builder.Services.AddHealthChecksUI(setup =>
                 {
                     setup.SetHeaderText("InvestLens - System Health Dashboard");
@@ -59,10 +59,16 @@ public static class Program
                     // Настройка интервала опроса
                     setup.SetEvaluationTimeInSeconds(30);
                     setup.SetApiMaxActiveRequests(3);
+
+                    setup.DisableDatabaseMigrations();
                 })
                 .AddInMemoryStorage();
 
             var app = builder.Build();
+
+            using var scope = app.Services.CreateScope();
+            var pollyService = scope.ServiceProvider.GetService<IPollyService>()!;
+            await EnsureDatabaseInitAsync(pollyService, app.Configuration);
 
             // 3. Использование Serilog для логирования запросов
             app.UseSerilogRequestLogging();
@@ -121,11 +127,11 @@ public static class Program
         }
     }
 
-    private static async Task EnsureDatabaseInitAsync(IConfiguration configuration)
+    private static async Task EnsureDatabaseInitAsync(IPollyService pollyService, IConfiguration configuration)
     {
         try
         {
-            await DatabaseHelper.EnsureDatabaseCreatedAsync(configuration, true);
+            await DatabaseHelper.EnsureDatabaseCreatedAsync(pollyService, configuration, true);
             Log.Information("Database initialized successfully");
         }
         catch (Exception ex)

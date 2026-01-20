@@ -10,9 +10,8 @@ namespace InvestLens.Web.Pages;
 public class SecuritiesModel : PageModel
 {
     private readonly ISecurityGrpcClientService _service;
-    private readonly ILogger<SecuritiesModel> _logger;
 
-    public IEnumerable<string> Columns { get; set; }
+    public IEnumerable<string> Columns { get; set; } = [];
 
     public List<Security> Securities { get; set; }
 
@@ -25,10 +24,10 @@ public class SecuritiesModel : PageModel
     public string CurrentFilter { get; set; } = "";
     public Dictionary<string, string> SortColumns { get; set; } = new();
 
-    public SecuritiesModel(ISecurityGrpcClientService service, ILogger<SecuritiesModel> logger)
+    public SecuritiesModel(ISecurityGrpcClientService service, List<Security> securities)
     {
         _service = service;
-        _logger = logger;
+        Securities = securities;
         InitializeSortColumns();
     }
 
@@ -69,7 +68,7 @@ public class SecuritiesModel : PageModel
 
     public string GetSortUrl(string columnName)
     {
-        string sortOrder = "";
+        string sortOrder;
 
         if (CurrentSort == columnName)
             sortOrder = $"{columnName}_desc";
