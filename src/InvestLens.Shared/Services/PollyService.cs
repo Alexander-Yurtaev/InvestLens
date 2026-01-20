@@ -1,4 +1,5 @@
-﻿using InvestLens.Abstraction.Services;
+﻿using System.Net.Sockets;
+using InvestLens.Abstraction.Services;
 using Microsoft.Extensions.Logging;
 using Polly;
 using Polly.Extensions.Http;
@@ -29,6 +30,21 @@ public class PollyService : IPollyService
                 });
     }
 
+    public IAsyncPolicy<HttpResponseMessage> GetRabbitMqRetryPolicy()
+    {
+        return HttpPolicyExtensions
+            .HandleTransientHttpError() // Обрабатывает 5xx и 408 ошибки
+            .Or<SocketException>()
+            .OrResult(msg => msg.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
+            .WaitAndRetryAsync(
+                retryCount: 3,
+                sleepDurationProvider: retryAttempt => TimeSpan.FromSeconds(10 * retryAttempt), // Экспоненциальная задержка
+                onRetry: (_, timespan, retryAttempt, _) =>
+                {
+                    _logger.LogWarning($"Повторная попытка {retryAttempt} через {timespan.TotalSeconds} секунд...");
+                });
+    }
+
     public IAsyncPolicy<HttpResponseMessage> GetHttpCircuitBreakerPolicy()
     {
         return HttpPolicyExtensions
@@ -49,6 +65,13 @@ public class PollyService : IPollyService
     public IAsyncPolicy<HttpResponseMessage> GetHttpResilientPolicy()
     {
         var retryPolicy = GetHttpRetryPolicy();
+        var circuitBreakerPolicy = GetHttpCircuitBreakerPolicy();
+        return Policy.WrapAsync(retryPolicy, circuitBreakerPolicy);
+    }
+
+    public IAsyncPolicy<HttpResponseMessage> GetRabbitMqResilientPolicy()
+    {
+        var retryPolicy = GetRabbitMqRetryPolicy();
         var circuitBreakerPolicy = GetHttpCircuitBreakerPolicy();
         return Policy.WrapAsync(retryPolicy, circuitBreakerPolicy);
     }

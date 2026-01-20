@@ -1,10 +1,12 @@
 ﻿using DotNetEnv.Configuration;
 using InvestLens.Abstraction.MessageBus.Services;
+using InvestLens.Abstraction.Redis.Services;
 using InvestLens.Abstraction.Services;
 using InvestLens.Shared.Constants;
 using InvestLens.Shared.MessageBus.Extensions;
 using InvestLens.Shared.MessageBus.Models;
 using InvestLens.Shared.Redis.Extensions;
+using InvestLens.Shared.Redis.Services;
 using InvestLens.Shared.Services;
 using InvestLens.Shared.Validators;
 using InvestLens.TelegramBot.Handlers;
@@ -51,6 +53,7 @@ public static class Program
             builder.Services.AddScoped<InformationEventHandler>();
             builder.Services.AddScoped<ErrorEventHandler>();
 
+            builder.Services.AddSingleton<ISecuritiesRefreshStatusService, SecuritiesRefreshStatusService>();
             builder.Services.AddHostedService<InvestLensBot>();
 
             var host = builder.Build();

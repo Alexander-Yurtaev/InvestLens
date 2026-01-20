@@ -3,5 +3,4 @@
 public static class RedisKeys
 {
     public const string SecuritiesRefreshStatusRedisKey = "Securities.RefreshStatus";
-    public const string JobStatusKey = "JobStatus";
 }

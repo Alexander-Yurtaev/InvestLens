@@ -40,9 +40,9 @@ public static class ResponseToEntityConverters
         switch (metadata.Type)
         {
             case "string":
-                return element?.GetString();
+                return element.Value.GetString();
             case "int32":
-                var v = element?.GetInt32();
+                var v = element.Value.GetInt32();
                 return (propertyType == typeof(bool)) ? v > 0 : v;
             default:
                 throw new Exception($"Unknown type: {metadata.Type}");

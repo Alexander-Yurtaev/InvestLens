@@ -1,12 +1,14 @@
-﻿namespace InvestLens.Shared.MessageBus.Models;
+﻿using InvestLens.Abstraction.DTOs;
+
+namespace InvestLens.Shared.MessageBus.Models;
 
 public class ErrorMessage : BaseTelegramMessage
 {
     public ErrorMessage(string operationId, DateTime finishedAt, Exception? exception) : base(operationId)
     {
         FinishedAt = finishedAt;
-        Exception = exception;
+        Exception = new ExceptionDto(exception?.Message ?? "Произошла ошибка", "SECURITY_REFRESH_ERROR", DateTime.UtcNow);
     }
 
-    public Exception? Exception { get; set; }
+    public ExceptionDto Exception { get; set; }
 }

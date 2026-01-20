@@ -17,9 +17,9 @@ public class ErrorEventHandler : IMessageHandler<ErrorMessage>
 
     public async Task<bool> HandleAsync(ErrorMessage message, CancellationToken cancellationToken = default)
     {
-        _logger.LogInformation("Операция {OperationId} завершилась неудачно: {Exception}", message.OperationId, message.Exception?.Message ?? "");
+        _logger.LogInformation("Операция {OperationId} завершилась неудачно: {Exception}", message.OperationId, message.Exception.Message);
         await _telegramService.NotifyOperationStartAsync(message.OperationId,
-            $"Операция {message.OperationId} завершилась неудачно: {message.Exception?.Message}", cancellationToken);
+            $"Операция {message.OperationId} завершилась неудачно: {message.Exception.Message}", cancellationToken);
         return await Task.FromResult(true);
     }
 }

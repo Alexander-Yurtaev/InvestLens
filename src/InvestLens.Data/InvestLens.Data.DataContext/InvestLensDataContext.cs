@@ -48,7 +48,8 @@ public class InvestLensDataContext : DbContext
             security.Property(s => s.ShortName)
                 .HasColumnName("shortname")
                 .HasMaxLength(189)
-                .IsRequired();
+                .HasDefaultValue("")
+                .IsRequired(true);
 
             security.Property(s => s.RegNumber)
                 .HasColumnName("regnumber")

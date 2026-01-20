@@ -58,7 +58,7 @@ public abstract class BaseRepository<TEntity, TKey> : IBaseRepository<TEntity, T
         }
     }
 
-    public virtual async Task<List<TEntity>> Add(List<TEntity> entities, bool orUpdate=false)
+    public virtual async Task<int> Add(List<TEntity> entities, bool orUpdate=false)
     {
         try
         {
@@ -86,8 +86,8 @@ public abstract class BaseRepository<TEntity, TKey> : IBaseRepository<TEntity, T
                 });
             }
 
-            await ResilientPolicy.ExecuteAsync(async () => await Context.SaveChangesAsync());
-            return entities;
+            var affected = await ResilientPolicy.ExecuteAsync(async () => await Context.SaveChangesAsync());
+            return affected;
         }
         catch (Exception ex)
         {

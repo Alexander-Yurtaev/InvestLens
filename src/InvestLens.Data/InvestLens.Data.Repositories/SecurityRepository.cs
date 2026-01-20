@@ -61,7 +61,7 @@ public class SecurityRepository : BaseRepository<Security, Guid>, ISecurityRepos
         }
     }
 
-    public override async Task<List<Security>> Add(List<Security> entities, bool orUpdate = false)
+    public override async Task<int> Add(List<Security> entities, bool orUpdate = false)
     {
         try
         {
@@ -101,8 +101,8 @@ public class SecurityRepository : BaseRepository<Security, Guid>, ISecurityRepos
                 });
             }
 
-            await ResilientPolicy.ExecuteAsync(async () => await Context.SaveChangesAsync());
-            return entities;
+            var affected = await ResilientPolicy.ExecuteAsync(async () => await Context.SaveChangesAsync());
+            return affected;
         }
         catch (Exception ex)
         {

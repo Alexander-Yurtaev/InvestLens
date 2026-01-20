@@ -5,7 +5,6 @@ using InvestLens.Abstraction.Services;
 using InvestLens.Data.Api.Converter;
 using InvestLens.Shared.Constants;
 using InvestLens.Shared.MessageBus.Models;
-using InvestLens.Shared.Redis.Models;
 
 namespace InvestLens.Data.Api.Handlers;
 
@@ -13,7 +12,7 @@ public class SecurityRefreshingEventHandler : IMessageHandler<SecurityRefreshing
 {
     private readonly IMoexClient _moexClient;
     private readonly IPollyService _pollyService;
-    private readonly IRedisClient _redisClient;
+    private readonly ISecuritiesRefreshStatusService _statusService;
     private readonly IMessageBusClient _messageBus;
     private readonly ISecurityRepository _securityRepository;
     private readonly IRefreshStatusRepository _refreshStatusRepository;
@@ -22,7 +21,7 @@ public class SecurityRefreshingEventHandler : IMessageHandler<SecurityRefreshing
     public SecurityRefreshingEventHandler(
         IMoexClient moexClient,
         IPollyService pollyService,
-        IRedisClient redisClient,
+        ISecuritiesRefreshStatusService statusService,
         IMessageBusClient messageBus,
         ISecurityRepository securityRepository,
         IRefreshStatusRepository refreshStatusRepository,
@@ -30,7 +29,7 @@ public class SecurityRefreshingEventHandler : IMessageHandler<SecurityRefreshing
     {
         _moexClient = moexClient;
         _pollyService = pollyService;
-        _redisClient = redisClient;
+        _statusService = statusService;
         _messageBus = messageBus;
         _securityRepository = securityRepository;
         _refreshStatusRepository = refreshStatusRepository;
@@ -43,7 +42,9 @@ public class SecurityRefreshingEventHandler : IMessageHandler<SecurityRefreshing
 
         try
         {
-            await RefreshSecurities();
+            var progress = await _statusService.Init();
+            await SendStartMessage(progress.Item1, progress.Item2, cancellationToken);
+            await RefreshSecurities(progress.Item1, progress.Item2, cancellationToken);
             _logger.LogInformation("Cписок ценных бумаг обновлен: {MessageId} от {MessageCreatedAt}.", message.MessageId, message.CreatedAt);
             return true;
         }
@@ -54,59 +55,38 @@ public class SecurityRefreshingEventHandler : IMessageHandler<SecurityRefreshing
         }
     }
 
-    private async Task RefreshSecurities()
+    private async Task RefreshSecurities(string operationId, DateTime startedAt, CancellationToken cancellationToken)
     {
-        // ToDo исправить на актуальный Exception.
-        var resilientPolicy = _pollyService.GetResilientPolicy<Exception>();
-        var securitiesRefreshStatus = await resilientPolicy.ExecuteAsync(async () =>
-            await _redisClient.GetAsync<SecuritiesRefreshState?>(RedisKeys.SecuritiesRefreshStatusRedisKey));
-        if (securitiesRefreshStatus is null)
-        {
-            _logger.LogError("В Redis отсутствует информация о SecuritiesRefreshStatus.");
-            return;
-        }
-
-        //
-        securitiesRefreshStatus.Start();
-        await _redisClient.SetAsync<SecuritiesRefreshState?>(RedisKeys.SecuritiesRefreshStatusRedisKey,
-            securitiesRefreshStatus, TimeSpan.FromHours(24));
-
-        var operationId = Guid.NewGuid().ToString();
-        DateTime startedAt = DateTime.UtcNow;
-
         try
         {
-            await SendStartMessage(operationId, startedAt, CancellationToken.None);
             // 1. Получаем данные от MOEX
-            var securitiesResponse = await _moexClient.GetSecurities();
+            var securitiesResponse = await _moexClient.GetSecurities(operationId);
             if (securitiesResponse is null || securitiesResponse.Securities.Data.Length == 0)
             {
                 throw new InvalidOperationException("Не были получены данные от MOEX.");
             }
 
             // 2. Конвертируем данные из Response в Entity
+            await _statusService.SetProcessing();
             var securities = ResponseToEntityConverters.SecurityResponseToEntityConverter(securitiesResponse);
 
             // 3. Сохраняем/обновляем данные в БД
-            await _securityRepository.Add(securities, true);
+            await _statusService.SetSaving();
+            var affected = await _securityRepository.Add(securities, true);
+
+            await _statusService.SetCompleted(affected);
 
             // 4. Обновляем RefreshStatus
             await _refreshStatusRepository.SetRefreshStatus(DatabaseConstants.SecurityEntityName);
 
-            //
-            securitiesRefreshStatus.Finish();
-            await _redisClient.SetAsync<SecuritiesRefreshState?>(RedisKeys.SecuritiesRefreshStatusRedisKey, securitiesRefreshStatus, TimeSpan.FromHours(24));
-
-            await SendCompleteMessage(operationId, startedAt, securities.Count, CancellationToken.None);
+            await SendCompleteMessage(operationId, startedAt, securities.Count, cancellationToken);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Ошибка при обновлении данных.");
 
-            await SendErrorMessage(operationId, startedAt, ex, CancellationToken.None);
-
-            securitiesRefreshStatus.Reset();
-            await _redisClient.SetAsync<SecuritiesRefreshState?>(RedisKeys.SecuritiesRefreshStatusRedisKey, securitiesRefreshStatus, TimeSpan.FromHours(24));
+            await _statusService.SetFailed(ex.Message);
+            await SendErrorMessage(operationId, startedAt, ex, cancellationToken);
 
             throw;
         }

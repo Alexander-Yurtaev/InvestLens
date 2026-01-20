@@ -1,9 +1,9 @@
 ﻿using InvestLens.Abstraction.MessageBus.Services;
+using InvestLens.Abstraction.Redis.Enums;
 using InvestLens.Abstraction.Redis.Services;
 using InvestLens.Shared.Constants;
 using InvestLens.Shared.Helpers;
 using InvestLens.Shared.MessageBus.Models;
-using InvestLens.Shared.Redis.Enums;
 using InvestLens.Shared.Redis.Models;
 using InvestLens.Worker.Models.Settings;
 
@@ -15,6 +15,9 @@ public class SecurityRefreshEventHandler : IMessageHandler<SecurityRefreshMessag
     private readonly IMessageBusClient _messageBus;
     private readonly IJobSettings _jobSettings;
     private readonly ILogger<SecurityRefreshEventHandler> _logger;
+
+    private SecuritiesRefreshStatus[] _idleStatuses =
+        [SecuritiesRefreshStatus.None, SecuritiesRefreshStatus.Completed, SecuritiesRefreshStatus.Failed];
 
     public SecurityRefreshEventHandler(
         IRedisClient redisClient,
@@ -33,31 +36,21 @@ public class SecurityRefreshEventHandler : IMessageHandler<SecurityRefreshMessag
         _logger.LogInformation("Получено поручение обновить список ценных бумаг.");
 
         // 1. Проверяем, что в данный момент нет запущенной задачи для обновления данных
-        var securitiesRefreshStatus = await _redisClient.GetAsync<SecuritiesRefreshState?>(RedisKeys.SecuritiesRefreshStatusRedisKey);
+        var securitiesRefreshStatus = await _redisClient.GetAsync<SecuritiesRefreshProgress?>(RedisKeys.SecuritiesRefreshStatusRedisKey);
         if (securitiesRefreshStatus is not null) // есть запись о статусе
         {
-            if (securitiesRefreshStatus.Status == SecuritiesRefreshStatus.Refreshing) // задача запущена
+            if (!_idleStatuses.Contains(securitiesRefreshStatus.Status)) // задача запущена
             {
                 _logger.LogInformation("Обновление списка ценных бумаг уже запущено.");
                 return true;
             }
 
-            if (securitiesRefreshStatus.FinishedAt is not null) // указана дата завершения
+            if (DateTimeHelper.IsRefreshed(securitiesRefreshStatus.UpdatedAt, _jobSettings.DelayBetweenRefresh)) // задача недавно завершилась
             {
-                if (DateTimeHelper.IsRefreshed(securitiesRefreshStatus.FinishedAt.Value, _jobSettings.DelayBetweenRefresh)) // задача недавно завершилась
-                {
-                    _logger.LogInformation("Списк ценных бумаг был обновлен недавно. Повторный запуск отменяется.");
-                    return true;
-                }
+                _logger.LogInformation("Списк ценных бумаг был обновлен недавно. Повторный запуск отменяется.");
+                return true;
             }
         }
-        else
-        {
-            securitiesRefreshStatus = new SecuritiesRefreshState();
-        }
-
-        securitiesRefreshStatus.Prepare();
-        await _redisClient.SetAsync<SecuritiesRefreshState?>(RedisKeys.SecuritiesRefreshStatusRedisKey, securitiesRefreshStatus, TimeSpan.FromHours(24));
 
         // 2. Отправить сообщение сервису InvestLens.Data о том, что необходимо обновить данные
         var refreshingMessage = new SecurityRefreshingMessage();

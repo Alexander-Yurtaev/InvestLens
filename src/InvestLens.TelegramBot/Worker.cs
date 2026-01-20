@@ -47,7 +47,7 @@ namespace InvestLens.TelegramBot
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Ошибка при выполнении длинной операции {OperationId}", operationId);
-                    await _telegramService.NotifyErrorAsync($"Длинная операция {operationId}", ex, stoppingToken);
+                    await _telegramService.NotifyErrorAsync($"Длинная операция {operationId}", ex.Message, stoppingToken);
                 }
 
                 _logger.LogInformation("Операция завершена {OperationId}", operationId);

@@ -8,7 +8,7 @@ public interface ITelegramService
     Task NotifyOperationStartAsync(string operationId, string details, CancellationToken cancellationToken = default);
     Task NotifyOperationCompleteAsync(string operationId, string result, TimeSpan duration, CancellationToken cancellationToken = default);
     Task NotifyInfoAsync(string title, string message, CancellationToken cancellationToken = default);
-    Task NotifyErrorAsync(string operation, Exception exception, CancellationToken cancellationToken = default);
+    Task NotifyErrorAsync(string operation, string exceptionMessage, CancellationToken cancellationToken = default);
     Task NotifyWarningAsync(string warning, string details = "", CancellationToken cancellationToken = default);
     Task NotifyStatusAsync(string status, string currentState, CancellationToken cancellationToken = default);
     Task NotifyDataUpdateAsync(string dataType, int count, string description = "", CancellationToken cancellationToken = default);

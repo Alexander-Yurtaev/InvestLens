@@ -72,11 +72,11 @@ public class TelegramService : ITelegramService
         await NotifyAsync(formattedMessage, cancellationToken);
     }
 
-    public async Task NotifyErrorAsync(string operation, Exception exception, CancellationToken cancellationToken = default)
+    public async Task NotifyErrorAsync(string operation, string exceptionMessage, CancellationToken cancellationToken = default)
     {
         var message = $"❌ <b>Ошибка в операции</b>\n" +
                      $"Операция: {operation}\n" +
-                     $"Ошибка: {exception.Message}\n" +
+                     $"Ошибка: {exceptionMessage}\n" +
                      $"Время: {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss} UTC";
 
         await NotifyAsync(message, cancellationToken);

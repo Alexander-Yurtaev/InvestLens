@@ -2,6 +2,7 @@
 using InvestLens.Abstraction.MessageBus.Data;
 using InvestLens.Abstraction.MessageBus.Services;
 using InvestLens.Abstraction.Redis.Data;
+using InvestLens.Abstraction.Redis.Services;
 using InvestLens.Abstraction.Repositories;
 using InvestLens.Abstraction.Services;
 using InvestLens.Data.Api.Extensions;
@@ -15,6 +16,7 @@ using InvestLens.Shared.Helpers;
 using InvestLens.Shared.MessageBus.Extensions;
 using InvestLens.Shared.MessageBus.Models;
 using InvestLens.Shared.Redis.Extensions;
+using InvestLens.Shared.Redis.Services;
 using InvestLens.Shared.Services;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Serilog;
@@ -60,6 +62,8 @@ public static class Program
             builder.Services.AddScoped<ISecurityRepository, SecurityRepository>();
             builder.Services.AddScoped<IRefreshStatusRepository, RefreshStatusRepository>();
             builder.Services.AddScoped<IDataService, DataService>();
+
+            builder.Services.AddSingleton<ISecuritiesRefreshStatusService, SecuritiesRefreshStatusService>();
 
             // Redis
             builder.Services.AddRedisSettings(builder.Configuration).AddRedisClient();

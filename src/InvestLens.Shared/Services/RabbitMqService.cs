@@ -31,7 +31,7 @@ public class RabbitMqService : IRabbitMqService
 
             _logger.LogInformation("Waiting for RabbitMQ at {RabbitMqHost}...", configuration["RABBITMQ_HOST"]);
 
-            var resilientPolicy = _pollyService.GetHttpResilientPolicy();
+            var resilientPolicy = _pollyService.GetRabbitMqRetryPolicy();
             client = new HttpClient();
 
             await resilientPolicy.ExecuteAsync(async () =>
