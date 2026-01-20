@@ -53,29 +53,29 @@ public abstract class BaseLazyRedisClient : IRedisClient
         return await client.GetKeysAsync(pattern);
     }
 
-    public async Task<long> IncrementAsync(string key, long value = 1)
-    {
-        var client = await _lazyClient.Value;
-        return await client.IncrementAsync(key, value);
-    }
+    //public async Task<long> IncrementAsync(string key, long value = 1)
+    //{
+    //    var client = await _lazyClient.Value;
+    //    return await client.IncrementAsync(key, value);
+    //}
 
-    public async Task<long> DecrementAsync(string key, long value = 1)
-    {
-        var client = await _lazyClient.Value;
-        return await client.DecrementAsync(key, value);
-    }
+    //public async Task<long> DecrementAsync(string key, long value = 1)
+    //{
+    //    var client = await _lazyClient.Value;
+    //    return await client.DecrementAsync(key, value);
+    //}
 
-    public async Task<bool> AddToSetAsync(string key, string value)
-    {
-        var client = await _lazyClient.Value;
-        return await client.AddToSetAsync(key, value);
-    }
+    //public async Task<bool> AddToSetAsync(string key, string value)
+    //{
+    //    var client = await _lazyClient.Value;
+    //    return await client.AddToSetAsync(key, value);
+    //}
 
-    public async Task<bool> RemoveFromSetAsync(string key, string value)
-    {
-        var client = await _lazyClient.Value;
-        return await client.RemoveFromSetAsync(key, value);
-    }
+    //public async Task<bool> RemoveFromSetAsync(string key, string value)
+    //{
+    //    var client = await _lazyClient.Value;
+    //    return await client.RemoveFromSetAsync(key, value);
+    //}
 
     public async Task<HashSet<string>> GetSetAsync(string key)
     {
@@ -89,21 +89,21 @@ public abstract class BaseLazyRedisClient : IRedisClient
         return await client.GetMultipleAsync<T>(keys);
     }
 
-    public async Task SetMultipleAsync<T>(IDictionary<string, T> keyValuePairs, TimeSpan? expiry = null)
-    {
-        var client = await _lazyClient.Value;
-        await client.SetMultipleAsync(keyValuePairs, expiry);
-    }
+    //public async Task SetMultipleAsync<T>(IDictionary<string, T> keyValuePairs, TimeSpan? expiry = null)
+    //{
+    //    var client = await _lazyClient.Value;
+    //    await client.SetMultipleAsync(keyValuePairs, expiry);
+    //}
 
-    public async Task<bool> AcquireLockAsync(string key, TimeSpan expiry)
-    {
-        var client = await _lazyClient.Value;
-        return await client.AcquireLockAsync(key, expiry);
-    }
+    //public async Task<bool> AcquireLockAsync(string key, TimeSpan expiry)
+    //{
+    //    var client = await _lazyClient.Value;
+    //    return await client.AcquireLockAsync(key, expiry);
+    //}
 
-    public async Task ReleaseLockAsync(string key)
-    {
-        var client = await _lazyClient.Value;
-        await client.ReleaseLockAsync(key);
-    }
+    //public async Task ReleaseLockAsync(string key)
+    //{
+    //    var client = await _lazyClient.Value;
+    //    await client.ReleaseLockAsync(key);
+    //}
 }

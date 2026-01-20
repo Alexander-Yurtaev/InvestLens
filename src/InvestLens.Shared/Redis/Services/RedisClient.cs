@@ -13,7 +13,7 @@ public class RedisClient : IRedisClient, IDisposable
     private readonly IRedisSettings _settings;
     private readonly string _instanceName;
     private readonly ILogger<RedisClient> _logger;
-    private IConnectionMultiplexer _connectionMultiplexer = null!;
+    private IConnectionMultiplexer? _connectionMultiplexer;
     private IDatabase _database = null!;
     private bool _disposed;
     private readonly SemaphoreSlim _connectionLock = new(1, 1);
@@ -141,10 +141,15 @@ public class RedisClient : IRedisClient, IDisposable
     {
         try
         {
-            var server = _connectionMultiplexer.GetServer(_connectionMultiplexer.GetEndPoints().First());
+            await InitConnectionMultiplexer();
+            var server = _connectionMultiplexer!.GetServer(_connectionMultiplexer.GetEndPoints().First());
 
             var keys = server.Keys(pattern: BuildKey(pattern));
-            return await Task.FromResult(keys.Select(k => k.ToString().Replace(_instanceName, "")));
+            return await Task.FromResult(keys.Select(k =>
+            {
+                var v = k.ToString();
+                return !v.StartsWith(_instanceName) ? v : v.Substring(_instanceName.Length);
+            }));
         }
         catch (Exception ex)
         {
@@ -153,61 +158,61 @@ public class RedisClient : IRedisClient, IDisposable
         }
     }
 
-    public async Task<long> IncrementAsync(string key, long value = 1)
-    {
-        try
-        {
-            var redisKey = BuildKey(key);
-            return await _database.StringIncrementAsync(redisKey, value);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to increment key: {key}", key);
-            throw new RedisException($"Failed to increment key: {key}", ex);
-        }
-    }
+    //public async Task<long> IncrementAsync(string key, long value = 1)
+    //{
+    //    try
+    //    {
+    //        var redisKey = BuildKey(key);
+    //        return await _database.StringIncrementAsync(redisKey, value);
+    //    }
+    //    catch (Exception ex)
+    //    {
+    //        _logger.LogError(ex, "Failed to increment key: {key}", key);
+    //        throw new RedisException($"Failed to increment key: {key}", ex);
+    //    }
+    //}
 
-    public async Task<long> DecrementAsync(string key, long value = 1)
-    {
-        try
-        {
-            var redisKey = BuildKey(key);
-            return await _database.StringDecrementAsync(redisKey, value);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to decrement key: {key}", key);
-            throw new RedisException($"Failed to decrement key: {key}", ex);
-        }
-    }
+    //public async Task<long> DecrementAsync(string key, long value = 1)
+    //{
+    //    try
+    //    {
+    //        var redisKey = BuildKey(key);
+    //        return await _database.StringDecrementAsync(redisKey, value);
+    //    }
+    //    catch (Exception ex)
+    //    {
+    //        _logger.LogError(ex, "Failed to decrement key: {key}", key);
+    //        throw new RedisException($"Failed to decrement key: {key}", ex);
+    //    }
+    //}
 
-    public async Task<bool> AddToSetAsync(string key, string value)
-    {
-        try
-        {
-            var redisKey = BuildKey(key);
-            return await _database.SetAddAsync(redisKey, value);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to add to set: {key}", key);
-            throw new RedisException($"Failed to add to set: {key}", ex);
-        }
-    }
+    //public async Task<bool> AddToSetAsync(string key, string value)
+    //{
+    //    try
+    //    {
+    //        var redisKey = BuildKey(key);
+    //        return await _database.SetAddAsync(redisKey, value);
+    //    }
+    //    catch (Exception ex)
+    //    {
+    //        _logger.LogError(ex, "Failed to add to set: {key}", key);
+    //        throw new RedisException($"Failed to add to set: {key}", ex);
+    //    }
+    //}
 
-    public async Task<bool> RemoveFromSetAsync(string key, string value)
-    {
-        try
-        {
-            var redisKey = BuildKey(key);
-            return await _database.SetRemoveAsync(redisKey, value);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to remove from set: {key}", key);
-            throw new RedisException($"Failed to remove from set: {key}", ex);
-        }
-    }
+    //public async Task<bool> RemoveFromSetAsync(string key, string value)
+    //{
+    //    try
+    //    {
+    //        var redisKey = BuildKey(key);
+    //        return await _database.SetRemoveAsync(redisKey, value);
+    //    }
+    //    catch (Exception ex)
+    //    {
+    //        _logger.LogError(ex, "Failed to remove from set: {key}", key);
+    //        throw new RedisException($"Failed to remove from set: {key}", ex);
+    //    }
+    //}
 
     public async Task<HashSet<string>> GetSetAsync(string key)
     {
@@ -257,72 +262,69 @@ public class RedisClient : IRedisClient, IDisposable
         }
     }
 
-    public async Task SetMultipleAsync<T>(IDictionary<string, T> keyValuePairs, TimeSpan? expiry = null)
-    {
-        try
-        {
-            var tasks = keyValuePairs.Select(kvp =>
-                SetAsync(kvp.Key, kvp.Value, expiry));
+    //public async Task SetMultipleAsync<T>(IDictionary<string, T> keyValuePairs, TimeSpan? expiry = null)
+    //{
+    //    try
+    //    {
+    //        var tasks = keyValuePairs.Select(kvp =>
+    //            SetAsync(kvp.Key, kvp.Value, expiry));
 
-            await Task.WhenAll(tasks);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to set multiple keys");
-            throw new RedisException("Failed to set multiple keys", ex);
-        }
-    }
+    //        await Task.WhenAll(tasks);
+    //    }
+    //    catch (Exception ex)
+    //    {
+    //        _logger.LogError(ex, "Failed to set multiple keys");
+    //        throw new RedisException("Failed to set multiple keys", ex);
+    //    }
+    //}
 
-    public async Task<bool> AcquireLockAsync(string key, TimeSpan expiry)
-    {
-        try
-        {
-            var lockKey = $"lock:{BuildKey(key)}";
-            var token = Guid.NewGuid().ToString();
+    //public async Task<bool> AcquireLockAsync(string key, TimeSpan expiry)
+    //{
+    //    try
+    //    {
+    //        var lockKey = $"lock:{BuildKey(key)}";
+    //        var token = Guid.NewGuid().ToString();
 
-            var resilientPolicy = _pollyService.GetResilientPolicy<Exception>();
-            return await resilientPolicy.ExecuteAsync(async () => await _database.StringSetAsync(
-                lockKey,
-                token,
-                expiry,
-                When.NotExists,
-                CommandFlags.DemandMaster));
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to acquire lock for key: {key}", key);
-            throw new RedisException($"Failed to acquire lock for key: {key}", ex);
-        }
-    }
+    //        var resilientPolicy = _pollyService.GetResilientPolicy<Exception>();
+    //        return await resilientPolicy.ExecuteAsync(async () => await _database.StringSetAsync(
+    //            lockKey,
+    //            token,
+    //            expiry,
+    //            When.NotExists,
+    //            CommandFlags.DemandMaster));
+    //    }
+    //    catch (Exception ex)
+    //    {
+    //        _logger.LogError(ex, "Failed to acquire lock for key: {key}", key);
+    //        throw new RedisException($"Failed to acquire lock for key: {key}", ex);
+    //    }
+    //}
 
-    public async Task ReleaseLockAsync(string key)
-    {
-        try
-        {
-            var resilientPolicy = _pollyService.GetResilientPolicy<Exception>();
-            await resilientPolicy.ExecuteAsync(async () =>
-            {
-                var lockKey = $"lock:{BuildKey(key)}";
-                return await _database.KeyDeleteAsync(lockKey);
-            });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to release lock for key: {key}", key);
-            throw new RedisException($"Failed to release lock for key: {key}", ex);
-        }
-    }
+    //public async Task ReleaseLockAsync(string key)
+    //{
+    //    try
+    //    {
+    //        var resilientPolicy = _pollyService.GetResilientPolicy<Exception>();
+    //        await resilientPolicy.ExecuteAsync(async () =>
+    //        {
+    //            var lockKey = $"lock:{BuildKey(key)}";
+    //            return await _database.KeyDeleteAsync(lockKey);
+    //        });
+    //    }
+    //    catch (Exception ex)
+    //    {
+    //        _logger.LogError(ex, "Failed to release lock for key: {key}", key);
+    //        throw new RedisException($"Failed to release lock for key: {key}", ex);
+    //    }
+    //}
 
     public async Task<IDatabase> GetDatabaseAsync()
     {
         await _connectionLock.WaitAsync();
         try
         {
-            if (!_connectionMultiplexer.IsConnected)
-            {
-                _connectionMultiplexer = await ConnectionMultiplexer.ConnectAsync(_settings.ConnectionString);
-            }
-            _database = _connectionMultiplexer.GetDatabase(_settings.DefaultDatabase);
+            await InitConnectionMultiplexer();
+            _database = _connectionMultiplexer!.GetDatabase(_settings.DefaultDatabase);
             return _database;
         }
         finally
@@ -331,11 +333,19 @@ public class RedisClient : IRedisClient, IDisposable
         }
     }
 
+    private async Task InitConnectionMultiplexer()
+    {
+        if (_connectionMultiplexer is not { IsConnected: true })
+        {
+            _connectionMultiplexer = await ConnectionMultiplexer.ConnectAsync(_settings.ConnectionString);
+        }
+    }
+
     public void Dispose()
     {
         if (!_disposed)
         {
-            _connectionMultiplexer.Dispose();
+            _connectionMultiplexer?.Dispose();
             _connectionLock.Dispose();
             _disposed = true;
         }
@@ -343,9 +353,9 @@ public class RedisClient : IRedisClient, IDisposable
         GC.SuppressFinalize(this);
     }
 
-    #region Privaet Methods
+    #region Private Methods
 
     private string BuildKey(string key) => $"{_instanceName}{key}";
 
-    #endregion Privaet Methods
+    #endregion Private Methods
 }
