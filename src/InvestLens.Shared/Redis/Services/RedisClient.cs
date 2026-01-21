@@ -92,13 +92,13 @@ public class RedisClient : IRedisClient, IDisposable
         }
     }
 
-    public async Task<bool> ExistsAsync(string key)
+    public async Task<bool> ExistsAsync(string key, CancellationToken cancellationToken)
     {
         try
         {
             var redisKey = BuildKey(key);
             var resilientPolicy = _pollyService.GetResilientPolicy<Exception>();
-            return await resilientPolicy.ExecuteAsync(async () => await _database.KeyExistsAsync(redisKey));
+            return await resilientPolicy.ExecuteAsync(async (_, _) => await _database.KeyExistsAsync(redisKey), [], cancellationToken: cancellationToken);
         }
         catch (Exception ex)
         {

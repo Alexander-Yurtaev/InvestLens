@@ -7,12 +7,12 @@ namespace InvestLens.TelegramBot.Services;
 
 public class BotCommandService : IBotCommandService
 {
-    private readonly ITelegramNotificationService _telegramNotificationService;
+    private readonly ITelegramBotClient _telegramBotClient;
     private readonly ISecuritiesRefreshStatusService _statusService;
 
-    public BotCommandService(ITelegramNotificationService telegramNotificationService, ISecuritiesRefreshStatusService statusService)
+    public BotCommandService(ITelegramBotClient telegramBotClient, ISecuritiesRefreshStatusService statusService)
     {
-        _telegramNotificationService = telegramNotificationService;
+        _telegramBotClient = telegramBotClient;
         _statusService = statusService;
     }
 
@@ -25,8 +25,6 @@ public class BotCommandService : IBotCommandService
                 break;
             case "/info":
                 await InfoOperation(cancellationToken);
-                break;
-            default:
                 break;
         }
     }
@@ -41,29 +39,29 @@ public class BotCommandService : IBotCommandService
         switch (refreshStatus.Status)
         {
             case SecuritiesRefreshStatus.None:
-                await _telegramNotificationService.NotifyInfoAsync(refreshStatus.Status.GetDisplayName(), refreshStatus.Status.GetDescription(), cancellationToken);
+                await _telegramBotClient.NotifyInfoAsync(refreshStatus.Status.GetDisplayName(), refreshStatus.Status.GetDescription(), cancellationToken);
                 break;
             case SecuritiesRefreshStatus.Scheduled:
-                await _telegramNotificationService.NotifyInfoAsync(refreshStatus.Status.GetDisplayName(), refreshStatus.Status.GetDescription(), cancellationToken);
+                await _telegramBotClient.NotifyInfoAsync(refreshStatus.Status.GetDisplayName(), refreshStatus.Status.GetDescription(), cancellationToken);
                 break;
             case SecuritiesRefreshStatus.Downloading:
-                await _telegramNotificationService.NotifyStatusAsync("Обновление данных", $"{refreshStatus.Status.GetDisplayName()}: {refreshStatus.DownloadedCount}", cancellationToken);
+                await _telegramBotClient.NotifyStatusAsync("Обновление данных", $"{refreshStatus.Status.GetDisplayName()}: {refreshStatus.DownloadedCount}", cancellationToken);
                 break;
             case SecuritiesRefreshStatus.Processing:
-                await _telegramNotificationService.NotifyStatusAsync("Обновление данных", refreshStatus.Status.GetDisplayName(), cancellationToken);
+                await _telegramBotClient.NotifyStatusAsync("Обновление данных", refreshStatus.Status.GetDisplayName(), cancellationToken);
                 break;
             case SecuritiesRefreshStatus.Saving:
-                await _telegramNotificationService.NotifyStatusAsync("Обновление данных", refreshStatus.Status.GetDisplayName(), cancellationToken);
+                await _telegramBotClient.NotifyStatusAsync("Обновление данных", refreshStatus.Status.GetDisplayName(), cancellationToken);
                 break;
             case SecuritiesRefreshStatus.Completed:
-                await _telegramNotificationService.NotifyOperationCompleteAsync(
+                await _telegramBotClient.NotifyOperationCompleteAsync(
                     refreshStatus.OperationId,
                     $"{refreshStatus.Status.GetDescription()}: {refreshStatus.DownloadedCount}/{refreshStatus.SavedCount}",
                     refreshStatus.Duration,
                     cancellationToken);
                 break;
             case SecuritiesRefreshStatus.Failed:
-                await _telegramNotificationService.NotifyErrorAsync(refreshStatus.OperationId, refreshStatus.ErrorMessage, cancellationToken);
+                await _telegramBotClient.NotifyErrorAsync(refreshStatus.OperationId, refreshStatus.ErrorMessage, cancellationToken);
                 break;
             default:
                 throw new ArgumentOutOfRangeException();
@@ -72,7 +70,7 @@ public class BotCommandService : IBotCommandService
 
     private async Task HealthOperation(CancellationToken cancellationToken)
     {
-        await _telegramNotificationService.NotifyInfoAsync("Health Check", "Healthy", cancellationToken);
+        await _telegramBotClient.NotifyInfoAsync("Health Check", "Healthy", cancellationToken);
     }
 
     #endregion Private Methods

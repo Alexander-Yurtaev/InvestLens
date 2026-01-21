@@ -61,7 +61,7 @@ public static class Program
             builder.Services.AddSingleton<IRabbitMqService, RabbitMqService>();
 
             builder.Services.AddSingleton<IBotCommandService, BotCommandService>();
-            builder.Services.AddHttpClient<ITelegramNotificationService, TelegramNotificationService>()
+            builder.Services.AddHttpClient<ITelegramBotClient, TelegramBotClient>()
                 .ConfigureHttpClient(client => { client.BaseAddress = new Uri("https://api.telegram.org/"); })
                 .AddPolicyHandler((provider, _) => provider.GetService<IPollyService>()!.GetHttpRetryPolicy())
                 .AddPolicyHandler((provider, _) => provider.GetService<IPollyService>()!.GetHttpCircuitBreakerPolicy());

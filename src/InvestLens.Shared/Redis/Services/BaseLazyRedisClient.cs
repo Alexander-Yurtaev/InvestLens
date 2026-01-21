@@ -29,10 +29,10 @@ public abstract class BaseLazyRedisClient : IRedisClient
         return await client.RemoveAsync(key);
     }
 
-    public async Task<bool> ExistsAsync(string key)
+    public async Task<bool> ExistsAsync(string key, CancellationToken cancellationToken)
     {
         var client = await _lazyClient.Value;
-        return await client.ExistsAsync(key);
+        return await client.ExistsAsync(key, cancellationToken);
     }
 
     public async Task<TimeSpan?> GetTimeToLiveAsync(string key)

@@ -14,10 +14,10 @@ public class GetUpdatesResponse
     public string Description { get; set; } = string.Empty;
 
     [JsonPropertyName("result")] 
-    public Result[] Result { get; set; } = [];
+    public GetUpdatesResult[] Result { get; set; } = [];
 }
 
-public class Result
+public class GetUpdatesResult
 {
     [JsonPropertyName("update_id")]
     public int UpdateId { get; set; }

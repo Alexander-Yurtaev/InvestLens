@@ -8,16 +8,16 @@ using InvestLens.Abstraction.Models.Telegram;
 using Models;
 using System.Threading;
 
-public class TelegramNotificationService : ITelegramNotificationService
+public class TelegramBotClient : ITelegramBotClient
 {
     private readonly HttpClient _httpClient;
     private readonly TelegramSettings _settings;
-    private readonly ILogger<TelegramNotificationService> _logger;
+    private readonly ILogger<TelegramBotClient> _logger;
 
-    public TelegramNotificationService(
+    public TelegramBotClient(
         HttpClient httpClient,
         IOptions<TelegramSettings> settings,
-        ILogger<TelegramNotificationService> logger)
+        ILogger<TelegramBotClient> logger)
     {
         _httpClient = httpClient;
         _settings = settings.Value;
@@ -180,7 +180,12 @@ public class TelegramNotificationService : ITelegramNotificationService
             timeout = 20
         };
 
-        return await GetUpdatesWithRetryAsync(payload, cancellationToken);
+        return await GetUpdatesWithRetryAsync<GetUpdatesResponse>("getUpdates", payload, cancellationToken);
+    }
+
+    public async Task<GetMeResponse?> GetMeAsync(CancellationToken cancellationToken)
+    {
+        return await GetUpdatesWithRetryAsync<GetMeResponse>("getMe", Array.Empty<object>(), cancellationToken);
     }
 
     #region Private Methods
@@ -204,19 +209,19 @@ public class TelegramNotificationService : ITelegramNotificationService
         }
     }
 
-    private async Task<GetUpdatesResponse?> GetUpdatesWithRetryAsync(object payload, CancellationToken cancellationToken)
+    private async Task<T?> GetUpdatesWithRetryAsync<T>(string command, object payload, CancellationToken cancellationToken) where T : class
     {
         try
         {
             var response = await _httpClient.PostAsJsonAsync(
-                $"/bot{_settings.BotToken}/getUpdates",
+                $"/bot{_settings.BotToken}/{command}",
                 payload,
                 cancellationToken);
 
             response.EnsureSuccessStatusCode();
-            _logger.LogDebug("Telegram updates get successfully");
+            _logger.LogDebug("Telegram get data successfully");
 
-            var updates = await response.Content.ReadFromJsonAsync<GetUpdatesResponse>(cancellationToken);
+            var updates = await response.Content.ReadFromJsonAsync<T>(cancellationToken);
             return updates;
         }
         catch (Exception ex)
