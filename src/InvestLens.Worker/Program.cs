@@ -147,9 +147,6 @@ public static class Program
 
             var app = builder.Build();
 
-            // 3. Использование Serilog для логирования запросов
-            app.UseSerilogRequestLogging();
-
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
@@ -251,54 +248,6 @@ public static class Program
             app.MapGet("/", () => "Worker service");
 
             app.UseHttpsRedirection();
-
-            // Добавьте этот endpoint перед app.RunAsync()
-            app.MapGet("/debug-connections", async () =>
-            {
-                var results = new List<string>();
-
-                // Тест 1: DNS разрешение
-                try
-                {
-                    var ipAddress = System.Net.Dns.GetHostAddresses("investlens.worker");
-                    results.Add($"DNS resolution for investlens.worker: {string.Join(", ", ipAddress.Select(ip => ip.ToString()))}");
-                }
-                catch (Exception ex)
-                {
-                    results.Add($"DNS error: {ex.Message}");
-                }
-
-                // Тест 2: Ping (ICMP)
-                try
-                {
-                    using var ping = new System.Net.NetworkInformation.Ping();
-                    var reply = await ping.SendPingAsync("investlens.worker", 1000);
-                    results.Add($"Ping to investlens.worker: {reply.Status}, time: {reply.RoundtripTime}ms");
-                }
-                catch (Exception ex)
-                {
-                    results.Add($"Ping error: {ex.Message}");
-                }
-
-                // Тест 3: Попытка подключения к разным портам
-                int[] portsToTest = [8080, 8081, 80, 443];
-
-                foreach (var port in portsToTest)
-                {
-                    try
-                    {
-                        using var tcpClient = new System.Net.Sockets.TcpClient(); // Создаем новый для каждого порта
-                        await tcpClient.ConnectAsync("investlens.worker", port, new CancellationTokenSource(1000).Token);
-                        results.Add($"Port {port}: OPEN");
-                    }
-                    catch (Exception ex)
-                    {
-                        results.Add($"Port {port}: CLOSED - {ex.GetType().Name}");
-                    }
-                }
-
-                return string.Join("\n", results);
-            });
 
             await app.RunAsync();
         }
