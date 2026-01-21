@@ -10,10 +10,11 @@ namespace InvestLens.Web.Pages;
 public class SecuritiesModel : PageModel
 {
     private readonly ISecurityGrpcClientService _service;
+    private readonly ILogger<Security> _logger;
 
     public IEnumerable<string> Columns { get; set; } = [];
 
-    public List<Security> Securities { get; set; }
+    public List<Security> Securities { get; set; } = [];
 
     // Свойства для пагинации и сортировки
     public int CurrentPage { get; set; } = 1;
@@ -24,10 +25,10 @@ public class SecuritiesModel : PageModel
     public string CurrentFilter { get; set; } = "";
     public Dictionary<string, string> SortColumns { get; set; } = new();
 
-    public SecuritiesModel(ISecurityGrpcClientService service, List<Security> securities)
+    public SecuritiesModel(ISecurityGrpcClientService service, ILogger<Security> logger)
     {
         _service = service;
-        Securities = securities;
+        _logger = logger;
         InitializeSortColumns();
     }
 
@@ -44,6 +45,8 @@ public class SecuritiesModel : PageModel
 
         Columns = GetColumns();
         var securitiesDto = await _service.GetSecuritiesAsync(CurrentPage, PageSize, sort, filter);
+        
+        _logger.LogInformation("От gRPC-сервера получено {SecuritiesCount} записей.", securitiesDto.Data.Count);
 
         Securities = securitiesDto.Data;
         TotalPages = securitiesDto.TotalPages;
