@@ -1,8 +1,6 @@
 using InvestLens.Abstraction.Redis.Data;
-using InvestLens.Abstraction.Redis.Enums;
 using InvestLens.Abstraction.Redis.Services;
 using InvestLens.Abstraction.Services;
-using InvestLens.Shared.Extensions;
 using InvestLens.TelegramBot.Data;
 
 namespace InvestLens.TelegramBot;
@@ -11,21 +9,21 @@ public class InvestLensBot : BackgroundService
 {
     private const string NextUpdateIdKey = "NextUpdateId";
 
-    private readonly ISecuritiesRefreshStatusService _statusService;
-    private readonly ITelegramService _telegramService;
+    private readonly ITelegramNotificationService _telegramNotificationService;
+    private readonly IBotCommandService _botCommandService;
     private readonly IRedisClient _redisClientForInstance;
     private readonly ILogger<InvestLensBot> _logger;
 
     public InvestLensBot(
         IRedisSettings redisSettings,
-        ISecuritiesRefreshStatusService statusService,
-        ITelegramService telegramService,
+        ITelegramNotificationService telegramNotificationService,
+        IBotCommandService botCommandService,
         IServiceProvider serviceProvider,
         ILogger<InvestLensBot> logger)
     {
         _redisClientForInstance = serviceProvider.GetKeyedService<IRedisClient>(redisSettings.InstanceName)!;
-        _statusService = statusService;
-        _telegramService = telegramService;
+        _telegramNotificationService = telegramNotificationService;
+        _botCommandService = botCommandService;
         _logger = logger;
     }
 
@@ -42,7 +40,7 @@ public class InvestLensBot : BackgroundService
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Ошибка при проверке сообщений в чат-боте.");
-                await _telegramService.NotifyErrorAsync("Ошибка при проверке сообщений в чат-боте.", ex.Message, stoppingToken);
+                await _telegramNotificationService.NotifyErrorAsync("Ошибка при проверке сообщений в чат-боте.", ex.Message, stoppingToken);
             }
         }
     }
@@ -63,7 +61,7 @@ public class InvestLensBot : BackgroundService
         var updateData = await _redisClientForInstance.GetAsync<UpdateData>(NextUpdateIdKey) ?? new UpdateData();
 
         // 2. Получить из Telegram данные
-        var response = await _telegramService.GetUpdatesAsync(updateData.NextUpdateId, cancellationToken);
+        var response = await _telegramNotificationService.GetUpdatesAsync(updateData.NextUpdateId, cancellationToken);
 
         // 3. Обработать полученные данные
         if (response is null)
@@ -78,55 +76,13 @@ public class InvestLensBot : BackgroundService
         {
             foreach (var result in response.Result)
             {
-                switch (result.Message.Text)
-                {
-                    case "/info":
-                        await InfoOperation(cancellationToken);
-                        break;
-                }
+                await _botCommandService.HandleCommandAsync(result.Message.Text, cancellationToken);
 
                 updateData.NextUpdateId = result.UpdateId + 1;
 
                 // 4. Обновить nextUpdateId в Redis
                 await _redisClientForInstance.SetAsync(NextUpdateIdKey, updateData);
             }
-        }
-    }
-
-    private async Task InfoOperation(CancellationToken cancellationToken)
-    {
-        // получить из Redis статус загрузки Securities
-        var refreshStatus = await _statusService.TryGetProgress();
-
-        switch (refreshStatus.Status)
-        {
-            case SecuritiesRefreshStatus.None:
-                await _telegramService.NotifyInfoAsync(refreshStatus.Status.GetDisplayName(), refreshStatus.Status.GetDescription(), cancellationToken);
-                break;
-            case SecuritiesRefreshStatus.Scheduled:
-                await _telegramService.NotifyInfoAsync(refreshStatus.Status.GetDisplayName(), refreshStatus.Status.GetDescription(), cancellationToken);
-                break;
-            case SecuritiesRefreshStatus.Downloading:
-                await _telegramService.NotifyStatusAsync("Обновление данных", $"{refreshStatus.Status.GetDisplayName()}: {refreshStatus.DownloadedCount}", cancellationToken);
-                break;
-            case SecuritiesRefreshStatus.Processing:
-                await _telegramService.NotifyStatusAsync("Обновление данных", refreshStatus.Status.GetDisplayName(), cancellationToken);
-                break;
-            case SecuritiesRefreshStatus.Saving:
-                await _telegramService.NotifyStatusAsync("Обновление данных", refreshStatus.Status.GetDisplayName(), cancellationToken);
-                break;
-            case SecuritiesRefreshStatus.Completed:
-                await _telegramService.NotifyOperationCompleteAsync(
-                    refreshStatus.OperationId, 
-                    $"{refreshStatus.Status.GetDescription()}: {refreshStatus.DownloadedCount}/{refreshStatus.SavedCount}",
-                    refreshStatus.Duration,
-                    cancellationToken);
-                break;
-            case SecuritiesRefreshStatus.Failed:
-                await _telegramService.NotifyErrorAsync(refreshStatus.OperationId, refreshStatus.ErrorMessage, cancellationToken);
-                break;
-            default:
-                throw new ArgumentOutOfRangeException();
         }
     }
 }

@@ -5,12 +5,12 @@ namespace InvestLens.TelegramBot
     [Obsolete("This is an example class.")]
     public class Worker : BackgroundService
     {
-        private readonly ITelegramService _telegramService;
+        private readonly ITelegramNotificationService _telegramNotificationService;
         private readonly ILogger<Worker> _logger;
 
-        public Worker(ITelegramService telegramService, ILogger<Worker> logger)
+        public Worker(ITelegramNotificationService telegramNotificationService, ILogger<Worker> logger)
         {
-            _telegramService = telegramService;
+            _telegramNotificationService = telegramNotificationService;
             _logger = logger;
         }
 
@@ -24,7 +24,7 @@ namespace InvestLens.TelegramBot
                 {
                     // Уведомление о начале
                     _logger.LogInformation("Запуск длинной операции обработки данных {OperationId}", operationId);
-                    await _telegramService.NotifyOperationStartAsync(
+                    await _telegramNotificationService.NotifyOperationStartAsync(
                         operationId,
                         "Запуск длинной операции обработки данных",
                         stoppingToken);
@@ -38,7 +38,7 @@ namespace InvestLens.TelegramBot
 
                     // Уведомление об окончании
                     _logger.LogInformation("Операция успешно завершена {OperationId}", operationId);
-                    await _telegramService.NotifyOperationCompleteAsync(
+                    await _telegramNotificationService.NotifyOperationCompleteAsync(
                         operationId,
                         "Операция успешно завершена",
                         duration,
@@ -47,11 +47,11 @@ namespace InvestLens.TelegramBot
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Ошибка при выполнении длинной операции {OperationId}", operationId);
-                    await _telegramService.NotifyErrorAsync($"Длинная операция {operationId}", ex.Message, stoppingToken);
+                    await _telegramNotificationService.NotifyErrorAsync($"Длинная операция {operationId}", ex.Message, stoppingToken);
                 }
 
                 _logger.LogInformation("Операция завершена {OperationId}", operationId);
-                await _telegramService.NotifyAsync($"Операция завершена {operationId}", stoppingToken);
+                await _telegramNotificationService.NotifyAsync($"Операция завершена {operationId}", stoppingToken);
 
                 break;
             }

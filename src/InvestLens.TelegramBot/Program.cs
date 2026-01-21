@@ -3,7 +3,6 @@ using InvestLens.Abstraction.MessageBus.Services;
 using InvestLens.Abstraction.Redis.Services;
 using InvestLens.Abstraction.Services;
 using InvestLens.Shared.Constants;
-using InvestLens.Shared.Helpers;
 using InvestLens.Shared.MessageBus.Extensions;
 using InvestLens.Shared.MessageBus.Models;
 using InvestLens.Shared.Redis.Extensions;
@@ -61,7 +60,8 @@ public static class Program
             builder.Services.AddSingleton<IPollyService, PollyService>();
             builder.Services.AddSingleton<IRabbitMqService, RabbitMqService>();
 
-            builder.Services.AddHttpClient<ITelegramService, TelegramService>()
+            builder.Services.AddSingleton<IBotCommandService, BotCommandService>();
+            builder.Services.AddHttpClient<ITelegramNotificationService, TelegramNotificationService>()
                 .ConfigureHttpClient(client => { client.BaseAddress = new Uri("https://api.telegram.org/"); })
                 .AddPolicyHandler((provider, _) => provider.GetService<IPollyService>()!.GetHttpRetryPolicy())
                 .AddPolicyHandler((provider, _) => provider.GetService<IPollyService>()!.GetHttpCircuitBreakerPolicy());

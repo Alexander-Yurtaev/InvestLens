@@ -8,16 +8,16 @@ using InvestLens.Abstraction.Models.Telegram;
 using Models;
 using System.Threading;
 
-public class TelegramService : ITelegramService
+public class TelegramNotificationService : ITelegramNotificationService
 {
     private readonly HttpClient _httpClient;
     private readonly TelegramSettings _settings;
-    private readonly ILogger<TelegramService> _logger;
+    private readonly ILogger<TelegramNotificationService> _logger;
 
-    public TelegramService(
+    public TelegramNotificationService(
         HttpClient httpClient,
         IOptions<TelegramSettings> settings,
-        ILogger<TelegramService> logger)
+        ILogger<TelegramNotificationService> logger)
     {
         _httpClient = httpClient;
         _settings = settings.Value;

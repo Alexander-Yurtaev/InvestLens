@@ -6,12 +6,12 @@ namespace InvestLens.TelegramBot.Handlers;
 
 public class InformationEventHandler : IMessageHandler<BaseInformationMessage>
 {
-    private readonly ITelegramService _telegramService;
+    private readonly ITelegramNotificationService _telegramNotificationService;
     private readonly ILogger<InformationEventHandler> _logger;
 
-    public InformationEventHandler(ITelegramService telegramService, ILogger<InformationEventHandler> logger)
+    public InformationEventHandler(ITelegramNotificationService telegramNotificationService, ILogger<InformationEventHandler> logger)
     {
-        _telegramService = telegramService;
+        _telegramNotificationService = telegramNotificationService;
         _logger = logger;
     }
 
@@ -30,7 +30,7 @@ public class InformationEventHandler : IMessageHandler<BaseInformationMessage>
     private async Task<bool> HandleStartMessageAsync(StartMessage message, CancellationToken cancellationToken = default)
     {
         _logger.LogInformation("Операция {OperationId} началась.", message.OperationId);
-        await _telegramService.NotifyOperationStartAsync(message.OperationId, message.Details, cancellationToken);
+        await _telegramNotificationService.NotifyOperationStartAsync(message.OperationId, message.Details, cancellationToken);
         return await Task.FromResult(true);
     }
 
@@ -40,7 +40,7 @@ public class InformationEventHandler : IMessageHandler<BaseInformationMessage>
             "Операция {OperationId} завершилась: за {duration:hh\\:mm\\:ss} было скачано {Count} записей.",
             message.OperationId, message.Duration, message.Count);
 
-        await _telegramService.NotifyOperationCompleteAsync(message.OperationId,
+        await _telegramNotificationService.NotifyOperationCompleteAsync(message.OperationId,
             $"Операция {message.OperationId} завершилась. Было загружено {message.Count} записей.",
             message.Duration, cancellationToken);
 

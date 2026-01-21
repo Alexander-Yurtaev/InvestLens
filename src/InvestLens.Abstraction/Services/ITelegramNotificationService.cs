@@ -2,7 +2,7 @@
 
 namespace InvestLens.Abstraction.Services;
 
-public interface ITelegramService
+public interface ITelegramNotificationService
 {
     Task NotifyAsync(string message, CancellationToken cancellationToken = default);
     Task NotifyOperationStartAsync(string operationId, string details, CancellationToken cancellationToken = default);

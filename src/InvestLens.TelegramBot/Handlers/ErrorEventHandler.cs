@@ -6,19 +6,19 @@ namespace InvestLens.TelegramBot.Handlers;
 
 public class ErrorEventHandler : IMessageHandler<ErrorMessage>
 {
-    private readonly ITelegramService _telegramService;
+    private readonly ITelegramNotificationService _telegramNotificationService;
     private readonly ILogger<ErrorEventHandler> _logger;
 
-    public ErrorEventHandler(ITelegramService telegramService, ILogger<ErrorEventHandler> logger)
+    public ErrorEventHandler(ITelegramNotificationService telegramNotificationService, ILogger<ErrorEventHandler> logger)
     {
-        _telegramService = telegramService;
+        _telegramNotificationService = telegramNotificationService;
         _logger = logger;
     }
 
     public async Task<bool> HandleAsync(ErrorMessage message, CancellationToken cancellationToken = default)
     {
         _logger.LogInformation("Операция {OperationId} завершилась неудачно: {Exception}", message.OperationId, message.Exception.Message);
-        await _telegramService.NotifyOperationStartAsync(message.OperationId,
+        await _telegramNotificationService.NotifyOperationStartAsync(message.OperationId,
             $"Операция {message.OperationId} завершилась неудачно: {message.Exception.Message}", cancellationToken);
         return await Task.FromResult(true);
     }
