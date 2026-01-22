@@ -66,8 +66,6 @@ public class MoexClient : IMoexClient
             {
                 await _statusService.SetDownloading(data.Count);
             }
-
-            if (start == 300_000) break;
         }
 
         _logger.LogInformation("От MOEX было получено {SecuritiesCount}.", data.Count);

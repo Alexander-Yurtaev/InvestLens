@@ -17,7 +17,7 @@ public class SecurityGrpcClientService : ISecurityGrpcClientService
         _logger = logger;
     }
 
-    public async Task<SecuritiesDto> GetSecuritiesAsync(int page, int pageSize, string? sort = "", string? filter = "")
+    public async Task<SecuritiesDto?> GetSecuritiesAsync(int page, int pageSize, string? sort = "", string? filter = "")
     {
         try
         {
@@ -58,7 +58,7 @@ public class SecurityGrpcClientService : ISecurityGrpcClientService
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
-            throw;
+            return null;
         }
     }
 }

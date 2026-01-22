@@ -45,13 +45,20 @@ public class SecuritiesModel : PageModel
 
         Columns = GetColumns();
         var securitiesDto = await _service.GetSecuritiesAsync(CurrentPage, PageSize, sort, filter);
-        
-        _logger.LogInformation("От gRPC-сервера получено {SecuritiesCount} записей.", securitiesDto.Data.Count);
 
-        Securities = securitiesDto.Data;
-        TotalPages = securitiesDto.TotalPages;
-        TotalItems = securitiesDto.TotalItems;
+        if (securitiesDto is null)
+        {
+            _logger.LogWarning($"Метод {nameof(ISecurityGrpcClientService.GetSecuritiesAsync)} не вернул данные.");
+        }
+        else
+        {
+            _logger.LogInformation("От gRPC-сервера получено {SecuritiesCount} записей.", securitiesDto.Data.Count);
 
+            Securities = securitiesDto.Data;
+            TotalPages = securitiesDto.TotalPages;
+            TotalItems = securitiesDto.TotalItems;
+        }
+            
         return Page();
     }
 
