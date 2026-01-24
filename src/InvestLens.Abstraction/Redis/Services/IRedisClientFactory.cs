@@ -1,6 +1,4 @@
-﻿using InvestLens.Abstraction.MessageBus.Services;
-
-namespace InvestLens.Abstraction.Redis.Services;
+﻿namespace InvestLens.Abstraction.Redis.Services;
 
 public interface IRedisClientFactory
 {

@@ -55,6 +55,8 @@ public class SecurityRefreshingEventHandler : IMessageHandler<SecurityRefreshing
         }
     }
 
+    #region Private Methods
+
     private async Task RefreshSecurities(string operationId, DateTime startedAt, CancellationToken cancellationToken)
     {
         try
@@ -137,4 +139,6 @@ public class SecurityRefreshingEventHandler : IMessageHandler<SecurityRefreshing
                 BusClientConstants.TelegramErrorKey, cancellationToken);
         });
     }
+
+    # endregion Private Methods
 }

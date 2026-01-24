@@ -1,9 +1,9 @@
 ﻿using InvestLens.Abstraction.Redis.Data;
 using InvestLens.Abstraction.Redis.Services;
+using InvestLens.Abstraction.Services;
 using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
 using System.Text.Json;
-using InvestLens.Abstraction.Services;
 
 namespace InvestLens.Shared.Redis.Services;
 
@@ -44,7 +44,7 @@ public class RedisClient : IRedisClient, IDisposable
         {
             var resilientPolicy = _pollyService.GetResilientPolicy<Exception>();
             var redisKey = BuildKey(key);
-            var value = await resilientPolicy.ExecuteAsync(async() => await _database.StringGetAsync(redisKey));
+            var value = await resilientPolicy.ExecuteAsync(async () => await _database.StringGetAsync(redisKey));
 
             if (!value.HasValue)
                 return default;
@@ -67,7 +67,7 @@ public class RedisClient : IRedisClient, IDisposable
 
             var resilientPolicy = _pollyService.GetResilientPolicy<Exception>();
 
-            await resilientPolicy.ExecuteAsync(async() => await _database.StringSetAsync(redisKey, serializedValue, expiry, When.Always));
+            await resilientPolicy.ExecuteAsync(async () => await _database.StringSetAsync(redisKey, serializedValue, expiry, When.Always));
         }
         catch (Exception ex)
         {
@@ -83,7 +83,7 @@ public class RedisClient : IRedisClient, IDisposable
             var redisKey = BuildKey(key);
             var resilientPolicy = _pollyService.GetResilientPolicy<Exception>();
 
-            return await resilientPolicy.ExecuteAsync(async () =>  await _database.KeyDeleteAsync(redisKey));
+            return await resilientPolicy.ExecuteAsync(async () => await _database.KeyDeleteAsync(redisKey));
         }
         catch (Exception ex)
         {

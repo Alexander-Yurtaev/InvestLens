@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Serilog;
 using Serilog.Formatting.Compact;
-using Serilog.Formatting.Json;
 
 namespace InvestLens.Shared.Helpers;
 

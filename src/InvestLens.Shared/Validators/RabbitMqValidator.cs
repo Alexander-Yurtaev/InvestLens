@@ -1,5 +1,4 @@
-﻿using InvestLens.Shared.MessageBus.Data;
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 
 namespace InvestLens.Shared.Validators;
 

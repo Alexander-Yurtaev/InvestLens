@@ -1,6 +1,4 @@
-﻿using InvestLens.Data.Entities;
-
-namespace InvestLens.Shared.Helpers;
+﻿namespace InvestLens.Shared.Helpers;
 
 public static class DateTimeHelper
 {

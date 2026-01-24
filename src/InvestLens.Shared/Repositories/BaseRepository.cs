@@ -58,7 +58,7 @@ public abstract class BaseRepository<TEntity, TKey> : IBaseRepository<TEntity, T
         }
     }
 
-    public virtual async Task<int> Add(List<TEntity> entities, bool orUpdate=false)
+    public virtual async Task<int> Add(List<TEntity> entities, bool orUpdate = false)
     {
         try
         {
@@ -221,7 +221,7 @@ public abstract class BaseRepository<TEntity, TKey> : IBaseRepository<TEntity, T
     {
         var entity = await ResilientPolicy.ExecuteAsync(async () => await DbSet.FindAsync(id));
         if (entity is not null || !throwIfNotFound) return entity;
-        
+
         Logger.LogWarning("Сущность не найдена с Id: {Id}", id);
         throw new KeyNotFoundException($"Entity not found.");
     }

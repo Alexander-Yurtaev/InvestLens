@@ -4,9 +4,9 @@ namespace InvestLens.Abstraction.Repositories;
 
 public interface IBaseRepository<TEntity, TKey> where TEntity : BaseEntity<TKey> where TKey : struct
 {
-    Task<TEntity> Add(TEntity entity, bool orUpdate=false);
+    Task<TEntity> Add(TEntity entity, bool orUpdate = false);
 
-    Task<int> Add(List<TEntity> entities, bool orUpdate=false);
+    Task<int> Add(List<TEntity> entities, bool orUpdate = false);
 
     Task<List<TEntity>> Get();
 

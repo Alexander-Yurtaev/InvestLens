@@ -1,7 +1,7 @@
-﻿using System.Text.Json;
-using InvestLens.Data.Entities;
+﻿using InvestLens.Data.Entities;
 using InvestLens.Data.Shared.Responses;
 using InvestLens.Shared.Helpers;
+using System.Text.Json;
 
 namespace InvestLens.Data.Api.Converter;
 
@@ -19,7 +19,7 @@ public static class ResponseToEntityConverters
                 var column = securitiesResponse.Securities.Columns[i];
                 var metaData = securitiesResponse.Securities.Metadata[column];
                 var propertyInfo = PropertyHelper.GetPropertyByJsonNameCached<Security>(column);
-                
+
                 if (propertyInfo is null)
                 {
                     throw new InvalidDataException($"Invalid property '{column}'");

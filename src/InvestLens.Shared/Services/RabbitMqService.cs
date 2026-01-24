@@ -1,11 +1,11 @@
-﻿using System.Net.Sockets;
-using InvestLens.Abstraction.MessageBus.Data;
+﻿using InvestLens.Abstraction.MessageBus.Data;
 using InvestLens.Abstraction.Services;
 using InvestLens.Shared.Validators;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Polly;
 using RabbitMQ.Client;
+using System.Net.Sockets;
 
 namespace InvestLens.Shared.Services;
 

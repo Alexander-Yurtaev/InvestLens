@@ -1,4 +1,7 @@
-﻿using InvestLens.Abstraction.MessageBus.Models;
+﻿using InvestLens.Abstraction.MessageBus.Data;
+using InvestLens.Abstraction.MessageBus.Models;
+using InvestLens.Abstraction.MessageBus.Services;
+using InvestLens.Abstraction.Services;
 using InvestLens.Shared.MessageBus.Exceptions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -8,9 +11,6 @@ using System.Collections.Concurrent;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using InvestLens.Abstraction.MessageBus.Data;
-using InvestLens.Abstraction.MessageBus.Services;
-using InvestLens.Abstraction.Services;
 
 namespace InvestLens.Shared.MessageBus.Services;
 

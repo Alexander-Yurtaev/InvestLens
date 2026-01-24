@@ -1,7 +1,5 @@
-﻿using InvestLens.Abstraction.MessageBus.Services;
-using InvestLens.Abstraction.Redis.Data;
+﻿using InvestLens.Abstraction.Redis.Data;
 using InvestLens.Abstraction.Redis.Services;
-using InvestLens.Shared.MessageBus.Services;
 using InvestLens.Shared.Redis.Data;
 using InvestLens.Shared.Redis.Services;
 using Microsoft.Extensions.Configuration;
