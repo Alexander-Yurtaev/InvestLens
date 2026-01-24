@@ -37,9 +37,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InvestLens.Abstraction", "s
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{A6408FA0-0BD2-4160-A3F2-B767A4929F36}"
 	ProjectSection(SolutionItems) = preProject
-		docs\iss.moex\links.md = docs\iss.moex\links.md
+		docs\readme\architecture.md = docs\readme\architecture.md
+		docs\links.md = docs\links.md
 		docs\migrations.md = docs\migrations.md
-		docs\iss.moex\Программный интерфейс ISS.pdf = docs\iss.moex\Программный интерфейс ISS.pdf
+		docs\readme\mindmap.md = docs\readme\mindmap.md
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InvestLens.Data.Shared", "src\InvestLens.Data.Shared\InvestLens.Data.Shared.csproj", "{31FE5B7A-35A7-C8A0-E340-2E01B6A1962A}"
@@ -50,6 +51,19 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{1F31
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InvestLens.TelegramBot", "src\InvestLens.TelegramBot\InvestLens.TelegramBot.csproj", "{A0153B2D-021B-4C5A-A88B-3EAD0112DB3D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "iss.moex", "iss.moex", "{393E1EF4-DFD4-4705-B84F-DEF20F6E1C94}"
+	ProjectSection(SolutionItems) = preProject
+		docs\iss.moex\links.md = docs\iss.moex\links.md
+		docs\iss.moex\Программный интерфейс ISS.pdf = docs\iss.moex\Программный интерфейс ISS.pdf
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "readme", "readme", "{EC20DA1F-8D9F-4591-9D52-502DCBA37D4F}"
+	ProjectSection(SolutionItems) = preProject
+		docs\readme\architecture.md = docs\readme\architecture.md
+		docs\readme\loading-processing-saving.md = docs\readme\loading-processing-saving.md
+		docs\readme\mindmap.md = docs\readme\mindmap.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -122,6 +136,8 @@ Global
 		{35DEA1BA-B40D-4AEB-B6EB-0A3F27B08F2A} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{31FE5B7A-35A7-C8A0-E340-2E01B6A1962A} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{A0153B2D-021B-4C5A-A88B-3EAD0112DB3D} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{393E1EF4-DFD4-4705-B84F-DEF20F6E1C94} = {A6408FA0-0BD2-4160-A3F2-B767A4929F36}
+		{EC20DA1F-8D9F-4591-9D52-502DCBA37D4F} = {A6408FA0-0BD2-4160-A3F2-B767A4929F36}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {F09F387B-F917-4C4C-993B-B2E123B73E68}

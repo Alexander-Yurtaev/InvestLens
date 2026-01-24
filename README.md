@@ -26,17 +26,19 @@ flowchart TD
 	web@{ shape: circle, label: "Web клиент [InvestLens.Web] (ASP.NET Web Core + Razor Pages)" }
 	-->
 	api_gateway@{ shape: rounded, label: "API Gateway [] (Ocelot) Аутентификация, маршрутизация, CORS" }
-	-->
+	-- Import -->
 	portfolio_service@{ shape: rounded, label: "Portfolio Service [] (Minimal API) Сервис для работы с портфелями" }
 
 	api_gateway
 	--> 
 	api_service@{ shape: rounded, label: "API Service [] (Minimal API) Сервис с основной бизнес-логикой" }
-	-->
+	--gRPC-->
 	data_service@{ shape: rounded, label: "Data Service [InvestLens.Data] (Minimal API) Сервис для работы с данными от MOEX" }
-	--gRPC-->
+	--RabbitMQ-->
 	worker_service@{ shape: rounded, label: "Worker Service [InvestLens.Worker] (Hangfire + Minimal API) Сервис для запуска фоновых процессов" }
-	--gRPC-->
+	--RabbitMQ-->
 	data_service
+
+	api_service --gRPC--> portfolio_service
 ```
 
