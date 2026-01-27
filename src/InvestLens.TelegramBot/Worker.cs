@@ -18,46 +18,46 @@ namespace InvestLens.TelegramBot
         {
             while (!stoppingToken.IsCancellationRequested)
             {
-                var operationId = Guid.NewGuid().ToString();
+                var correlationId = Guid.NewGuid();
 
                 try
                 {
                     // Уведомление о начале
-                    _logger.LogInformation("Запуск длинной операции обработки данных {OperationId}", operationId);
+                    _logger.LogInformation("Запуск длинной операции обработки данных {OperationId}", correlationId);
                     await _telegramBotClient.NotifyOperationStartAsync(
-                        operationId,
+                        correlationId,
                         "Запуск длинной операции обработки данных",
                         stoppingToken);
 
                     var startTime = DateTime.UtcNow;
 
                     // Долгая операция
-                    await PerformLongOperation(operationId, stoppingToken);
+                    await PerformLongOperation(correlationId, stoppingToken);
 
                     var duration = DateTime.UtcNow - startTime;
 
                     // Уведомление об окончании
-                    _logger.LogInformation("Операция успешно завершена {OperationId}", operationId);
+                    _logger.LogInformation("Операция успешно завершена {OperationId}", correlationId);
                     await _telegramBotClient.NotifyOperationCompleteAsync(
-                        operationId,
+                        correlationId,
                         "Операция успешно завершена",
                         duration,
                         stoppingToken);
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Ошибка при выполнении длинной операции {OperationId}", operationId);
-                    await _telegramBotClient.NotifyErrorAsync($"Длинная операция {operationId}", ex.Message, stoppingToken);
+                    _logger.LogError(ex, "Ошибка при выполнении длинной операции {CorrelationId}", correlationId);
+                    await _telegramBotClient.NotifyErrorAsync(correlationId, $"Длинная операция {correlationId}: {ex.Message}", stoppingToken);
                 }
 
-                _logger.LogInformation("Операция завершена {OperationId}", operationId);
-                await _telegramBotClient.NotifyAsync($"Операция завершена {operationId}", stoppingToken);
+                _logger.LogInformation("Операция завершена {CorrelationId}", correlationId);
+                await _telegramBotClient.NotifyAsync($"Операция завершена {correlationId}", stoppingToken);
 
                 break;
             }
         }
 
-        private async Task PerformLongOperation(string operationId, CancellationToken cancellationToken)
+        private async Task PerformLongOperation(Guid correlationId, CancellationToken cancellationToken)
         {
             // Имитация длительной операции
             await Task.Delay(TimeSpan.FromMinutes(5), cancellationToken);

@@ -5,14 +5,17 @@ namespace InvestLens.Shared.Redis.Models;
 
 public class SecuritiesRefreshProgress : ISecuritiesRefreshProgress
 {
-    public SecuritiesRefreshProgress(string operationId)
+    public SecuritiesRefreshProgress(Guid correlationId)
     {
-        OperationId = operationId;
-        StartedAt = DateTime.UtcNow;
-        UpdatedAt = DateTime.UtcNow;
+        CorrelationId = correlationId;
+        var now = DateTime.UtcNow;
+        StartedAt = now;
+        UpdatedAt = now;
     }
 
-    public string OperationId { get; set; }
+    public string MessageId { get; set; } = Guid.NewGuid().ToString();
+    
+    public Guid CorrelationId { get; set; }
 
     public SecuritiesRefreshStatus Status { get; set; } = SecuritiesRefreshStatus.None;
 

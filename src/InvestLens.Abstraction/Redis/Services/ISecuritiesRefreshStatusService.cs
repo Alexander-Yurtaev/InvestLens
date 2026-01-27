@@ -4,7 +4,7 @@ namespace InvestLens.Abstraction.Redis.Services;
 
 public interface ISecuritiesRefreshStatusService
 {
-    Task<(string, DateTime)> Init();
+    Task<(Guid, DateTime)> Init();
     Task<ISecuritiesRefreshProgress> TryGetProgress();
     Task Reset();
     Task SetScheduled();

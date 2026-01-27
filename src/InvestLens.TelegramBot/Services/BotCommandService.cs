@@ -55,13 +55,13 @@ public class BotCommandService : IBotCommandService
                 break;
             case SecuritiesRefreshStatus.Completed:
                 await _telegramBotClient.NotifyOperationCompleteAsync(
-                    refreshStatus.OperationId,
+                    refreshStatus.CorrelationId,
                     $"{refreshStatus.Status.GetDescription()}: {refreshStatus.DownloadedCount}/{refreshStatus.SavedCount}",
                     refreshStatus.Duration,
                     cancellationToken);
                 break;
             case SecuritiesRefreshStatus.Failed:
-                await _telegramBotClient.NotifyErrorAsync(refreshStatus.OperationId, refreshStatus.ErrorMessage, cancellationToken);
+                await _telegramBotClient.NotifyErrorAsync(refreshStatus.CorrelationId, refreshStatus.ErrorMessage, cancellationToken);
                 break;
             default:
                 throw new ArgumentOutOfRangeException();

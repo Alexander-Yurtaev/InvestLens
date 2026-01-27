@@ -2,10 +2,10 @@
 
 public abstract class BaseTelegramMessage : BaseMessage
 {
-    public BaseTelegramMessage(string operationId)
+    public BaseTelegramMessage(Guid correlationId)
     {
-        OperationId = operationId;
+        CorrelationId = correlationId;
     }
 
-    public string OperationId { get; init; }
+    public Guid CorrelationId { get; init; }
 }

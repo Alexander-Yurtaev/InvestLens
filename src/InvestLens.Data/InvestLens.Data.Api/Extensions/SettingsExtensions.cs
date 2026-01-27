@@ -23,9 +23,9 @@ public static class SettingsExtensions
     {
         ArgumentException.ThrowIfNullOrEmpty(commonSettings.MoexBaseUrl, nameof(commonSettings.MoexBaseUrl));
         ArgumentException.ThrowIfNullOrEmpty(commonSettings.TargetMigration, nameof(commonSettings.TargetMigration));
-        if (commonSettings.ExpiredRefreshStatusMinutes <= 0)
+        if (commonSettings.ExpiredRefreshStatus.TotalMinutes <= 0)
         {
-            throw new ArgumentException("ExpiredRefreshStatusMinutes must be grate then 0.");
+            throw new ArgumentException("ExpiredRefreshStatus must be grate then 0 minutes.");
         }
     }
 

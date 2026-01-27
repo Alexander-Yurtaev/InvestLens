@@ -69,7 +69,7 @@ public static class Program
 
             // RabbitMQ
             builder.Services.AddRabbitMqSettings(builder.Configuration).AddRabbitMqClient();
-            builder.Services.AddScoped<SecurityRefreshingEventHandler>();
+            builder.Services.AddScoped<SecurityRefreshEventHandler>();
 
             builder.Services.AddHealthChecks()
                 .AddNpgSql(ConnectionStringHelper.GetTargetConnectionString(builder.Configuration))
@@ -103,7 +103,7 @@ public static class Program
             }
 
             var messageBus = app.Services.GetRequiredService<IMessageBusClient>();
-            await messageBus.SubscribeAsync<SecurityRefreshingMessage, SecurityRefreshingEventHandler>(
+            await messageBus.SubscribeAsync<SecurityRefreshMessage, SecurityRefreshEventHandler>(
                 queueName: BusClientConstants.SecretesRefreshQueue,
                 exchangeName: BusClientConstants.SecuritiesExchangeName,
                 routingKey: BusClientConstants.DataSecuritiesRefreshKey);

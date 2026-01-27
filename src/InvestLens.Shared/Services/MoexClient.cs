@@ -24,7 +24,7 @@ public class MoexClient : IMoexClient
     /// </summary>
     /// <returns></returns>
     /// <warning>При создании HttpClient были применены AddPolicyHandler.</warning>
-    public async Task<SecuritiesResponse?> GetSecurities(string operationId)
+    public async Task<SecuritiesResponse?> GetSecurities(Guid correlationId)
     {
         var start = 0;
         const int limit = 100;

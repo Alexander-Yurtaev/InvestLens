@@ -2,8 +2,8 @@
 
 public static class DateTimeHelper
 {
-    public static bool IsRefreshed(DateTime start, int expired)
+    public static bool IsRefreshed(DateTime start, TimeSpan expired)
     {
-        return start.AddMinutes(expired) > DateTime.UtcNow;
+        return start.AddSeconds(expired.TotalSeconds) > DateTime.UtcNow;
     }
 }

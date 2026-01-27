@@ -16,7 +16,7 @@ public class SecurityRefreshEventHandler : IMessageHandler<SecurityRefreshMessag
     private readonly IJobSettings _jobSettings;
     private readonly ILogger<SecurityRefreshEventHandler> _logger;
 
-    private SecuritiesRefreshStatus[] _idleStatuses =
+    private readonly SecuritiesRefreshStatus[] _idleStatuses =
         [SecuritiesRefreshStatus.None, SecuritiesRefreshStatus.Completed, SecuritiesRefreshStatus.Failed];
 
     public SecurityRefreshEventHandler(
@@ -33,28 +33,51 @@ public class SecurityRefreshEventHandler : IMessageHandler<SecurityRefreshMessag
 
     public async Task<bool> HandleAsync(SecurityRefreshMessage message, CancellationToken cancellationToken = default)
     {
-        _logger.LogInformation("Получено поручение обновить список ценных бумаг.");
+        _logger.LogInformation("Получено задание на обновление списка ценных бумаг.");
 
-        // 1. Проверяем, что в данный момент нет запущенной задачи для обновления данных
-        var securitiesRefreshStatus = await _redisClient.GetAsync<SecuritiesRefreshProgress?>(RedisKeys.SecuritiesRefreshStatusRedisKey);
-        if (securitiesRefreshStatus is not null) // есть запись о статусе
+        try
         {
-            if (!_idleStatuses.Contains(securitiesRefreshStatus.Status)) // задача запущена
+            // 1. Проверяем, что в данный момент не выполняется задача обновления данных
+            var securitiesRefreshStatus = await _redisClient.GetAsync<SecuritiesRefreshProgress?>(
+                RedisKeys.SecuritiesRefreshStatusRedisKey);
+
+            if (securitiesRefreshStatus is not null)
             {
-                _logger.LogInformation("Обновление списка ценных бумаг уже запущено.");
-                return true;
+                // Проверяем, выполняется ли задача в данный момент
+                if (!_idleStatuses.Contains(securitiesRefreshStatus.Status))
+                {
+                    _logger.LogInformation("Обновление списка ценных бумаг уже выполняется. Статус: {Status}",
+                        securitiesRefreshStatus.Status);
+                    return true;
+                }
+
+                // Проверяем, не было ли недавнего успешного обновления
+                if (DateTimeHelper.IsRefreshed(securitiesRefreshStatus.UpdatedAt, _jobSettings.DelayBetweenRefresh))
+                {
+                    _logger.LogInformation(
+                        "Список ценных бумаг был обновлен {UpdatedAt}. " +
+                        "Следующее обновление возможно через {Delay} минут. Задача отменена.",
+                        securitiesRefreshStatus.UpdatedAt,
+                        _jobSettings.DelayBetweenRefresh.TotalMinutes);
+                    return true;
+                }
             }
 
-            if (DateTimeHelper.IsRefreshed(securitiesRefreshStatus.UpdatedAt, _jobSettings.DelayBetweenRefresh)) // задача недавно завершилась
-            {
-                _logger.LogInformation("Списк ценных бумаг был обновлен недавно. Повторный запуск отменяется.");
-                return true;
-            }
+            // 2. Отправляем сообщение сервису InvestLens.Data для обновления данных
+            // Используем тот же тип сообщения, что был получен
+            await _messageBus.PublishAsync(
+                message, // Используем исходное сообщение или создаем новое
+                BusClientConstants.SecuritiesExchangeName,
+                BusClientConstants.DataSecuritiesRefreshKey,
+                cancellationToken);
+
+            _logger.LogInformation("Задание на обновление списка ценных бумаг отправлено в очередь.");
+            return true;
         }
-
-        // 2. Отправить сообщение сервису InvestLens.Data о том, что необходимо обновить данные
-        var refreshingMessage = new SecurityRefreshingMessage();
-        await _messageBus.PublishAsync(refreshingMessage, BusClientConstants.SecuritiesExchangeName, BusClientConstants.DataSecuritiesRefreshKey, cancellationToken);
-        return true;
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Ошибка при обработке задания обновления списка ценных бумаг.");
+            return false; // Возвращаем false для NACK и отправки в DLQ
+        }
     }
 }

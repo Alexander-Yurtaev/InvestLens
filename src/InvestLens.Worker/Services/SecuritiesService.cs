@@ -57,7 +57,7 @@ public class SecuritiesService : ISecuritiesService
         var resilientPolicy = _pollyService.GetRabbitMqResilientPolicy();
         await resilientPolicy.ExecuteAndCaptureAsync(async () =>
         {
-            await _messageBusClient.PublishAsync(new SecurityRefreshingMessage(),
+            await _messageBusClient.PublishAsync(new SecurityRefreshMessage(),
                                                  BusClientConstants.SecuritiesExchangeName,
                                                  BusClientConstants.DataSecuritiesRefreshKey,
                                                  _cancellationToken);

@@ -29,8 +29,8 @@ public class InformationEventHandler : IMessageHandler<BaseInformationMessage>
 
     private async Task<bool> HandleStartMessageAsync(StartMessage message, CancellationToken cancellationToken = default)
     {
-        _logger.LogInformation("Операция {OperationId} началась.", message.OperationId);
-        await _telegramBotClient.NotifyOperationStartAsync(message.OperationId, message.Details, cancellationToken);
+        _logger.LogInformation("Операция {OperationId} началась.", message.CorrelationId);
+        await _telegramBotClient.NotifyOperationStartAsync(message.CorrelationId, message.Details, cancellationToken);
         return await Task.FromResult(true);
     }
 
@@ -38,10 +38,10 @@ public class InformationEventHandler : IMessageHandler<BaseInformationMessage>
     {
         _logger.LogInformation(
             "Операция {OperationId} завершилась: за {duration:hh\\:mm\\:ss} было скачано {Count} записей.",
-            message.OperationId, message.Duration, message.Count);
+            message.CorrelationId, message.Duration, message.Count);
 
-        await _telegramBotClient.NotifyOperationCompleteAsync(message.OperationId,
-            $"Операция {message.OperationId} завершилась. Было загружено {message.Count} записей.",
+        await _telegramBotClient.NotifyOperationCompleteAsync(message.CorrelationId,
+            $"Операция {message.Count} завершилась. Было загружено {message.Count} записей.",
             message.Duration, cancellationToken);
 
         return await Task.FromResult(true);

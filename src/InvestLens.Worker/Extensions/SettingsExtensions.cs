@@ -21,9 +21,9 @@ public static class SettingsExtensions
 
     private static void ValidateJobSettings(IJobSettings jobSettings)
     {
-        if (jobSettings.DelayBetweenRefresh <= 0)
+        if (jobSettings.DelayBetweenRefresh.TotalMinutes <= 0)
         {
-            throw new ArgumentException("DelayBetweenRefresh must be grate then 0.");
+            throw new ArgumentException("DelayBetweenRefresh must be grate then 0 minutes.");
         }
 
         if (jobSettings.MaxRetryCount <= 0)

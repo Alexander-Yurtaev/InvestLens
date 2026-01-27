@@ -65,7 +65,7 @@ public class InvestLensBot : BackgroundService, IHealthCheck
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Ошибка при проверке сообщений в чат-боте.");
-                await _botClient.NotifyErrorAsync("Ошибка при проверке сообщений в чат-боте.", ex.Message, stoppingToken);
+                await _botClient.NotifyErrorAsync(Guid.Empty, "Ошибка при проверке сообщений в чат-боте: {ex.Message}", stoppingToken);
             }
         }
 

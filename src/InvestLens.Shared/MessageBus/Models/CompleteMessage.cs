@@ -2,7 +2,7 @@
 
 public class CompleteMessage : BaseInformationMessage
 {
-    public CompleteMessage(string operationId) : base(operationId)
+    public CompleteMessage(Guid correlationId) : base(correlationId)
     {
     }
 

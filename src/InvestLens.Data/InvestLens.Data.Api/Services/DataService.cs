@@ -38,7 +38,7 @@ public class DataService : IDataService
     private async Task RefreshSecurities()
     {
         var refreshStatus = await _refreshStatusRepository.GetRefreshStatus(DatabaseConstants.SecurityEntityName);
-        if (refreshStatus is null || !DateTimeHelper.IsRefreshed(refreshStatus.RefreshDate, _commonSettings.ExpiredRefreshStatusMinutes))
+        if (refreshStatus is null || !DateTimeHelper.IsRefreshed(refreshStatus.RefreshDate, _commonSettings.ExpiredRefreshStatus))
         {
             var message = new SecurityRefreshMessage();
             await _messageBus.PublishAsync(message, BusClientConstants.SecuritiesExchangeName, BusClientConstants.WorkerSecuritiesRefreshKey);

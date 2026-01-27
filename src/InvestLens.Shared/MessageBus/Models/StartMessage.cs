@@ -2,7 +2,7 @@
 
 public class StartMessage : BaseInformationMessage
 {
-    public StartMessage(string operationId) : base(operationId)
+    public StartMessage(Guid correlationId) : base(correlationId)
     {
     }
 

@@ -8,7 +8,7 @@ using InvestLens.Shared.MessageBus.Models;
 
 namespace InvestLens.Data.Api.Handlers;
 
-public class SecurityRefreshingEventHandler : IMessageHandler<SecurityRefreshingMessage>
+public class SecurityRefreshEventHandler : IMessageHandler<SecurityRefreshMessage>
 {
     private readonly IMoexClient _moexClient;
     private readonly IPollyService _pollyService;
@@ -16,16 +16,16 @@ public class SecurityRefreshingEventHandler : IMessageHandler<SecurityRefreshing
     private readonly IMessageBusClient _messageBus;
     private readonly ISecurityRepository _securityRepository;
     private readonly IRefreshStatusRepository _refreshStatusRepository;
-    private readonly ILogger<SecurityRefreshingEventHandler> _logger;
+    private readonly ILogger<SecurityRefreshEventHandler> _logger;
 
-    public SecurityRefreshingEventHandler(
+    public SecurityRefreshEventHandler(
         IMoexClient moexClient,
         IPollyService pollyService,
         ISecuritiesRefreshStatusService statusService,
         IMessageBusClient messageBus,
         ISecurityRepository securityRepository,
         IRefreshStatusRepository refreshStatusRepository,
-        ILogger<SecurityRefreshingEventHandler> logger)
+        ILogger<SecurityRefreshEventHandler> logger)
     {
         _moexClient = moexClient;
         _pollyService = pollyService;
@@ -36,7 +36,7 @@ public class SecurityRefreshingEventHandler : IMessageHandler<SecurityRefreshing
         _logger = logger;
     }
 
-    public async Task<bool> HandleAsync(SecurityRefreshingMessage message, CancellationToken cancellationToken = default)
+    public async Task<bool> HandleAsync(SecurityRefreshMessage message, CancellationToken cancellationToken = default)
     {
         _logger.LogInformation("Получено поручение обновить список ценных бумаг: {MessageId} от {MessageCreatedAt}.", message.MessageId, message.CreatedAt);
 
@@ -57,12 +57,12 @@ public class SecurityRefreshingEventHandler : IMessageHandler<SecurityRefreshing
 
     #region Private Methods
 
-    private async Task RefreshSecurities(string operationId, DateTime startedAt, CancellationToken cancellationToken)
+    private async Task RefreshSecurities(Guid correlationId, DateTime startedAt, CancellationToken cancellationToken)
     {
         try
         {
             // 1. Получаем данные от MOEX
-            var securitiesResponse = await _moexClient.GetSecurities(operationId);
+            var securitiesResponse = await _moexClient.GetSecurities(correlationId);
             if (securitiesResponse is null || securitiesResponse.Securities.Data.Length == 0)
             {
                 throw new InvalidOperationException("Не были получены данные от MOEX.");
@@ -81,22 +81,22 @@ public class SecurityRefreshingEventHandler : IMessageHandler<SecurityRefreshing
             // 4. Обновляем RefreshStatus
             await _refreshStatusRepository.SetRefreshStatus(DatabaseConstants.SecurityEntityName);
 
-            await SendCompleteMessage(operationId, startedAt, securities.Count, cancellationToken);
+            await SendCompleteMessage(correlationId, startedAt, securities.Count, cancellationToken);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Ошибка при обновлении данных.");
 
             await _statusService.SetFailed(ex.Message);
-            await SendErrorMessage(operationId, startedAt, ex, cancellationToken);
+            await SendErrorMessage(correlationId, startedAt, ex, cancellationToken);
 
             throw;
         }
     }
 
-    private async Task SendStartMessage(string operationId, DateTime startedAt, CancellationToken cancellationToken)
+    private async Task SendStartMessage(Guid correlationId, DateTime startedAt, CancellationToken cancellationToken)
     {
-        var message = new StartMessage(operationId)
+        var message = new StartMessage(correlationId)
         {
             CreatedAt = startedAt,
             Details = "Началась загрузка списка ценных бумаг на MOEX."
@@ -110,31 +110,29 @@ public class SecurityRefreshingEventHandler : IMessageHandler<SecurityRefreshing
         });
     }
 
-    private async Task SendCompleteMessage(string operationId, DateTime startedAt, int count, CancellationToken cancellationToken)
+    private async Task SendCompleteMessage(Guid correlationId, DateTime startedAt, int count, CancellationToken cancellationToken)
     {
-        var message = new CompleteMessage(operationId)
+        var message = new CompleteMessage(correlationId)
         {
             CreatedAt = startedAt,
             FinishedAt = DateTime.UtcNow,
             Count = count
         };
-        // ToDo исправить на актуальный Exception.
-        var resilientPolicy = _pollyService.GetResilientPolicy<Exception>();
-        await resilientPolicy.ExecuteAndCaptureAsync(async () =>
+        var rabbitMqRetryPolicy = _pollyService.GetRabbitMqRetryPolicy();
+        await rabbitMqRetryPolicy.ExecuteAndCaptureAsync(async () =>
         {
             await _messageBus.PublishAsync(message, BusClientConstants.TelegramExchangeName,
                 BusClientConstants.TelegramCompleteKey, cancellationToken);
         });
     }
 
-    private async Task SendErrorMessage(string operationId, DateTime startedAt, Exception exception,
+    private async Task SendErrorMessage(Guid correlationId, DateTime startedAt, Exception exception,
         CancellationToken cancellationToken)
     {
-        // ToDo исправить на актуальный Exception.
-        var resilientPolicy = _pollyService.GetResilientPolicy<Exception>();
-        await resilientPolicy.ExecuteAndCaptureAsync(async () =>
+        var rabbitMqRetryPolicy = _pollyService.GetRabbitMqRetryPolicy();
+        await rabbitMqRetryPolicy.ExecuteAndCaptureAsync(async () =>
         {
-            var message = new ErrorMessage(operationId, DateTime.UtcNow, exception) { CreatedAt = startedAt };
+            var message = new ErrorMessage(correlationId, DateTime.UtcNow, exception) { CreatedAt = startedAt };
             await _messageBus.PublishAsync(message, BusClientConstants.TelegramExchangeName,
                 BusClientConstants.TelegramErrorKey, cancellationToken);
         });

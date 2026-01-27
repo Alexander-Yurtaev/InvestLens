@@ -159,7 +159,7 @@ public class PollyService : IPollyService
                 },
                 onReset: () =>
                 {
-                    _logger.LogInformation("Цепь для {ExceptionType} восстановлена!", typeof(TextReader).Name);
+                    _logger.LogInformation("Цепь для {ExceptionType} восстановлена!", typeof(TException).Name);
                 },
                 onHalfOpen: () =>
                 {

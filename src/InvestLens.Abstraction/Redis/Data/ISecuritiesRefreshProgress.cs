@@ -4,7 +4,9 @@ namespace InvestLens.Abstraction.Redis.Data;
 
 public interface ISecuritiesRefreshProgress
 {
-    string OperationId { get; set; }
+    string MessageId { get; set; }
+
+    Guid CorrelationId { get; set; }
     DateTime StartedAt { get; set; }
     DateTime UpdatedAt { get; set; }
     SecuritiesRefreshStatus Status { get; set; }

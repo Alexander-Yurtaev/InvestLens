@@ -19,12 +19,12 @@ public class SecuritiesRefreshStatusService : ISecuritiesRefreshStatusService
         _redisClient = redisClient;
     }
 
-    public async Task<(string, DateTime)> Init()
+    public async Task<(Guid, DateTime)> Init()
     {
-        var progress = new SecuritiesRefreshProgress(Guid.NewGuid().ToString());
+        var progress = new SecuritiesRefreshProgress(Guid.NewGuid());
         await _resilientPolicy.ExecuteAsync(async () => await _redisClient.SetAsync(RedisKeys.SecuritiesRefreshStatusRedisKey, progress));
 
-        return (progress.OperationId, progress.StartedAt);
+        return (progress.CorrelationId, progress.StartedAt);
     }
 
     public async Task<ISecuritiesRefreshProgress> TryGetProgress()

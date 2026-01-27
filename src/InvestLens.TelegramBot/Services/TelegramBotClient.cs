@@ -42,20 +42,20 @@ public class TelegramBotClient : ITelegramBotClient
         await SendWithRetryAsync(payload, cancellationToken);
     }
 
-    public async Task NotifyOperationStartAsync(string operationId, string details, CancellationToken cancellationToken = default)
+    public async Task NotifyOperationStartAsync(Guid correlationId, string details, CancellationToken cancellationToken = default)
     {
         var message = $"🚀 <b>Операция начата</b>\n" +
-                     $"ID: {operationId}\n" +
+                     $"Correlation ID: {correlationId.ToString()}\n" +
                      $"Время: {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss} UTC\n" +
                      $"Детали: {details}";
 
         await NotifyAsync(message, cancellationToken);
     }
 
-    public async Task NotifyOperationCompleteAsync(string operationId, string result, TimeSpan duration, CancellationToken cancellationToken = default)
+    public async Task NotifyOperationCompleteAsync(Guid correlationId, string result, TimeSpan duration, CancellationToken cancellationToken = default)
     {
         var message = $"✅ <b>Операция завершена</b>\n" +
-                     $"ID: {operationId}\n" +
+                     $"Correlation ID: {correlationId}\n" +
                      $"Длительность: {duration:hh\\:mm\\:ss}\n" +
                      $"Результат: {result}\n" +
                      $"Время: {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss} UTC";
@@ -72,10 +72,10 @@ public class TelegramBotClient : ITelegramBotClient
         await NotifyAsync(formattedMessage, cancellationToken);
     }
 
-    public async Task NotifyErrorAsync(string operation, string exceptionMessage, CancellationToken cancellationToken = default)
+    public async Task NotifyErrorAsync(Guid correlationId, string exceptionMessage, CancellationToken cancellationToken = default)
     {
         var message = $"❌ <b>Ошибка в операции</b>\n" +
-                     $"Операция: {operation}\n" +
+                     $"Correlation ID: {correlationId}\n" +
                      $"Ошибка: {exceptionMessage}\n" +
                      $"Время: {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss} UTC";
 
