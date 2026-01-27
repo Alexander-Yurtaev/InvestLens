@@ -26,11 +26,11 @@ public class SecuritiesService : ISecuritiesService
         try
         {
             await RefreshSecuritiesAsync();
-            _logger.LogInformation("Ежедневное обновление списка ценных бумаг завершен.");
+            _logger.LogInformation("Ежедневное обновление списка ценных бумаг завершено успешно.");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Ежедневное обновление списка ценных бумаг завершен с ошибкой.");
+            _logger.LogError(ex, "Ежедневное обновление списка ценных бумаг завершилось с ошибкой.");
             throw;
         }
     }
@@ -41,11 +41,11 @@ public class SecuritiesService : ISecuritiesService
         try
         {
             await RefreshSecuritiesAsync();
-            _logger.LogInformation("Обновление списка ценных бумаг при инициализации приложения завершено.");
+            _logger.LogInformation("Обновление списка ценных бумаг при инициализации приложения завершено успешно.");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Обновление списка ценных бумаг при инициализации приложения завершен с ошибкой.");
+            _logger.LogError(ex, "Обновление списка ценных бумаг при инициализации приложения завершилось с ошибкой.");
             throw;
         }
     }
@@ -54,12 +54,11 @@ public class SecuritiesService : ISecuritiesService
 
     private async Task RefreshSecuritiesAsync()
     {
-        // ToDo исправить на актуальный Exception.
-        var resilientPolicy = _pollyService.GetResilientPolicy<Exception>();
+        var resilientPolicy = _pollyService.GetRabbitMqResilientPolicy();
         await resilientPolicy.ExecuteAndCaptureAsync(async () =>
         {
             await _messageBusClient.PublishAsync(new SecurityRefreshingMessage(),
-                                                 BusClientConstants.SecuritiesExchangeName, 
+                                                 BusClientConstants.SecuritiesExchangeName,
                                                  BusClientConstants.DataSecuritiesRefreshKey,
                                                  _cancellationToken);
         });
