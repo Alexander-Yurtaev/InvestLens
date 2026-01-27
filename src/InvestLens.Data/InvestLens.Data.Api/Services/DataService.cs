@@ -41,7 +41,7 @@ public class DataService : IDataService
         if (refreshStatus is null || !DateTimeHelper.IsRefreshed(refreshStatus.RefreshDate, _commonSettings.ExpiredRefreshStatusMinutes))
         {
             var message = new SecurityRefreshMessage();
-            await _messageBus.PublishAsync(message, BusClientConstants.SecuritiesExchangeName, BusClientConstants.SecuritiesRefreshKey);
+            await _messageBus.PublishAsync(message, BusClientConstants.SecuritiesExchangeName, BusClientConstants.WorkerSecuritiesRefreshKey);
         }   
     }
 }

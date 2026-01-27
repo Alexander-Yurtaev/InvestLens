@@ -5,8 +5,8 @@ public static class BusClientConstants
     public const string SecuritiesExchangeName = "securities-exchange";
     public const string TelegramExchangeName = "telegram-exchange";
 
-    public const string SecuritiesRefreshKey = "securities.refresh";
-    public const string SecuritiesRefreshingKey = "securities.refreshing";
+    public const string WorkerSecuritiesRefreshKey = "worker.securities.refresh"; // Send command to Worker
+    public const string DataSecuritiesRefreshKey = "data.securities.refresh"; // Send command to Data
 
     public const string TelegramStartKey = "telegram.start";
     public const string TelegramCompleteKey = "telegram.complete";

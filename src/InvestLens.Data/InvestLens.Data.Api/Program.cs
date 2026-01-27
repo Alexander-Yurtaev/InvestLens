@@ -106,7 +106,7 @@ public static class Program
             await messageBus.SubscribeAsync<SecurityRefreshingMessage, SecurityRefreshingEventHandler>(
                 queueName: BusClientConstants.SecretesRefreshQueue,
                 exchangeName: BusClientConstants.SecuritiesExchangeName,
-                routingKey: BusClientConstants.SecuritiesRefreshingKey);
+                routingKey: BusClientConstants.DataSecuritiesRefreshKey);
 
             app.MapHealthChecks("/health", new HealthCheckOptions
             {

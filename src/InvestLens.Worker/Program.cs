@@ -185,7 +185,7 @@ public static class Program
             await messageBus.SubscribeAsync<SecurityRefreshMessage, SecurityRefreshEventHandler>(
                 queueName: BusClientConstants.SecretesRefreshQueue,
                 exchangeName: BusClientConstants.SecuritiesExchangeName,
-                routingKey: BusClientConstants.SecuritiesRefreshKey);
+                routingKey: BusClientConstants.WorkerSecuritiesRefreshKey);
 
             #region UseHangfire
 

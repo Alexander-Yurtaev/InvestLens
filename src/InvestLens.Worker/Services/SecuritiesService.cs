@@ -60,7 +60,7 @@ public class SecuritiesService : ISecuritiesService
         {
             await _messageBusClient.PublishAsync(new SecurityRefreshingMessage(),
                                                  BusClientConstants.SecuritiesExchangeName, 
-                                                 BusClientConstants.SecuritiesRefreshingKey,
+                                                 BusClientConstants.DataSecuritiesRefreshKey,
                                                  _cancellationToken);
         });
     }
