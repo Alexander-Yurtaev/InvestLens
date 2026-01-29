@@ -2,9 +2,5 @@
 
 public class StartMessage : BaseInformationMessage
 {
-    public StartMessage(Guid correlationId) : base(correlationId)
-    {
-    }
-
     public string Details { get; set; } = string.Empty;
 }

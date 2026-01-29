@@ -19,20 +19,20 @@ public class SecuritiesRefreshStatusService : ISecuritiesRefreshStatusService
         _redisClient = redisClient;
     }
 
-    public async Task<(Guid, DateTime)> Init()
+    public async Task<DateTime> Init(string correlationId)
     {
-        var progress = new SecuritiesRefreshProgress(Guid.NewGuid());
+        var progress = new SecuritiesRefreshProgress(correlationId);
         await _resilientPolicy.ExecuteAsync(async () => await _redisClient.SetAsync(RedisKeys.SecuritiesRefreshStatusRedisKey, progress));
 
-        return (progress.CorrelationId, progress.StartedAt);
+        return progress.StartedAt;
     }
 
-    public async Task<ISecuritiesRefreshProgress> TryGetProgress()
+    public async Task<ISecuritiesRefreshProgress> TryGetProgress(string correlationId)
     {
         var progress = await _resilientPolicy.ExecuteAsync(async () => await _redisClient.GetAsync<SecuritiesRefreshProgress>(RedisKeys.SecuritiesRefreshStatusRedisKey));
         if (progress is null)
         {
-            await Init();
+            await Init(correlationId);
             progress = await _resilientPolicy.ExecuteAsync(async () => await _redisClient.GetAsync<SecuritiesRefreshProgress>(RedisKeys.SecuritiesRefreshStatusRedisKey));
         }
 
@@ -44,59 +44,59 @@ public class SecuritiesRefreshStatusService : ISecuritiesRefreshStatusService
         return progress;
     }
 
-    public async Task Reset()
+    public async Task Reset(string correlationId)
     {
-        var progress = await TryGetProgress();
+        var progress = await TryGetProgress(correlationId);
         progress.UpdatedAt = DateTime.UtcNow;
         progress.Status = SecuritiesRefreshStatus.None;
         await _resilientPolicy.ExecuteAsync(async () => await _redisClient.SetAsync(RedisKeys.SecuritiesRefreshStatusRedisKey, progress));
     }
 
-    public async Task SetScheduled()
+    public async Task SetScheduled(string correlationId)
     {
-        var progress = await TryGetProgress();
+        var progress = await TryGetProgress(correlationId);
         progress.UpdatedAt = DateTime.UtcNow;
         progress.Status = SecuritiesRefreshStatus.Scheduled;
         await _resilientPolicy.ExecuteAsync(async () => await _redisClient.SetAsync(RedisKeys.SecuritiesRefreshStatusRedisKey, progress));
     }
 
-    public async Task SetDownloading(int? count = 0)
+    public async Task SetDownloading(string correlationId, int? count = 0)
     {
-        var progress = await TryGetProgress();
+        var progress = await TryGetProgress(correlationId);
         progress.UpdatedAt = DateTime.UtcNow;
         progress.DownloadedCount = count ?? 0;
         progress.Status = SecuritiesRefreshStatus.Downloading;
         await _resilientPolicy.ExecuteAsync(async () => await _redisClient.SetAsync(RedisKeys.SecuritiesRefreshStatusRedisKey, progress));
     }
 
-    public async Task SetProcessing()
+    public async Task SetProcessing(string correlationId)
     {
-        var progress = await TryGetProgress();
+        var progress = await TryGetProgress(correlationId);
         progress.UpdatedAt = DateTime.UtcNow;
         progress.Status = SecuritiesRefreshStatus.Processing;
         await _resilientPolicy.ExecuteAsync(async () => await _redisClient.SetAsync(RedisKeys.SecuritiesRefreshStatusRedisKey, progress));
     }
 
-    public async Task SetSaving()
+    public async Task SetSaving(string correlationId)
     {
-        var progress = await TryGetProgress();
+        var progress = await TryGetProgress(correlationId);
         progress.UpdatedAt = DateTime.UtcNow;
         progress.Status = SecuritiesRefreshStatus.Saving;
         await _resilientPolicy.ExecuteAsync(async () => await _redisClient.SetAsync(RedisKeys.SecuritiesRefreshStatusRedisKey, progress));
     }
 
-    public async Task SetCompleted(int affected)
+    public async Task SetCompleted(string correlationId, int affected)
     {
-        var progress = await TryGetProgress();
+        var progress = await TryGetProgress(correlationId);
         progress.UpdatedAt = DateTime.UtcNow;
         progress.SavedCount = affected;
         progress.Status = SecuritiesRefreshStatus.Completed;
         await _resilientPolicy.ExecuteAsync(async () => await _redisClient.SetAsync(RedisKeys.SecuritiesRefreshStatusRedisKey, progress));
     }
 
-    public async Task SetFailed(string errorMessage)
+    public async Task SetFailed(string correlationId, string errorMessage)
     {
-        var progress = await TryGetProgress();
+        var progress = await TryGetProgress(correlationId);
         progress.UpdatedAt = DateTime.UtcNow;
         progress.Status = SecuritiesRefreshStatus.Failed;
         progress.ErrorMessage = errorMessage;

@@ -239,4 +239,52 @@ public class PollyService : IPollyService
 
         return Policy.WrapAsync(circuitBreakerPolicy, retryPolicy);
     }
+
+    // Универсальный метод для любых типов (не только string)
+    public IAsyncPolicy<T> GetGenericResilientPolicy<T>()
+    {
+        var retryPolicy = Policy<T>
+            .Handle<HttpRequestException>()
+            .Or<IOException>()
+            .Or<TaskCanceledException>()
+            .Or<TimeoutException>()
+            .OrResult(result => result == null) // Проверка на null
+            .WaitAndRetryAsync(
+                retryCount: 3,
+                sleepDurationProvider: retryAttempt =>
+                    TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)),
+                onRetry: (result, timespan, retryAttempt, _) =>
+                {
+                    _logger.LogWarning(
+                        "Generic Retry {RetryAttempt} after {Seconds}s. Type: {Type}, Error: {Error}",
+                        retryAttempt, timespan.TotalSeconds, typeof(T).Name,
+                        result.Exception?.Message ?? "Result validation failed");
+                });
+
+        var circuitBreakerPolicy = Policy<T>
+            .Handle<HttpRequestException>()
+            .Or<IOException>()
+            .Or<TaskCanceledException>()
+            .Or<TimeoutException>()
+            .CircuitBreakerAsync(
+                handledEventsAllowedBeforeBreaking: 5,
+                durationOfBreak: TimeSpan.FromSeconds(30),
+                onBreak: (result, breakDelay) =>
+                {
+                    _logger.LogError(
+                        "Generic Circuit Breaker opened for {Seconds}s. Type: {Type}, Error: {Error}",
+                        breakDelay.TotalSeconds, typeof(T).Name,
+                        result.Exception?.Message ?? "Unknown error");
+                },
+                onReset: () =>
+                {
+                    _logger.LogInformation("Generic Circuit Breaker for {Type} reset", typeof(T).Name);
+                },
+                onHalfOpen: () =>
+                {
+                    _logger.LogInformation("Generic Circuit Breaker for {Type} half-open", typeof(T).Name);
+                });
+
+        return Policy.WrapAsync(retryPolicy, circuitBreakerPolicy);
+    }
 }

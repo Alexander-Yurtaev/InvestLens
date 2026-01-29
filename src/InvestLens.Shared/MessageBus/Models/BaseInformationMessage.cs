@@ -2,7 +2,7 @@
 
 public abstract class BaseInformationMessage : BaseTelegramMessage
 {
-    protected BaseInformationMessage(Guid correlationId) : base(correlationId)
+    protected BaseInformationMessage()
     {
     }
 }

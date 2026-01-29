@@ -1,25 +1,43 @@
 ﻿using InvestLens.Abstraction.MessageBus.Services;
 using InvestLens.Abstraction.Services;
+using InvestLens.Shared.Constants;
 using InvestLens.Shared.MessageBus.Models;
+using Serilog.Context;
 
 namespace InvestLens.TelegramBot.Handlers;
 
 public class ErrorEventHandler : IMessageHandler<ErrorMessage>
 {
     private readonly ITelegramBotClient _telegramBotClient;
+    private readonly ICorrelationIdService _correlationIdService;
     private readonly ILogger<ErrorEventHandler> _logger;
 
-    public ErrorEventHandler(ITelegramBotClient telegramBotClient, ILogger<ErrorEventHandler> logger)
+    public ErrorEventHandler(ITelegramBotClient telegramBotClient, ICorrelationIdService correlationIdService, ILogger<ErrorEventHandler> logger)
     {
         _telegramBotClient = telegramBotClient;
+        _correlationIdService = correlationIdService;
         _logger = logger;
     }
 
     public async Task<bool> HandleAsync(ErrorMessage message, CancellationToken cancellationToken = default)
     {
-        _logger.LogInformation("Операция {OperationId} завершилась неудачно: {Exception}", message.CorrelationId, message.Exception.Message);
-        await _telegramBotClient.NotifyOperationStartAsync(message.CorrelationId,
-            $"Операция {message.CorrelationId} завершилась неудачно: {message.Exception.Message}", cancellationToken);
-        return await Task.FromResult(true);
+        var correlationId = message.Headers[HeaderConstants.CorrelationHeader].ToString() ?? "";
+        if (string.IsNullOrEmpty(correlationId))
+        {
+            correlationId = _correlationIdService.GetOrCreateCorrelationId("TelegramBot");
+            _logger.LogWarning(
+                "Пришло сообщение Id={MessageId} без CorrelationId. Новый correlationId: {CorrelationId}",
+                message.MessageId, correlationId);
+        }
+
+        using (LogContext.PushProperty("CorrelationId", correlationId))
+        {
+            _logger.LogInformation("Операция {OperationId} завершилась неудачно: {Exception}", correlationId, message.Exception.Message);
+            
+            await _telegramBotClient.NotifyOperationStartAsync(
+                correlationId, $"Операция {correlationId} завершилась неудачно: {message.Exception.Message}", cancellationToken);
+         
+            return await Task.FromResult(true);
+        }
     }
 }

@@ -1,16 +1,19 @@
-﻿using InvestLens.Abstraction.MessageBus.Data;
+﻿using CorrelationId.Abstractions;
+using InvestLens.Abstraction.MessageBus.Data;
 using InvestLens.Abstraction.MessageBus.Models;
 using InvestLens.Abstraction.MessageBus.Services;
 using InvestLens.Abstraction.Services;
-using InvestLens.Shared.MessageBus.Exceptions;
+using InvestLens.Shared.Constants;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
+using Serilog.Context;
 using System.Collections.Concurrent;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using InvestLens.Shared.Exceptions;
 
 namespace InvestLens.Shared.MessageBus.Services;
 
@@ -29,10 +32,10 @@ public class RabbitMqClient : IMessageBusClient
     public static async Task<RabbitMqClient> CreateAsync(
         IRabbitMqSettings settings,
         IRabbitMqService service,
-        ILogger<RabbitMqClient> logger,
-        IServiceProvider serviceProvider)
+        IServiceProvider serviceProvider,
+        ILogger<RabbitMqClient> logger)
     {
-        var client = new RabbitMqClient(settings, service, logger, serviceProvider);
+        var client = new RabbitMqClient(settings, service, serviceProvider, logger);
         await client.InitializeAsync();
         return client;
     }
@@ -40,8 +43,8 @@ public class RabbitMqClient : IMessageBusClient
     internal RabbitMqClient(
         IRabbitMqSettings settings,
         IRabbitMqService service,
-        ILogger<RabbitMqClient> logger,
-        IServiceProvider serviceProvider)
+        IServiceProvider serviceProvider,
+        ILogger<RabbitMqClient> logger)
     {
         _settings = settings;
         _service = service;
@@ -113,12 +116,12 @@ public class RabbitMqClient : IMessageBusClient
                 MessageId = message.MessageId.ToString(),
                 Type = typeof(T).Name,
                 Timestamp = new AmqpTimestamp(DateTimeOffset.UtcNow.ToUnixTimeSeconds()),
-                Headers = new Dictionary<string, object?>()
+                Headers = new Dictionary<string, object?>
+                {
+                    ["x-app-name"] = _settings.ClientName,
+                    ["x-origin"] = Environment.MachineName
+                }
             };
-
-            // Добавляем заголовки
-            properties.Headers["x-app-name"] = _settings.ClientName;
-            properties.Headers["x-origin"] = Environment.MachineName;
 
             foreach (var header in message.Headers)
             {
@@ -212,7 +215,13 @@ public class RabbitMqClient : IMessageBusClient
 
             // Регистрируем обработчики событий
             consumer.ReceivedAsync += async (_, ea) =>
-                await OnMessageReceived<T, TH>(ea, cancellationToken);
+            {
+                var correlationId = ea.BasicProperties.Headers?[HeaderConstants.CorrelationHeader] as string;
+                using (LogContext.PushProperty("CorrelationId", correlationId))
+                {
+                    await OnMessageReceived<T, TH>(ea, cancellationToken);
+                }
+            };
 
             consumer.ShutdownAsync += OnConsumerShutdown;
             consumer.RegisteredAsync += OnConsumerRegistered;

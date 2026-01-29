@@ -1,4 +1,4 @@
-﻿namespace InvestLens.Shared.MessageBus.Exceptions;
+﻿namespace InvestLens.Shared.Exceptions;
 
 public class MessageBusException : Exception
 {

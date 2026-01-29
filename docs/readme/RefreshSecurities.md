@@ -1,7 +1,7 @@
 # Большие шаги
-- [ ] Сервис Worker запускает задачу
-- [ ] Задача отправляет в RabbitMQ сообщение DataSecuritiesRefreshKey
-- [ ] Сообщение получает сервис Data
+- [x] Сервис Worker запускает задачу
+- [x] Задача отправляет в RabbitMQ сообщение DataSecuritiesRefreshKey
+- [x] Сообщение получает сервис Data
 - [ ] В обработчике запускается фоновая задача, которая
     - [ ] получает данные от ISS.MOEX
     - [ ] конвертирует их в entity
@@ -11,7 +11,7 @@
 - [ ] **Сервис Worker запускает задачу**
     - [ ] Проверяем запущена ли уже такая задача
         - [ ] в Redis ищем значение с ключом WorkerSecuritiesRefreshStatusRedisKey
-        - [ ] формат:
+        - [x] формат:
             - string MessageId
             - string CorrelationId
             - datetime CreatedAt
@@ -24,7 +24,8 @@
 - [ ] **Задача отправляет в RabbitMQ сообщение DataSecuritiesRefreshKey**
     - [ ] Создается сообщение, указывается CorrelationId (либо берется из WorkerSecuritiesRefreshStatusRedisKey, либо создается новый)
 - [ ] **Сообщение получает сервис Data**
-    - [ ] Получаем CorrelationId
+    - [x] Настроить CorrelationId
+    - [x] Получаем CorrelationId
 - [ ] **В обработчике запускается фоновая задача, которая**
     - [ ] отправляем в RabbitMQ сообщение TelegramStartKey
     - [ ] получает данные от ISS.MOEX (MoexClient)

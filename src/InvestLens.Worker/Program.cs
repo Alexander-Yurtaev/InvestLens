@@ -1,3 +1,6 @@
+using CorrelationId;
+using CorrelationId.Abstractions;
+using CorrelationId.DependencyInjection;
 using Hangfire;
 using Hangfire.PostgreSql;
 using Hangfire.States;
@@ -22,6 +25,7 @@ using InvestLens.Worker.Models;
 using InvestLens.Worker.Services;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Serilog;
+using Serilog.Context;
 
 namespace InvestLens.Worker;
 
@@ -39,11 +43,29 @@ public static class Program
             .AddJsonFile("appsettings.Jobs.json", optional: false, reloadOnChange: true) // ← наш файл!
             .AddEnvironmentVariables();
 
+        builder.Services.AddDefaultCorrelationId(options =>
+        {
+            options.RequestHeader = HeaderConstants.CorrelationHeader;
+            options.ResponseHeader = HeaderConstants.CorrelationHeader;
+            options.IncludeInResponse = true;
+            options.AddToLoggingScope = true; // Автоматически добавляет в LogContext
+            options.LoggingScopeKey = "CorrelationId";
+        });
+
+        builder.Services.AddSingleton<ICorrelationIdService, CorrelationIdService>();
+
         // 1. Настройка Serilog
         Log.Logger = SerilogHelper.CreateLogger(builder);
 
         // 2. Добавление Serilog в DI
-        builder.Host.UseSerilog();
+        builder.Host.UseSerilog((_, configuration) =>
+        {
+            configuration
+                .Enrich.FromLogContext()
+                .WriteTo.Console(outputTemplate:
+                    "[{Timestamp:HH:mm:ss} {Level:u3}] {CorrelationId} {Message:lj}{NewLine}{Exception}")
+                .WriteTo.File("logs/log-.txt", rollingInterval: RollingInterval.Day);
+        });
 
         try
         {
@@ -146,6 +168,28 @@ public static class Program
                 .AddInMemoryStorage();
 
             var app = builder.Build();
+
+            app.UseCorrelationId();
+
+            app.Use(async (context, next) =>
+            {
+                var correlationContextAccessor = context.RequestServices
+                    .GetRequiredService<ICorrelationContextAccessor>();
+
+                var correlationId = correlationContextAccessor.CorrelationContext?.CorrelationId;
+
+                if (!string.IsNullOrEmpty(correlationId))
+                {
+                    using (LogContext.PushProperty("CorrelationId", correlationId))
+                    {
+                        await next(context);
+                    }
+                }
+                else
+                {
+                    await next(context);
+                }
+            });
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())

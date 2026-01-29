@@ -4,6 +4,7 @@ using InvestLens.Abstraction.Redis.Services;
 using InvestLens.Abstraction.Services;
 using InvestLens.TelegramBot.Data;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Serilog.Context;
 
 namespace InvestLens.TelegramBot.Services;
 
@@ -14,6 +15,7 @@ public class InvestLensBot : BackgroundService, IHealthCheck
     private volatile bool _isHealthy = true;
     private readonly ITelegramBotClient _botClient;
     private readonly IBotCommandService _botCommandService;
+    private readonly ICorrelationIdService _correlationIdService;
     private readonly IRedisClient _redisClientForInstance;
     private readonly ILogger<InvestLensBot> _logger;
 
@@ -23,53 +25,59 @@ public class InvestLensBot : BackgroundService, IHealthCheck
         IRedisSettings redisSettings,
         ITelegramBotClient botClient,
         IBotCommandService botCommandService,
+        ICorrelationIdService correlationIdService,
         IServiceProvider serviceProvider,
         ILogger<InvestLensBot> logger)
     {
         _redisClientForInstance = serviceProvider.GetKeyedService<IRedisClient>(redisSettings.InstanceName)!;
         _botClient = botClient;
         _botCommandService = botCommandService;
+        _correlationIdService = correlationIdService;
         _logger = logger;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        _logger.LogInformation("Telegram Bot Service starting...");
-
-        await InitAsync(stoppingToken);
-
-        while (!stoppingToken.IsCancellationRequested)
+        var correlationId = _correlationIdService.GetOrCreateCorrelationId("TelegramBot");
+        using (LogContext.PushProperty("CorrelationId", correlationId))
         {
-            try
+            _logger.LogInformation("Telegram Bot Service starting...");
+
+            await InitAsync(stoppingToken);
+
+            while (!stoppingToken.IsCancellationRequested)
             {
-                var updateData = await _redisClientForInstance.GetAsync<UpdateData>(NextUpdateIdKey) ?? new UpdateData();
-                
-                var updates = await GetUpdatesOperation(updateData.NextUpdateId, stoppingToken);
-                if (updates is not null)
+                try
                 {
-                    foreach (var result in updates.Result)
+                    var updateData = await _redisClientForInstance.GetAsync<UpdateData>(NextUpdateIdKey) ?? new UpdateData();
+
+                    var updates = await GetUpdatesOperation(updateData.NextUpdateId, stoppingToken);
+                    if (updates is not null)
                     {
-                        await _botCommandService.HandleCommandAsync(result.Message.Text, stoppingToken);
+                        foreach (var result in updates.Result)
+                        {
+                            await _botCommandService.HandleCommandAsync(result.Message.Text, stoppingToken);
 
-                        updateData.NextUpdateId = result.UpdateId + 1;
-                        _lastProcessedTime = DateTime.UtcNow;
+                            updateData.NextUpdateId = result.UpdateId + 1;
+                            _lastProcessedTime = DateTime.UtcNow;
 
-                        // 4. Обновить nextUpdateId в Redis
-                        await _redisClientForInstance.SetAsync(NextUpdateIdKey, updateData);
+                            // 4. Обновить nextUpdateId в Redis
+                            await _redisClientForInstance.SetAsync(NextUpdateIdKey, updateData);
+                        }
+                        _isHealthy = true;
                     }
-                    _isHealthy = true;
+
+                    await Task.Delay(1000, stoppingToken);
                 }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Ошибка при проверке сообщений в чат-боте.");
+                    await _botClient.NotifyErrorAsync(correlationId, "Ошибка при проверке сообщений в чат-боте: {ex.Message}", stoppingToken);
+                }
+            }
 
-                await Task.Delay(1000, stoppingToken);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Ошибка при проверке сообщений в чат-боте.");
-                await _botClient.NotifyErrorAsync(Guid.Empty, "Ошибка при проверке сообщений в чат-боте: {ex.Message}", stoppingToken);
-            }
+            _logger.LogInformation("Telegram Bot Service stopping...");
         }
-
-        _logger.LogInformation("Telegram Bot Service stopping...");
     }
 
     private async Task InitAsync(CancellationToken cancellationToken)

@@ -1,4 +1,6 @@
-﻿using DotNetEnv.Configuration;
+﻿using CorrelationId.DependencyInjection;
+using CorrelationId.HttpClient;
+using DotNetEnv.Configuration;
 using InvestLens.Abstraction.MessageBus.Services;
 using InvestLens.Abstraction.Redis.Services;
 using InvestLens.Abstraction.Services;
@@ -22,25 +24,36 @@ public static class Program
 {
     public static async Task Main(string[] args)
     {
+        var builder = Host.CreateApplicationBuilder(args);
+
+        builder.Configuration
+            .AddDotNetEnv();
+
+        builder.Services.AddDefaultCorrelationId(options =>
+        {
+            options.RequestHeader = HeaderConstants.CorrelationHeader;
+            options.ResponseHeader = HeaderConstants.CorrelationHeader;
+            options.IncludeInResponse = true;
+            options.AddToLoggingScope = true; // Автоматически добавляет в LogContext
+            options.LoggingScopeKey = "CorrelationId";
+        });
+
+        builder.Services.AddSingleton<ICorrelationIdService, CorrelationIdService>();
+
         // Конфигурация Serilog перед созданием хоста
         Log.Logger = new LoggerConfiguration()
             .MinimumLevel.Debug()
             .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
             .MinimumLevel.Override("System", LogEventLevel.Warning)
             .Enrich.FromLogContext()
-            .WriteTo.Console(
-                outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}")
+            .WriteTo.Console(outputTemplate:
+                "[{Timestamp:HH:mm:ss} {Level:u3}] {CorrelationId} {Message:lj}{NewLine}{Exception}")
             .WriteTo.File(
                 "logs/log-.txt",
                 rollingInterval: RollingInterval.Day,
                 retainedFileCountLimit: 7,
                 outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj}{NewLine}{Exception}")
             .CreateLogger();
-
-        var builder = Host.CreateApplicationBuilder(args);
-
-        builder.Configuration
-            .AddDotNetEnv();
 
         builder.Services.Configure<TelegramSettings>(options =>
         {
@@ -61,8 +74,8 @@ public static class Program
             builder.Services.AddSingleton<IRabbitMqService, RabbitMqService>();
 
             builder.Services.AddSingleton<IBotCommandService, BotCommandService>();
-            builder.Services.AddHttpClient<ITelegramBotClient, TelegramBotClient>()
-                .ConfigureHttpClient(client => { client.BaseAddress = new Uri("https://api.telegram.org/"); })
+            builder.Services.AddHttpClient<ITelegramBotClient, TelegramBotClient>(client => { client.BaseAddress = new Uri("https://api.telegram.org/"); })
+                .AddCorrelationIdForwarding()
                 .AddPolicyHandler((provider, _) => provider.GetService<IPollyService>()!.GetHttpRetryPolicy())
                 .AddPolicyHandler((provider, _) => provider.GetService<IPollyService>()!.GetHttpCircuitBreakerPolicy());
 

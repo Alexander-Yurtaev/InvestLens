@@ -20,6 +20,7 @@
 	  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 	</PackageReference>
 	<PackageReference Include="IdentityModel" />
+	<PackageReference Include="CorrelationId" />
   </ItemGroup>
 
   <ItemGroup Label="Serilog">
@@ -35,6 +36,7 @@
 	<PackageReference Include="Microsoft.Extensions.DependencyModel" />
 	<PackageReference Include="Serilog" />
 	<PackageReference Include="Serilog.Extensions.Logging" />
+	<PackageReference Include="Serilog.Enrichers.CorrelationId" />
 	<PackageReference Include="Serilog.AspNetCore" />
 	<PackageReference Include="Serilog.Sinks.File" />
   </ItemGroup>

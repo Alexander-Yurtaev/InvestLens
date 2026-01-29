@@ -6,7 +6,7 @@ public interface ISecuritiesRefreshProgress
 {
     string MessageId { get; set; }
 
-    Guid CorrelationId { get; set; }
+    string CorrelationId { get; set; }
     DateTime StartedAt { get; set; }
     DateTime UpdatedAt { get; set; }
     SecuritiesRefreshStatus Status { get; set; }

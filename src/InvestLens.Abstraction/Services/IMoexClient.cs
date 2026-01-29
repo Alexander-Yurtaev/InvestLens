@@ -4,5 +4,5 @@ namespace InvestLens.Abstraction.Services;
 
 public interface IMoexClient
 {
-    Task<SecuritiesResponse?> GetSecurities(Guid correlationId);
+    Task<SecuritiesResponse?> GetSecurities(string correlationId);
 }

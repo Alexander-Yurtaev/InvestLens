@@ -5,6 +5,7 @@ using InvestLens.Abstraction.Services;
 using InvestLens.Data.Api.Converter;
 using InvestLens.Shared.Constants;
 using InvestLens.Shared.MessageBus.Models;
+using Serilog.Context;
 
 namespace InvestLens.Data.Api.Handlers;
 
@@ -13,6 +14,7 @@ public class SecurityRefreshEventHandler : IMessageHandler<SecurityRefreshMessag
     private readonly IMoexClient _moexClient;
     private readonly IPollyService _pollyService;
     private readonly ISecuritiesRefreshStatusService _statusService;
+    private readonly ICorrelationIdService _correlationIdService;
     private readonly IMessageBusClient _messageBus;
     private readonly ISecurityRepository _securityRepository;
     private readonly IRefreshStatusRepository _refreshStatusRepository;
@@ -22,6 +24,7 @@ public class SecurityRefreshEventHandler : IMessageHandler<SecurityRefreshMessag
         IMoexClient moexClient,
         IPollyService pollyService,
         ISecuritiesRefreshStatusService statusService,
+        ICorrelationIdService correlationIdService,
         IMessageBusClient messageBus,
         ISecurityRepository securityRepository,
         IRefreshStatusRepository refreshStatusRepository,
@@ -30,6 +33,7 @@ public class SecurityRefreshEventHandler : IMessageHandler<SecurityRefreshMessag
         _moexClient = moexClient;
         _pollyService = pollyService;
         _statusService = statusService;
+        _correlationIdService = correlationIdService;
         _messageBus = messageBus;
         _securityRepository = securityRepository;
         _refreshStatusRepository = refreshStatusRepository;
@@ -38,26 +42,48 @@ public class SecurityRefreshEventHandler : IMessageHandler<SecurityRefreshMessag
 
     public async Task<bool> HandleAsync(SecurityRefreshMessage message, CancellationToken cancellationToken = default)
     {
-        _logger.LogInformation("Получено поручение обновить список ценных бумаг: {MessageId} от {MessageCreatedAt}.", message.MessageId, message.CreatedAt);
+        var correlationHeader = message.Headers
+            .FirstOrDefault(h => h.Key.Equals(HeaderConstants.CorrelationHeader, StringComparison.OrdinalIgnoreCase));
 
-        try
+        var correlationId = correlationHeader.Value?.ToString();
+
+        if (string.IsNullOrEmpty(correlationId))
         {
-            var progress = await _statusService.Init();
-            await SendStartMessage(progress.Item1, progress.Item2, cancellationToken);
-            await RefreshSecurities(progress.Item1, progress.Item2, cancellationToken);
-            _logger.LogInformation("Cписок ценных бумаг обновлен: {MessageId} от {MessageCreatedAt}.", message.MessageId, message.CreatedAt);
-            return true;
+            correlationId = _correlationIdService.GetOrCreateCorrelationId("rabbitmq");
+            _logger.LogWarning(
+                "RabbitMQ-сообщение Id={MessageId} пришло без CorrelationId. Создаем новое: {CorrelationId}.",
+                message.MessageId, correlationId);
         }
-        catch (Exception ex)
+
+        using (LogContext.PushProperty("CorrelationId", correlationId))
         {
-            _logger.LogError(ex, "Ошибка при обновлении списка ценных бумаг: {MessageId} от {MessageCreatedAt}.", message.MessageId, message.CreatedAt);
-            return false;
+            _logger.LogInformation(
+                "Получено поручение обновить список ценных бумаг: {MessageId} от {MessageCreatedAt}. CorrelationId: {CorrelationId}",
+                message.MessageId, message.CreatedAt, correlationId);
+
+            try
+            {
+                var startedAt = await _statusService.Init(correlationId);
+                await SendStartMessage(correlationId, startedAt, cancellationToken);
+                await RefreshSecurities(correlationId, startedAt, cancellationToken);
+                _logger.LogInformation(
+                    "Cписок ценных бумаг обновлен: {MessageId} от {MessageCreatedAt}. CorrelationId: {CorrelationId}",
+                    message.MessageId, message.CreatedAt, correlationId);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex,
+                    "Ошибка при обновлении списка ценных бумаг: {MessageId} от {MessageCreatedAt}. CorrelationId: {CorrelationId}",
+                    message.MessageId, message.CreatedAt, correlationId);
+                return false;
+            }
         }
     }
 
     #region Private Methods
 
-    private async Task RefreshSecurities(Guid correlationId, DateTime startedAt, CancellationToken cancellationToken)
+    private async Task RefreshSecurities(string correlationId, DateTime startedAt, CancellationToken cancellationToken)
     {
         try
         {
@@ -69,14 +95,14 @@ public class SecurityRefreshEventHandler : IMessageHandler<SecurityRefreshMessag
             }
 
             // 2. Конвертируем данные из Response в Entity
-            await _statusService.SetProcessing();
+            await _statusService.SetProcessing(correlationId);
             var securities = ResponseToEntityConverters.SecurityResponseToEntityConverter(securitiesResponse);
 
             // 3. Сохраняем/обновляем данные в БД
-            await _statusService.SetSaving();
+            await _statusService.SetSaving(correlationId);
             var affected = await _securityRepository.Add(securities, true);
 
-            await _statusService.SetCompleted(affected);
+            await _statusService.SetCompleted(correlationId, affected);
 
             // 4. Обновляем RefreshStatus
             await _refreshStatusRepository.SetRefreshStatus(DatabaseConstants.SecurityEntityName);
@@ -87,22 +113,23 @@ public class SecurityRefreshEventHandler : IMessageHandler<SecurityRefreshMessag
         {
             _logger.LogError(ex, "Ошибка при обновлении данных.");
 
-            await _statusService.SetFailed(ex.Message);
+            await _statusService.SetFailed(correlationId, ex.Message);
             await SendErrorMessage(correlationId, startedAt, ex, cancellationToken);
 
             throw;
         }
     }
 
-    private async Task SendStartMessage(Guid correlationId, DateTime startedAt, CancellationToken cancellationToken)
+    private async Task SendStartMessage(string correlationId, DateTime startedAt, CancellationToken cancellationToken)
     {
-        var message = new StartMessage(correlationId)
+        var message = new StartMessage()
         {
             CreatedAt = startedAt,
             Details = "Началась загрузка списка ценных бумаг на MOEX."
         };
-        // ToDo исправить на актуальный Exception.
-        var resilientPolicy = _pollyService.GetResilientPolicy<Exception>();
+        message.Headers.Add(HeaderConstants.CorrelationHeader, correlationId);
+
+        var resilientPolicy = _pollyService.GetRabbitMqRetryPolicy();
         await resilientPolicy.ExecuteAndCaptureAsync(async () =>
         {
             await _messageBus.PublishAsync(message, BusClientConstants.TelegramExchangeName,
@@ -110,14 +137,16 @@ public class SecurityRefreshEventHandler : IMessageHandler<SecurityRefreshMessag
         });
     }
 
-    private async Task SendCompleteMessage(Guid correlationId, DateTime startedAt, int count, CancellationToken cancellationToken)
+    private async Task SendCompleteMessage(string correlationId, DateTime startedAt, int count, CancellationToken cancellationToken)
     {
-        var message = new CompleteMessage(correlationId)
+        var message = new CompleteMessage()
         {
             CreatedAt = startedAt,
             FinishedAt = DateTime.UtcNow,
             Count = count
         };
+        message.Headers.Add(HeaderConstants.CorrelationHeader, correlationId);
+
         var rabbitMqRetryPolicy = _pollyService.GetRabbitMqRetryPolicy();
         await rabbitMqRetryPolicy.ExecuteAndCaptureAsync(async () =>
         {
@@ -126,13 +155,15 @@ public class SecurityRefreshEventHandler : IMessageHandler<SecurityRefreshMessag
         });
     }
 
-    private async Task SendErrorMessage(Guid correlationId, DateTime startedAt, Exception exception,
+    private async Task SendErrorMessage(string correlationId, DateTime startedAt, Exception exception,
         CancellationToken cancellationToken)
     {
+        var message = new ErrorMessage(DateTime.UtcNow, exception) { CreatedAt = startedAt };
+        message.Headers.Add(HeaderConstants.CorrelationHeader, correlationId);
+        
         var rabbitMqRetryPolicy = _pollyService.GetRabbitMqRetryPolicy();
         await rabbitMqRetryPolicy.ExecuteAndCaptureAsync(async () =>
         {
-            var message = new ErrorMessage(correlationId, DateTime.UtcNow, exception) { CreatedAt = startedAt };
             await _messageBus.PublishAsync(message, BusClientConstants.TelegramExchangeName,
                 BusClientConstants.TelegramErrorKey, cancellationToken);
         });

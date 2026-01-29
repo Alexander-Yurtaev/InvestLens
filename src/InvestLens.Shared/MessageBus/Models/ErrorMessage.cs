@@ -4,7 +4,7 @@ namespace InvestLens.Shared.MessageBus.Models;
 
 public class ErrorMessage : BaseTelegramMessage
 {
-    public ErrorMessage(Guid correlationId, DateTime finishedAt, Exception? exception) : base(correlationId)
+    public ErrorMessage(DateTime? finishedAt, Exception? exception)
     {
         FinishedAt = finishedAt;
         Exception = new ExceptionDto(exception?.Message ?? "Произошла ошибка", "SECURITY_REFRESH_ERROR", DateTime.UtcNow);

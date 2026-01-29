@@ -19,4 +19,6 @@ public interface IPollyService
     AsyncPolicy GetRabbitMqExponentialBackoffPolicy();
 
     AsyncPolicy GetRedisResilientPolicy();
+
+    IAsyncPolicy<T> GetGenericResilientPolicy<T>();
 }

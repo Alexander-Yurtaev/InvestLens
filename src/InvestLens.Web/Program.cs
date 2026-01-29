@@ -1,5 +1,9 @@
-﻿using HealthChecks.UI.Client;
+﻿using CorrelationId;
+using CorrelationId.Abstractions;
+using CorrelationId.DependencyInjection;
+using HealthChecks.UI.Client;
 using InvestLens.Abstraction.Services;
+using InvestLens.Shared.Constants;
 using InvestLens.Shared.Helpers;
 using InvestLens.Shared.MessageBus.Extensions;
 using InvestLens.Shared.Redis.Extensions;
@@ -8,6 +12,7 @@ using InvestLens.Shared.Validators;
 using InvestLens.Web.Services;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Serilog;
+using Serilog.Context;
 
 namespace InvestLens.Web;
 
@@ -17,11 +22,27 @@ public static class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
+        builder.Services.AddDefaultCorrelationId(options =>
+        {
+            options.RequestHeader = HeaderConstants.CorrelationHeader;
+            options.ResponseHeader = HeaderConstants.CorrelationHeader;
+            options.IncludeInResponse = true;
+            options.AddToLoggingScope = true; // Автоматически добавляет в LogContext
+            options.LoggingScopeKey = "CorrelationId";
+        });
+
         // 1. Настройка Serilog
         Log.Logger = SerilogHelper.CreateLogger(builder);
 
         // 2. Добавление Serilog в DI
-        builder.Host.UseSerilog();
+        builder.Host.UseSerilog((_, configuration) =>
+        {
+            configuration
+                .Enrich.FromLogContext()
+                .WriteTo.Console(outputTemplate:
+                    "[{Timestamp:HH:mm:ss} {Level:u3}] {CorrelationId} {Message:lj}{NewLine}{Exception}")
+                .WriteTo.File("logs/log-.txt", rollingInterval: RollingInterval.Day);
+        });
 
         try
         {
@@ -65,6 +86,28 @@ public static class Program
                 .AddInMemoryStorage();
 
             var app = builder.Build();
+
+            app.UseCorrelationId();
+
+            app.Use(async (context, next) =>
+            {
+                var correlationContextAccessor = context.RequestServices
+                    .GetRequiredService<ICorrelationContextAccessor>();
+
+                var correlationId = correlationContextAccessor.CorrelationContext?.CorrelationId;
+
+                if (!string.IsNullOrEmpty(correlationId))
+                {
+                    using (LogContext.PushProperty("CorrelationId", correlationId))
+                    {
+                        await next(context);
+                    }
+                }
+                else
+                {
+                    await next(context);
+                }
+            });
 
             using var scope = app.Services.CreateScope();
             var pollyService = scope.ServiceProvider.GetService<IPollyService>()!;

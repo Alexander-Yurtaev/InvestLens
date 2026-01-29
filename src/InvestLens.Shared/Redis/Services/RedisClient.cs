@@ -18,7 +18,8 @@ public class RedisClient : IRedisClient, IDisposable
     private bool _disposed;
     private readonly SemaphoreSlim _connectionLock = new(1, 1);
 
-    public static async Task<RedisClient> CreateAsync(IPollyService pollyService, IRedisSettings settings, string instanceName, ILogger<RedisClient> logger)
+    public static async Task<RedisClient> CreateAsync(IPollyService pollyService, IRedisSettings settings,
+        string instanceName, ILogger<RedisClient> logger)
     {
         var client = new RedisClient(pollyService, settings, instanceName, logger);
         await client.InitializeAsync();

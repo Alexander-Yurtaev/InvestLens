@@ -16,6 +16,7 @@
 	<PackageReference Include="AspNetCore.HealthChecks.Rabbitmq" />
 	<PackageReference Include="AspNetCore.HealthChecks.Redis" />
 	<PackageReference Include="AspNetCore.HealthChecks.UI.Client" />
+	<PackageReference Include="CorrelationId" />
   </ItemGroup>
 
   <ItemGroup Label="Npgsql">
@@ -38,6 +39,7 @@
 
   <ItemGroup Label="Serilog">
 	<PackageReference Include="Serilog" />
+	<PackageReference Include="Serilog.Enrichers.CorrelationId" />
 	<PackageReference Include="Serilog.Extensions.Logging" />
 	<PackageReference Include="Serilog.AspNetCore" />
 	<PackageReference Include="Serilog.Sinks.File" />
