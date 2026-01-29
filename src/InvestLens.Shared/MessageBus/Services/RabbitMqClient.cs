@@ -1,9 +1,9 @@
-﻿using CorrelationId.Abstractions;
-using InvestLens.Abstraction.MessageBus.Data;
+﻿using InvestLens.Abstraction.MessageBus.Data;
 using InvestLens.Abstraction.MessageBus.Models;
 using InvestLens.Abstraction.MessageBus.Services;
 using InvestLens.Abstraction.Services;
 using InvestLens.Shared.Constants;
+using InvestLens.Shared.Exceptions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
@@ -13,7 +13,6 @@ using System.Collections.Concurrent;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using InvestLens.Shared.Exceptions;
 
 namespace InvestLens.Shared.MessageBus.Services;
 

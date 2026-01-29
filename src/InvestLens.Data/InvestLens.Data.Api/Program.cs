@@ -1,6 +1,7 @@
 ﻿using CorrelationId;
 using CorrelationId.Abstractions;
 using CorrelationId.DependencyInjection;
+using CorrelationId.HttpClient;
 using HealthChecks.UI.Client;
 using InvestLens.Abstraction.MessageBus.Data;
 using InvestLens.Abstraction.MessageBus.Services;
@@ -24,7 +25,6 @@ using InvestLens.Shared.Services;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Serilog;
 using Serilog.Context;
-using CorrelationId.HttpClient;
 
 namespace InvestLens.Data.Api;
 

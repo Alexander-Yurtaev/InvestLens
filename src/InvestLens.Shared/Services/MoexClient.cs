@@ -1,9 +1,9 @@
 ﻿using InvestLens.Abstraction.Redis.Services;
 using InvestLens.Abstraction.Services;
 using InvestLens.Data.Shared.Responses;
+using InvestLens.Shared.Exceptions;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
-using InvestLens.Shared.Exceptions;
 
 namespace InvestLens.Shared.Services;
 
