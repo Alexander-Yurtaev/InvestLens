@@ -7,7 +7,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
 using Polly;
 using Serilog;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Net.Sockets;
+using System.Reflection;
 
 namespace InvestLens.Shared.Helpers;
 
@@ -175,6 +177,20 @@ public static class DatabaseHelper
         return migrations.LastOrDefault() ?? "No migrations applied";
     }
 
+    public static string GetTableName(Type type)
+    {
+        var tableAttr = type.GetCustomAttribute<TableAttribute>();
+        if (tableAttr != null)
+            return tableAttr.Name;
+
+        return type.Name;
+    }
+
+    public static string QuoteIdentifier(string identifier)
+    {
+        return $"\"{identifier.Replace("\"", "\"\"")}\"";
+    }
+
     #endregion Create&Migrations
 
     #region Private Methods
@@ -251,12 +267,6 @@ public static class DatabaseHelper
             await using var cmd = new NpgsqlCommand(cmdText, serviceMasterConnection);
             await cmd.ExecuteNonQueryAsync();
         }
-    }
-
-    private static string QuoteIdentifier(string identifier)
-    {
-        // Экранируем идентификаторы для защиты от SQL injection
-        return $"\"{identifier.Replace("\"", "\"\"")}\"";
     }
 
     #endregion

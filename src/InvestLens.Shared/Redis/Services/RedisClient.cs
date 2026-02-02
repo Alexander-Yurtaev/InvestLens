@@ -45,6 +45,7 @@ public class RedisClient : IRedisClient, IDisposable
         {
             var resilientPolicy = _pollyService.GetResilientPolicy<Exception>();
             var redisKey = BuildKey(key);
+            //await resilientPolicy.ExecuteAsync(async () => await RemoveAsync(redisKey));
             var value = await resilientPolicy.ExecuteAsync(async () => await _database.StringGetAsync(redisKey));
 
             if (!value.HasValue)

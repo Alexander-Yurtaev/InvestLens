@@ -11,7 +11,7 @@ namespace InvestLens.Data.DataContext.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "RefreshStatus",
+                name: "refresh_status",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
@@ -25,7 +25,7 @@ namespace InvestLens.Data.DataContext.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Security",
+                name: "security",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
@@ -34,14 +34,14 @@ namespace InvestLens.Data.DataContext.Migrations
                     regnumber = table.Column<string>(type: "character varying(189)", maxLength: 189, nullable: false),
                     name = table.Column<string>(type: "character varying(765)", maxLength: 765, nullable: false),
                     isin = table.Column<string>(type: "character varying(51)", maxLength: 51, nullable: false),
-                    is_trade = table.Column<bool>(type: "boolean", nullable: false),
+                    is_traded = table.Column<bool>(type: "boolean", nullable: false),
                     emitent_id = table.Column<int>(type: "integer", nullable: false),
                     emitent_title = table.Column<string>(type: "character varying(765)", maxLength: 765, nullable: false),
                     emitent_inn = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
                     emitent_okpo = table.Column<string>(type: "character varying(21)", maxLength: 21, nullable: false),
                     type = table.Column<string>(type: "character varying(93)", maxLength: 93, nullable: false),
                     group = table.Column<string>(type: "character varying(93)", maxLength: 93, nullable: false),
-                    primaryprice_boardid = table.Column<string>(type: "character varying(12)", maxLength: 12, nullable: false),
+                    primary_boardid = table.Column<string>(type: "character varying(12)", maxLength: 12, nullable: false),
                     marketprice_boardid = table.Column<string>(type: "character varying(12)", maxLength: 12, nullable: false)
                 },
                 constraints: table =>
@@ -51,13 +51,13 @@ namespace InvestLens.Data.DataContext.Migrations
 
             migrationBuilder.CreateIndex(
                 name: "IX_RefreshStatus_entity_name",
-                table: "RefreshStatus",
+                table: "refresh_status",
                 column: "entity_name",
                 unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Security_secid",
-                table: "Security",
+                table: "security",
                 column: "secid",
                 unique: true);
         }
@@ -66,10 +66,10 @@ namespace InvestLens.Data.DataContext.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "RefreshStatus");
+                name: "refresh_status");
 
             migrationBuilder.DropTable(
-                name: "Security");
+                name: "security");
         }
     }
 }

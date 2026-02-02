@@ -17,6 +17,7 @@
 	<PackageReference Include="AspNetCore.HealthChecks.Redis" />
 	<PackageReference Include="AspNetCore.HealthChecks.UI.Client" />
 	<PackageReference Include="CorrelationId" />
+	<PackageReference Include="Dapper" />
   </ItemGroup>
 
   <ItemGroup Label="Npgsql">

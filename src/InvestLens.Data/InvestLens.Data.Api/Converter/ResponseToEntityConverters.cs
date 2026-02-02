@@ -7,13 +7,18 @@ namespace InvestLens.Data.Api.Converter;
 
 public static class ResponseToEntityConverters
 {
-    public static List<Security> SecurityResponseToEntityConverter(SecuritiesResponse securitiesResponse)
+    public static List<Security> SecurityResponseToEntityConverter(SecuritiesResponse securitiesResponse, int page, int pageSize)
     {
         var result = new List<Security>();
 
         foreach (object[] row in securitiesResponse.Securities.Data)
         {
-            var security = new Security();
+            var security = new SecurityEx
+            {
+                Page = page,
+                PageSize = pageSize
+            };
+
             for (int i = 0; i < securitiesResponse.Securities.Columns.Length; i++)
             {
                 var column = securitiesResponse.Securities.Columns[i];
@@ -26,6 +31,10 @@ public static class ResponseToEntityConverters
                 }
 
                 var value = GetValue((JsonElement?)row[i], metaData, propertyInfo.PropertyType);
+                if (value is null && string.Compare(column, "shortname", StringComparison.OrdinalIgnoreCase) == 0)
+                {
+                    System.Diagnostics.Debugger.Break();
+                }
                 propertyInfo.SetValue(security, value);
             }
             result.Add(security);
@@ -36,16 +45,20 @@ public static class ResponseToEntityConverters
 
     private static dynamic? GetValue(JsonElement? element, ColumnMetadata metadata, Type propertyType)
     {
-        if (element is null) return null;
-        switch (metadata.Type)
+        if (string.Equals(metadata.Type, "string", StringComparison.OrdinalIgnoreCase))
         {
-            case "string":
-                return element.Value.GetString();
-            case "int32":
-                var v = element.Value.GetInt32();
-                return (propertyType == typeof(bool)) ? v > 0 : v;
-            default:
-                throw new Exception($"Unknown type: {metadata.Type}");
+            if (element is null) return "";
+            return element.Value.GetString() ?? "";
         }
+
+        if (string.Equals(metadata.Type, "int32", StringComparison.OrdinalIgnoreCase))
+        {
+            if (element is null) return null;
+
+            var v = element.Value.GetInt32();
+            return (propertyType == typeof(bool)) ? v > 0 : v;
+        }
+
+        throw new Exception($"Unknown type: {metadata.Type}");
     }
 }

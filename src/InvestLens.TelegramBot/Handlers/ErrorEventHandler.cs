@@ -29,14 +29,18 @@ public class ErrorEventHandler : IMessageHandler<ErrorMessage>
                 "Пришло сообщение Id={MessageId} без CorrelationId. Новый correlationId: {CorrelationId}",
                 message.MessageId, correlationId);
         }
+        else
+        {
+            _correlationIdService.SetCorrelationId(correlationId);
+        }
 
         using (LogContext.PushProperty("CorrelationId", correlationId))
         {
-            _logger.LogInformation("Операция {OperationId} завершилась неудачно: {Exception}", correlationId, message.Exception.Message);
-            
-            await _telegramBotClient.NotifyOperationStartAsync(
-                correlationId, $"Операция {correlationId} завершилась неудачно: {message.Exception.Message}", cancellationToken);
-         
+            _logger.LogInformation("Операция завершилась неудачно: {Exception}", message.Exception.Message);
+
+            await _telegramBotClient.NotifyErrorAsync($"Операция завершилась неудачно: {message.Exception.Message}",
+                cancellationToken);
+
             return await Task.FromResult(true);
         }
     }

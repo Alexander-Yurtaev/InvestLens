@@ -60,12 +60,12 @@ public class SecuritiesRefreshStatusService : ISecuritiesRefreshStatusService
         await _resilientPolicy.ExecuteAsync(async () => await _redisClient.SetAsync(RedisKeys.SecuritiesRefreshStatusRedisKey, progress));
     }
 
-    public async Task SetDownloading(string correlationId, int? count = 0)
+    public async Task SetDownloading(string correlationId, int count)
     {
         var progress = await TryGetProgress(correlationId);
         progress.UpdatedAt = DateTime.UtcNow;
-        progress.DownloadedCount = count ?? 0;
-        progress.Status = SecuritiesRefreshStatus.Downloading;
+        progress.DownloadedCount = count;
+        progress.Status = SecuritiesRefreshStatus.Processing;
         await _resilientPolicy.ExecuteAsync(async () => await _redisClient.SetAsync(RedisKeys.SecuritiesRefreshStatusRedisKey, progress));
     }
 
@@ -77,11 +77,12 @@ public class SecuritiesRefreshStatusService : ISecuritiesRefreshStatusService
         await _resilientPolicy.ExecuteAsync(async () => await _redisClient.SetAsync(RedisKeys.SecuritiesRefreshStatusRedisKey, progress));
     }
 
-    public async Task SetSaving(string correlationId)
+    public async Task SetSaving(string correlationId, int count)
     {
         var progress = await TryGetProgress(correlationId);
         progress.UpdatedAt = DateTime.UtcNow;
-        progress.Status = SecuritiesRefreshStatus.Saving;
+        progress.SavedCount = count;
+        progress.Status = SecuritiesRefreshStatus.Processing;
         await _resilientPolicy.ExecuteAsync(async () => await _redisClient.SetAsync(RedisKeys.SecuritiesRefreshStatusRedisKey, progress));
     }
 

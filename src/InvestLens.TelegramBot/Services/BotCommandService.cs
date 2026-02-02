@@ -21,16 +21,16 @@ public class BotCommandService : IBotCommandService
 
     public async Task HandleCommandAsync(string command, CancellationToken cancellationToken)
     {
-        var correlationId = _correlationIdService.GetOrCreateCorrelationId("BotCommandService");
+        var correlationId = _correlationIdService.GetOrCreateCorrelationId(nameof(BotCommandService));
         using (LogContext.PushProperty("CorrelationId", correlationId))
         {
             switch (command)
             {
                 case "/health":
-                    await HealthOperation(correlationId, cancellationToken);
+                    await HealthOperation(cancellationToken);
                     break;
                 case "/info":
-                    await InfoOperation(correlationId, cancellationToken);
+                    await InfoOperation(cancellationToken);
                     break;
             }
         }
@@ -38,46 +38,39 @@ public class BotCommandService : IBotCommandService
 
     #region Private Methods
 
-    private async Task InfoOperation(string correlationId, CancellationToken cancellationToken)
+    private async Task InfoOperation(CancellationToken cancellationToken)
     {
         // получить из Redis статус загрузки Securities
-        var refreshStatus = await _statusService.TryGetProgress(correlationId);
+        var refreshStatus = await _statusService.TryGetProgress(_correlationIdService.GetOrCreateCorrelationId(nameof(BotCommandService)));
         
         switch (refreshStatus.Status)
         {
             case SecuritiesRefreshStatus.None:
-                await _telegramBotClient.NotifyInfoAsync(refreshStatus.CorrelationId, refreshStatus.Status.GetDisplayName(), refreshStatus.Status.GetDescription(), cancellationToken);
+                await _telegramBotClient.NotifyInfoAsync(refreshStatus.Status.GetDisplayName(), refreshStatus.Status.GetDescription(), cancellationToken);
                 break;
             case SecuritiesRefreshStatus.Scheduled:
-                await _telegramBotClient.NotifyInfoAsync(refreshStatus.CorrelationId, refreshStatus.Status.GetDisplayName(), refreshStatus.Status.GetDescription(), cancellationToken);
-                break;
-            case SecuritiesRefreshStatus.Downloading:
-                await _telegramBotClient.NotifyStatusAsync(refreshStatus.CorrelationId, $"Обновление данных: {refreshStatus.Duration:dd\\.hh\\:mm\\:ss}", $"{refreshStatus.Status.GetDisplayName()}: {refreshStatus.DownloadedCount:N0}", cancellationToken);
+                await _telegramBotClient.NotifyInfoAsync(refreshStatus.Status.GetDisplayName(), refreshStatus.Status.GetDescription(), cancellationToken);
                 break;
             case SecuritiesRefreshStatus.Processing:
-                await _telegramBotClient.NotifyStatusAsync(refreshStatus.CorrelationId, $"Обновление данных: {refreshStatus.Duration:dd\\.hh\\:mm\\:ss}", refreshStatus.Status.GetDisplayName(), cancellationToken);
-                break;
-            case SecuritiesRefreshStatus.Saving:
-                await _telegramBotClient.NotifyStatusAsync(refreshStatus.CorrelationId, $"Обновление данных: {refreshStatus.Duration:dd\\.hh\\:mm\\:ss}", $"{refreshStatus.Status.GetDisplayName()}: {refreshStatus.SavedCount:N0}", cancellationToken);
+                await _telegramBotClient.NotifyStatusAsync($"Обновление данных: {refreshStatus.Duration:dd\\.hh\\:mm\\:ss}", $"{refreshStatus.Status.GetDisplayName()}: {refreshStatus.SavedCount:N0}/{refreshStatus.DownloadedCount:N0}", cancellationToken);
                 break;
             case SecuritiesRefreshStatus.Completed:
                 await _telegramBotClient.NotifyOperationCompleteAsync(
-                    refreshStatus.CorrelationId,
-                    $"{refreshStatus.Status.GetDescription()}: {refreshStatus.DownloadedCount}/{refreshStatus.SavedCount}",
+                    $"{refreshStatus.Status.GetDescription()}: {refreshStatus.SavedCount}/{refreshStatus.DownloadedCount}",
                     refreshStatus.Duration,
                     cancellationToken);
                 break;
             case SecuritiesRefreshStatus.Failed:
-                await _telegramBotClient.NotifyErrorAsync(refreshStatus.CorrelationId, refreshStatus.ErrorMessage, cancellationToken);
+                await _telegramBotClient.NotifyErrorAsync(refreshStatus.ErrorMessage, cancellationToken);
                 break;
             default:
                 throw new ArgumentOutOfRangeException();
         }
     }
 
-    private async Task HealthOperation(string correlationId, CancellationToken cancellationToken)
+    private async Task HealthOperation(CancellationToken cancellationToken)
     {
-        await _telegramBotClient.NotifyInfoAsync(correlationId, "Health Check", "Healthy", cancellationToken);
+        await _telegramBotClient.NotifyInfoAsync("Health Check", "Healthy", cancellationToken);
     }
 
     #endregion Private Methods

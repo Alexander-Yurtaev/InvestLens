@@ -1,28 +1,17 @@
 ﻿using InvestLens.Data.Entities;
-using InvestLens.Shared.Helpers;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 
 namespace InvestLens.Data.DataContext;
 
 public class InvestLensDataContext : DbContext
 {
-    private readonly IConfiguration _configuration;
-
-    public InvestLensDataContext(DbContextOptions<InvestLensDataContext> options, IConfiguration configuration) : base(options)
+    public InvestLensDataContext(DbContextOptions<InvestLensDataContext> options) : base(options)
     {
-        _configuration = configuration;
     }
 
     public DbSet<Security> Security { get; set; }
 
     public DbSet<RefreshStatus> RefreshStatus { get; set; }
-
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-    {
-        if (optionsBuilder.IsConfigured) return;
-        optionsBuilder.UseNpgsql(ConnectionStringHelper.GetTargetConnectionString(_configuration));
-    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -34,9 +23,12 @@ public class InvestLensDataContext : DbContext
     {
         modelBuilder.Entity<Security>(security =>
         {
+            security.ToTable("security");
+
             security.HasKey(s => s.Id);
             
             security.Property(s => s.Id)
+                .HasDefaultValueSql("gen_random_uuid()")
                 .ValueGeneratedOnAdd();
 
             security.Property(s => s.SecId)
@@ -68,7 +60,7 @@ public class InvestLensDataContext : DbContext
                 .IsRequired(false);
 
             security.Property(s => s.IsTraded)
-                .HasColumnName("is_trade")
+                .HasColumnName("is_traded")
                 .IsRequired();
 
             security.Property(s => s.EmitentId)
@@ -101,7 +93,7 @@ public class InvestLensDataContext : DbContext
                 .IsRequired();
 
             security.Property(s => s.PrimaryBoardId)
-                .HasColumnName("primaryprice_boardid")
+                .HasColumnName("primary_boardid")
                 .HasMaxLength(12)
                 .IsRequired(false);
 
@@ -117,6 +109,8 @@ public class InvestLensDataContext : DbContext
     {
         modelBuilder.Entity<RefreshStatus>(rs =>
         {
+            rs.ToTable("refresh_status");
+
             rs.HasKey(p => p.Id);
 
             rs.Property(p => p.EntityName)

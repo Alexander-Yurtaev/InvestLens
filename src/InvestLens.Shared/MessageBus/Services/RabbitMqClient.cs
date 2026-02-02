@@ -124,7 +124,7 @@ public class RabbitMqClient : IMessageBusClient
 
             foreach (var header in message.Headers)
             {
-                properties.Headers[header.Key] = header.Value;
+                properties.Headers[header.Key] = header.Value.ToString();
             }
 
             await _channel.BasicPublishAsync(

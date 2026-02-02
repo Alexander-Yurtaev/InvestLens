@@ -38,8 +38,6 @@ public class SecurityRefreshEventHandler : IMessageHandler<SecurityRefreshMessag
 
     public async Task<bool> HandleAsync(SecurityRefreshMessage message, CancellationToken cancellationToken = default)
     {
-        _logger.LogInformation("Получено задание на обновление списка ценных бумаг.");
-
         var correlationHeader = message.Headers
             .FirstOrDefault(h => h.Key.Equals(HeaderConstants.CorrelationHeader, StringComparison.OrdinalIgnoreCase));
 
@@ -55,6 +53,8 @@ public class SecurityRefreshEventHandler : IMessageHandler<SecurityRefreshMessag
 
         using (LogContext.PushProperty("CorrelationId", correlationId))
         {
+            _logger.LogInformation("Получено задание на обновление списка ценных бумаг.");
+
             try
             {
                 // 1. Проверяем, что в данный момент не выполняется задача обновления данных

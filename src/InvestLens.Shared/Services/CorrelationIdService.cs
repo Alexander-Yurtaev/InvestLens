@@ -25,4 +25,10 @@ public class CorrelationIdService : ICorrelationIdService
 
         return correlationId;
     }
+
+    public void SetCorrelationId(string correlationId)
+    {
+        _correlationContextAccessor.CorrelationContext =
+            new CorrelationId.CorrelationContext(correlationId, HeaderConstants.CorrelationHeader);
+    }
 }

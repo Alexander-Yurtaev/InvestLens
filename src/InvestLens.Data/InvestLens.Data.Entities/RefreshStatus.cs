@@ -8,7 +8,7 @@ public class RefreshStatus : BaseEntity<Guid>
         RefreshDate = DateTime.UtcNow;
     }
 
-    public string EntityName { get; set; } = string.Empty;
+    public string EntityName { get; set; }
 
     public DateTime RefreshDate { get; set; }
 

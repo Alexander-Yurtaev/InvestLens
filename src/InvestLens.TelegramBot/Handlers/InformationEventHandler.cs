@@ -29,13 +29,17 @@ public class InformationEventHandler : IMessageHandler<BaseInformationMessage>
                 "Пришло сообщение Id={MessageId} без CorrelationId. Новый correlationId: {CorrelationId}",
                 message.MessageId, correlationId);
         }
+        else
+        {
+            _correlationIdService.SetCorrelationId(correlationId);
+        }
 
         using (LogContext.PushProperty("CorrelationId", correlationId))
         {
             return message switch
             {
-                StartMessage startMessage => await HandleStartMessageAsync(correlationId, startMessage, cancellationToken),
-                CompleteMessage completeMessage => await HandleCompleteMessageAsync(correlationId, completeMessage, cancellationToken),
+                StartMessage startMessage => await HandleStartMessageAsync(startMessage, cancellationToken),
+                CompleteMessage completeMessage => await HandleCompleteMessageAsync(completeMessage, cancellationToken),
                 _ => false
             };
         }
@@ -43,22 +47,22 @@ public class InformationEventHandler : IMessageHandler<BaseInformationMessage>
 
     #region Private Methods
 
-    private async Task<bool> HandleStartMessageAsync(string correlationId, StartMessage message,
+    private async Task<bool> HandleStartMessageAsync(StartMessage message,
         CancellationToken cancellationToken = default)
     {
         _logger.LogInformation("Операция началась, MessageId: {MessageId} .", message.MessageId);
-        await _telegramBotClient.NotifyOperationStartAsync(correlationId, message.Details, cancellationToken);
+        await _telegramBotClient.NotifyOperationStartAsync(message.Details, cancellationToken);
         return await Task.FromResult(true);
     }
 
-    private async Task<bool> HandleCompleteMessageAsync(string correlationId, CompleteMessage message,
+    private async Task<bool> HandleCompleteMessageAsync(CompleteMessage message,
         CancellationToken cancellationToken = default)
     {
         _logger.LogInformation(
             "Операция завершилась: за {Duration:hh\\:mm\\:ss} было скачано {Count} записей, MessageId: {MessageId} ",
             message.Duration, message.Count, message.MessageId);
 
-        await _telegramBotClient.NotifyOperationCompleteAsync(correlationId,
+        await _telegramBotClient.NotifyOperationCompleteAsync(
             $"Операция завершилась: за {message.Duration:hh\\:mm\\:ss} было скачано {message.Count} записей, MessageId: {message.MessageId}",
             message.Duration, cancellationToken);
 

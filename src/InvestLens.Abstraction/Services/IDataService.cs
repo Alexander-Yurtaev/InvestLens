@@ -14,4 +14,7 @@ public interface IDataService
     /// <param name="filter">фильтрация (опционально)</param>
     /// <returns></returns>
     Task<IGetResult<Security, Guid>> GetSecurities(int page, int pageSize, string? sort = "", string? filter = "");
+
+    Task<int> SaveDataAsync<TEntity, TKey>(IEnumerable<TEntity> entities, int batchId, Func<Exception, Task> failBack)
+        where TEntity : BaseEntity<TKey> where TKey : struct;
 }

@@ -11,8 +11,8 @@ namespace InvestLens.Data.DataContext.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AlterColumn<string>(
-                name: "primaryprice_boardid",
-                table: "Security",
+                name: "primary_boardid",
+                table: "security",
                 type: "character varying(12)",
                 maxLength: 12,
                 nullable: true,
@@ -25,8 +25,8 @@ namespace InvestLens.Data.DataContext.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AlterColumn<string>(
-                name: "primaryprice_boardid",
-                table: "Security",
+                name: "primary_boardid",
+                table: "security",
                 type: "character varying(12)",
                 maxLength: 12,
                 nullable: false,

@@ -12,7 +12,7 @@ namespace InvestLens.Data.DataContext.Migrations
         {
             migrationBuilder.AlterColumn<string>(
                 name: "regnumber",
-                table: "Security",
+                table: "security",
                 type: "character varying(189)",
                 maxLength: 189,
                 nullable: true,
@@ -22,7 +22,7 @@ namespace InvestLens.Data.DataContext.Migrations
 
             migrationBuilder.AlterColumn<string>(
                 name: "marketprice_boardid",
-                table: "Security",
+                table: "security",
                 type: "character varying(12)",
                 maxLength: 12,
                 nullable: true,
@@ -32,7 +32,7 @@ namespace InvestLens.Data.DataContext.Migrations
 
             migrationBuilder.AlterColumn<string>(
                 name: "isin",
-                table: "Security",
+                table: "security",
                 type: "character varying(51)",
                 maxLength: 51,
                 nullable: true,
@@ -42,7 +42,7 @@ namespace InvestLens.Data.DataContext.Migrations
 
             migrationBuilder.AlterColumn<string>(
                 name: "emitent_title",
-                table: "Security",
+                table: "security",
                 type: "character varying(765)",
                 maxLength: 765,
                 nullable: true,
@@ -52,7 +52,7 @@ namespace InvestLens.Data.DataContext.Migrations
 
             migrationBuilder.AlterColumn<string>(
                 name: "emitent_okpo",
-                table: "Security",
+                table: "security",
                 type: "character varying(21)",
                 maxLength: 21,
                 nullable: true,
@@ -62,7 +62,7 @@ namespace InvestLens.Data.DataContext.Migrations
 
             migrationBuilder.AlterColumn<string>(
                 name: "emitent_inn",
-                table: "Security",
+                table: "security",
                 type: "character varying(30)",
                 maxLength: 30,
                 nullable: true,
@@ -72,7 +72,7 @@ namespace InvestLens.Data.DataContext.Migrations
 
             migrationBuilder.AlterColumn<int>(
                 name: "emitent_id",
-                table: "Security",
+                table: "security",
                 type: "integer",
                 nullable: true,
                 oldClrType: typeof(int),
@@ -84,7 +84,7 @@ namespace InvestLens.Data.DataContext.Migrations
         {
             migrationBuilder.AlterColumn<string>(
                 name: "regnumber",
-                table: "Security",
+                table: "security",
                 type: "character varying(189)",
                 maxLength: 189,
                 nullable: false,
@@ -96,7 +96,7 @@ namespace InvestLens.Data.DataContext.Migrations
 
             migrationBuilder.AlterColumn<string>(
                 name: "marketprice_boardid",
-                table: "Security",
+                table: "security",
                 type: "character varying(12)",
                 maxLength: 12,
                 nullable: false,
@@ -108,7 +108,7 @@ namespace InvestLens.Data.DataContext.Migrations
 
             migrationBuilder.AlterColumn<string>(
                 name: "isin",
-                table: "Security",
+                table: "security",
                 type: "character varying(51)",
                 maxLength: 51,
                 nullable: false,
@@ -120,7 +120,7 @@ namespace InvestLens.Data.DataContext.Migrations
 
             migrationBuilder.AlterColumn<string>(
                 name: "emitent_title",
-                table: "Security",
+                table: "security",
                 type: "character varying(765)",
                 maxLength: 765,
                 nullable: false,
@@ -132,7 +132,7 @@ namespace InvestLens.Data.DataContext.Migrations
 
             migrationBuilder.AlterColumn<string>(
                 name: "emitent_okpo",
-                table: "Security",
+                table: "security",
                 type: "character varying(21)",
                 maxLength: 21,
                 nullable: false,
@@ -144,7 +144,7 @@ namespace InvestLens.Data.DataContext.Migrations
 
             migrationBuilder.AlterColumn<string>(
                 name: "emitent_inn",
-                table: "Security",
+                table: "security",
                 type: "character varying(30)",
                 maxLength: 30,
                 nullable: false,
@@ -156,7 +156,7 @@ namespace InvestLens.Data.DataContext.Migrations
 
             migrationBuilder.AlterColumn<int>(
                 name: "emitent_id",
-                table: "Security",
+                table: "security",
                 type: "integer",
                 nullable: false,
                 defaultValue: 0,

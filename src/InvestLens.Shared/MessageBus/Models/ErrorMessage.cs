@@ -1,14 +1,30 @@
 ﻿using InvestLens.Abstraction.DTOs;
+using Newtonsoft.Json;
 
 namespace InvestLens.Shared.MessageBus.Models;
 
 public class ErrorMessage : BaseTelegramMessage
 {
-    public ErrorMessage(DateTime? finishedAt, Exception? exception)
+    private string _innerExceptionMessage = string.Empty;
+
+    public ErrorMessage(DateTime? finishedAt, string innerExceptionMessage)
     {
         FinishedAt = finishedAt;
-        Exception = new ExceptionDto(exception?.Message ?? "Произошла ошибка", "SECURITY_REFRESH_ERROR", DateTime.UtcNow);
+        InnerExceptionMessage = innerExceptionMessage;
     }
 
-    public ExceptionDto Exception { get; set; }
+    public string InnerExceptionMessage
+    {
+        get => _innerExceptionMessage;
+        set
+        {
+            _innerExceptionMessage = value;
+            Exception = new ExceptionDto(
+                string.IsNullOrEmpty(_innerExceptionMessage) ? "Произошла ошибка" : _innerExceptionMessage,
+                "SECURITY_REFRESH_ERROR", DateTime.UtcNow);
+        }
+    }
+
+    [JsonIgnore]
+    public ExceptionDto Exception { get; set; } = null!;
 }

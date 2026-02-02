@@ -11,13 +11,13 @@ public record SecuritiesResponse
 public record Securities
 {
     [JsonPropertyName("columns")]
-    public required string[] Columns { get; set; }
+    public string[] Columns { get; set; } = [];
 
     [JsonPropertyName("metadata")]
-    public required Dictionary<string, ColumnMetadata> Metadata { get; set; }
+    public Dictionary<string, ColumnMetadata> Metadata { get; set; } = new Dictionary<string, ColumnMetadata>();
 
     [JsonPropertyName("data")]
-    public required object[][] Data { get; set; }
+    public object[][] Data { get; set; } = [];
 }
 
 public record ColumnMetadata

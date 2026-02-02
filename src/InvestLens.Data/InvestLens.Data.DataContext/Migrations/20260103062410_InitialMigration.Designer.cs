@@ -25,38 +25,6 @@ namespace InvestLens.Data.DataContext.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("InvestLens.Data.Entities.OutboxMessage", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<string>("Payload")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("payload");
-
-                    b.Property<DateTime>("ProcessedAt")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("processed_at");
-
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("character varying(150)")
-                        .HasColumnName("type");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("OutboxMessage");
-                });
-
             modelBuilder.Entity("InvestLens.Data.Entities.RefreshStatus", b =>
                 {
                     b.Property<Guid>("Id")
@@ -84,7 +52,7 @@ namespace InvestLens.Data.DataContext.Migrations
                     b.HasIndex("EntityName")
                         .IsUnique();
 
-                    b.ToTable("RefreshStatus");
+                    b.ToTable("refresh_status");
                 });
 
             modelBuilder.Entity("InvestLens.Data.Entities.Security", b =>
@@ -123,7 +91,7 @@ namespace InvestLens.Data.DataContext.Migrations
 
                     b.Property<bool>("IsTraded")
                         .HasColumnType("boolean")
-                        .HasColumnName("is_trade");
+                        .HasColumnName("is_traded");
 
                     b.Property<string>("Isin")
                         .IsRequired()
@@ -147,7 +115,7 @@ namespace InvestLens.Data.DataContext.Migrations
                         .IsRequired()
                         .HasMaxLength(12)
                         .HasColumnType("character varying(12)")
-                        .HasColumnName("primaryprice_boardid");
+                        .HasColumnName("primary_boardid");
 
                     b.Property<string>("RegNumber")
                         .IsRequired()
@@ -178,7 +146,7 @@ namespace InvestLens.Data.DataContext.Migrations
                     b.HasIndex("SecId")
                         .IsUnique();
 
-                    b.ToTable("Security");
+                    b.ToTable("security");
                 });
 #pragma warning restore 612, 618
         }

@@ -12,7 +12,7 @@ namespace InvestLens.Data.DataContext.Migrations
         {
             migrationBuilder.AlterColumn<string>(
                 name: "shortname",
-                table: "Security",
+                table: "security",
                 type: "character varying(189)",
                 maxLength: 189,
                 nullable: false,
@@ -27,7 +27,7 @@ namespace InvestLens.Data.DataContext.Migrations
         {
             migrationBuilder.AlterColumn<string>(
                 name: "shortname",
-                table: "Security",
+                table: "security",
                 type: "character varying(189)",
                 maxLength: 189,
                 nullable: false,

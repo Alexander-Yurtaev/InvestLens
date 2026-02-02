@@ -11,15 +11,18 @@ using System.Threading;
 public class TelegramBotClient : ITelegramBotClient
 {
     private readonly HttpClient _httpClient;
+    private readonly ICorrelationIdService _correlationIdService;
     private readonly TelegramSettings _settings;
     private readonly ILogger<TelegramBotClient> _logger;
 
     public TelegramBotClient(
         HttpClient httpClient,
         IOptions<TelegramSettings> settings,
+        ICorrelationIdService correlationIdService,
         ILogger<TelegramBotClient> logger)
     {
         _httpClient = httpClient;
+        _correlationIdService = correlationIdService;
         _settings = settings.Value;
         _logger = logger;
     }
@@ -42,20 +45,20 @@ public class TelegramBotClient : ITelegramBotClient
         await SendWithRetryAsync(payload, cancellationToken);
     }
 
-    public async Task NotifyOperationStartAsync(string correlationId, string details, CancellationToken cancellationToken = default)
+    public async Task NotifyOperationStartAsync(string details, CancellationToken cancellationToken = default)
     {
         var message = $"🚀 <b>Операция начата</b>\n" +
-                     $"Correlation ID: {correlationId}\n" +
+                     $"Correlation ID: {_correlationIdService.GetOrCreateCorrelationId(nameof(TelegramBotClient))}\n" +
                      $"Время: {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss} UTC\n" +
                      $"Детали: {details}";
 
         await NotifyAsync(message, cancellationToken);
     }
 
-    public async Task NotifyOperationCompleteAsync(string correlationId, string result, TimeSpan duration, CancellationToken cancellationToken = default)
+    public async Task NotifyOperationCompleteAsync(string result, TimeSpan duration, CancellationToken cancellationToken = default)
     {
         var message = $"✅ <b>Операция завершена</b>\n" +
-                     $"Correlation ID: {correlationId}\n" +
+                     $"Correlation ID: {_correlationIdService.GetOrCreateCorrelationId(nameof(TelegramBotClient))}\n" +
                      //$"Длительность: {duration:dd\\.hh\\:mm\\:ss}\n" +
                      $"Длительность: {duration}\n" +
                      $"Результат: {result}\n" +
@@ -64,30 +67,30 @@ public class TelegramBotClient : ITelegramBotClient
         await NotifyAsync(message, cancellationToken);
     }
 
-    public async Task NotifyInfoAsync(string correlationId, string title, string message, CancellationToken cancellationToken = default)
+    public async Task NotifyInfoAsync(string title, string message, CancellationToken cancellationToken = default)
     {
         var formattedMessage = $"ℹ️ <b>{title}</b>\n" +
-                               $"Correlation ID: {correlationId}\n" +
+                               $"Correlation ID: {_correlationIdService.GetOrCreateCorrelationId(nameof(TelegramBotClient))}\n" +
                                $"{message}\n" +
                                $"Время: {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss} UTC";
 
         await NotifyAsync(formattedMessage, cancellationToken);
     }
 
-    public async Task NotifyErrorAsync(string correlationId, string exceptionMessage, CancellationToken cancellationToken = default)
+    public async Task NotifyErrorAsync(string exceptionMessage, CancellationToken cancellationToken = default)
     {
         var message = $"❌ <b>Ошибка в операции</b>\n" +
-                     $"Correlation ID: {correlationId}\n" +
+                     $"Correlation ID: {_correlationIdService.GetOrCreateCorrelationId(nameof(TelegramBotClient))}\n" +
                      $"Ошибка: {exceptionMessage}\n" +
                      $"Время: {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss} UTC";
 
         await NotifyAsync(message, cancellationToken);
     }
 
-    public async Task NotifyWarningAsync(string correlationId, string warning, string details = "", CancellationToken cancellationToken = default)
+    public async Task NotifyWarningAsync(string warning, string details = "", CancellationToken cancellationToken = default)
     {
         var message = $"⚠️ <b>Внимание</b>\n" +
-                      $"Correlation ID: {correlationId}\n" +
+                      $"Correlation ID: {_correlationIdService.GetOrCreateCorrelationId(nameof(TelegramBotClient))}\n" +
                       $"Предупреждение: {warning}\n";
 
         if (!string.IsNullOrEmpty(details))
@@ -100,10 +103,10 @@ public class TelegramBotClient : ITelegramBotClient
         await NotifyAsync(message, cancellationToken);
     }
 
-    public async Task NotifyStatusAsync(string correlationId, string status, string currentState, CancellationToken cancellationToken = default)
+    public async Task NotifyStatusAsync(string status, string currentState, CancellationToken cancellationToken = default)
     {
         var message = $"📈 <b>Статус системы</b>\n" +
-                      $"Correlation ID: {correlationId}\n" +
+                      $"Correlation ID: {_correlationIdService.GetOrCreateCorrelationId(nameof(TelegramBotClient))}\n" +
                       $"Статус: {status}\n" +
                       $"Текущее состояние: {currentState}\n" +
                       $"Время: {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss} UTC";
@@ -111,10 +114,10 @@ public class TelegramBotClient : ITelegramBotClient
         await NotifyAsync(message, cancellationToken);
     }
 
-    public async Task NotifyDataUpdateAsync(string correlationId, string dataType, int count, string description = "", CancellationToken cancellationToken = default)
+    public async Task NotifyDataUpdateAsync(string dataType, int count, string description = "", CancellationToken cancellationToken = default)
     {
         var message = $"📊 <b>Обновление данных</b>\n" +
-                      $"Correlation ID: {correlationId}\n" +
+                      $"Correlation ID: {_correlationIdService.GetOrCreateCorrelationId(nameof(TelegramBotClient))}\n" +
                       $"Тип данных: {dataType}\n" +
                       $"Количество записей: {count}\n";
 
@@ -128,10 +131,10 @@ public class TelegramBotClient : ITelegramBotClient
         await NotifyAsync(message, cancellationToken);
     }
 
-    public async Task NotifyScheduledTaskAsync(string correlationId, string taskName, string result, CancellationToken cancellationToken = default)
+    public async Task NotifyScheduledTaskAsync(string taskName, string result, CancellationToken cancellationToken = default)
     {
         var message = $"⏰ <b>Плановое задание выполнено</b>\n" +
-                      $"Correlation ID: {correlationId}\n" +
+                      $"Correlation ID: {_correlationIdService.GetOrCreateCorrelationId(nameof(TelegramBotClient))}\n" +
                       $"Задание: {taskName}\n" +
                       $"Результат: {result}\n" +
                       $"Время: {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss} UTC";
@@ -139,10 +142,10 @@ public class TelegramBotClient : ITelegramBotClient
         await NotifyAsync(message, cancellationToken);
     }
 
-    public async Task NotifyHeartbeatAsync(string correlationId, string serviceName, TimeSpan uptime, CancellationToken cancellationToken = default)
+    public async Task NotifyHeartbeatAsync(string serviceName, TimeSpan uptime, CancellationToken cancellationToken = default)
     {
         var message = $"❤️ <b>Heartbeat</b>\n" +
-                      $"Correlation ID: {correlationId}\n" +
+                      $"Correlation ID: {_correlationIdService.GetOrCreateCorrelationId(nameof(TelegramBotClient))}\n" +
                       $"Сервис: {serviceName}\n" +
                       $"Аптайм: {uptime:dd\\.hh\\:mm\\:ss}\n" +
                       $"Статус: Работает нормально\n" +

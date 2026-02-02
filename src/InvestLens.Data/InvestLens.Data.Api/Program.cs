@@ -72,19 +72,20 @@ public static class Program
             builder.Services.AddSingleton<IPollyService, PollyService>();
             builder.Services.AddSingleton<IRabbitMqService, RabbitMqService>();
 
+            builder.Services.AddInvestLensDatabaseInfrastructure(builder.Configuration);
+            builder.Services.AddScoped<ISecurityRepository, SecurityRepository>();
+            builder.Services.AddScoped<IRefreshStatusRepository, RefreshStatusRepository>();
+            
+            builder.Services.AddScoped<IDataService, DataService>();
+
             builder.Services
-                .AddHttpClient<IMoexClient, MoexClient>(client => client.BaseAddress = new Uri(commonSettings.MoexBaseUrl))
+                .AddHttpClient<IDataPipeline, DataPipeline>(client => client.BaseAddress = new Uri(commonSettings.MoexBaseUrl))
                 .AddCorrelationIdForwarding()
                 .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
                 {
                     ServerCertificateCustomValidationCallback = (_, _, _, _) => true
                 })
                 .AddPolicyHandler((provider, _) => provider.GetRequiredService<IPollyService>().GetHttpResilientPolicy());
-
-            builder.Services.AddInvestLensDatabaseInfrastructure(builder.Configuration);
-            builder.Services.AddScoped<ISecurityRepository, SecurityRepository>();
-            builder.Services.AddScoped<IRefreshStatusRepository, RefreshStatusRepository>();
-            builder.Services.AddScoped<IDataService, DataService>();
 
             builder.Services.AddSingleton<ISecuritiesRefreshStatusService, SecuritiesRefreshStatusService>();
 

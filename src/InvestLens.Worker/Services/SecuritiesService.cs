@@ -57,11 +57,10 @@ public class SecuritiesService : ISecuritiesService
             try
             {
                 await RefreshSecuritiesAsync(correlationId);
-                _logger.LogInformation("Обновление списка ценных бумаг при инициализации приложения завершено успешно.");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Обновление списка ценных бумаг при инициализации приложения завершилось с ошибкой.");
+                _logger.LogError(ex, "Запуск обновление списка ценных бумаг при инициализации приложения завершилось с ошибкой.");
                 throw;
             }
         });

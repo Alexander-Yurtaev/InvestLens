@@ -1,47 +1,197 @@
-﻿using InvestLens.Abstraction.MessageBus.Services;
+﻿using Dapper;
 using InvestLens.Abstraction.Repositories;
 using InvestLens.Abstraction.Services;
-using InvestLens.Data.Api.Models.Settings;
 using InvestLens.Data.Entities;
-using InvestLens.Shared.Constants;
 using InvestLens.Shared.Helpers;
-using InvestLens.Shared.MessageBus.Models;
+using Npgsql;
+using NpgsqlTypes;
+using System.Reflection;
+using System.Text.Json.Serialization;
 
 namespace InvestLens.Data.Api.Services;
 
 public class DataService : IDataService
 {
-    private readonly ICommonSettings _commonSettings;
+    private readonly string _connectionString;
     private readonly ISecurityRepository _securityRepository;
-    private readonly IRefreshStatusRepository _refreshStatusRepository;
-    private readonly IMessageBusClient _messageBus;
+    private readonly ILogger<DataService> _logger;
 
     public DataService(
-        ICommonSettings commonSettings,
+        IConfiguration configuration,
         ISecurityRepository securityRepository,
-        IRefreshStatusRepository refreshStatusRepository,
-        IMessageBusClient messageBus)
+        ILogger<DataService> logger)
     {
-        _commonSettings = commonSettings;
+        _connectionString = ConnectionStringHelper.GetTargetConnectionString(configuration);
         _securityRepository = securityRepository;
-        _refreshStatusRepository = refreshStatusRepository;
-        _messageBus = messageBus;
+        _logger = logger;
     }
-
 
     public async Task<IGetResult<Security, Guid>> GetSecurities(int page, int pageSize, string? sort = "", string? filter = "")
     {
-        await RefreshSecurities();
         return await _securityRepository.Get(page, pageSize, sort, filter);
     }
 
-    private async Task RefreshSecurities()
+    public async Task<int> SaveDataAsync<TEntity, TKey>(IEnumerable<TEntity> batch, int batchId,
+        Func<Exception, Task>? failBack) where TEntity : BaseEntity<TKey> where TKey : struct
     {
-        var refreshStatus = await _refreshStatusRepository.GetRefreshStatus(DatabaseConstants.SecurityEntityName);
-        if (refreshStatus is null || !DateTimeHelper.IsRefreshed(refreshStatus.RefreshDate, _commonSettings.ExpiredRefreshStatus))
+        string tempTableName = $"temp_security_batch_{batchId}";
+        var columns = typeof(Security)
+            .GetProperties()
+            .Where(p => p.GetCustomAttribute<JsonPropertyNameAttribute>() != null)
+            .Select(p => p.GetCustomAttribute<JsonPropertyNameAttribute>()!.Name)
+            .Where(name => !string.Equals(name, "id", StringComparison.OrdinalIgnoreCase))
+            .Select(name =>
+                string.Equals(name, "group", StringComparison.OrdinalIgnoreCase) ? $"\"{name}\"" : name)
+            .ToList();
+
+        var selectColumns = string.Join(',', columns);
+        var conflictColumns = columns.Select(name => $"{name}=EXCLUDED.{name}");
+
+        try
         {
-            var message = new SecurityRefreshMessage();
-            await _messageBus.PublishAsync(message, BusClientConstants.SecuritiesExchangeName, BusClientConstants.WorkerSecuritiesRefreshKey);
-        }   
+            await using var connection = new NpgsqlConnection(_connectionString);
+            await connection.OpenAsync();
+
+            // 1. Создаем временную таблицу
+            await connection.ExecuteAsync($@"
+                CREATE TABLE public.{tempTableName} (LIKE public.security INCLUDING ALL);
+                ALTER TABLE public.{tempTableName} ADD COLUMN Page INTEGER;
+                ALTER TABLE public.{tempTableName} ADD COLUMN PageSize INTEGER;
+                CREATE INDEX idx_{tempTableName}_secid ON {tempTableName}(secid);
+            ");
+            _logger.LogInformation("Создана временная таблица: {TempTableName}", tempTableName);
+
+            // 2. Загружаем данные
+            await LoadDataToTempTable<TEntity, TKey>(connection, tempTableName, batch, selectColumns);
+            _logger.LogInformation("Данные загружены во временную таблицу: {TempTableName}", tempTableName);
+
+            // 3. Синхронизируем с основной таблицей
+            var savedCount = await connection.ExecuteAsync($@"
+                INSERT INTO public.security ({selectColumns})
+                SELECT {selectColumns} FROM public.{tempTableName}
+                ON CONFLICT (secid) DO UPDATE
+                SET {string.Join(',', conflictColumns)};
+            ");
+            _logger.LogInformation("Данные из временной таблицы синхронизированны: {TempTableName}", tempTableName);
+
+
+            // 4. Удаляем временную таблицу
+            await connection.ExecuteAsync($"DROP TABLE public.{tempTableName};");
+            _logger.LogInformation("Временная таблица удалена: {TempTableName}", tempTableName);
+
+            return savedCount;
+        }
+        catch (Exception ex)
+        {
+            // Логируем ошибку, оставляем временную таблицу для анализа и продолжаем сохранение дальше
+            _logger.LogError(ex, $"Ошибка в батче {batchId}: {ex.Message}");
+            failBack?.Invoke(ex);
+            return 0;
+        }
     }
+
+    private async Task LoadDataToTempTable<TEntity, TKey>(NpgsqlConnection connection, string tempTableName,
+        IEnumerable<TEntity> batch, string selectColumns) where TEntity : BaseEntity<TKey> where TKey : struct
+
+    {
+        var properties = typeof(TEntity)
+            .GetProperties()
+            .Where(p => p.GetCustomAttribute<JsonPropertyNameAttribute>() is not null)
+            .ToDictionary(k => k.GetCustomAttribute<JsonPropertyNameAttribute>()!.Name, v => v);
+
+        await using var writer = await connection.BeginBinaryImportAsync(
+            $"COPY public.{tempTableName} ({selectColumns}) FROM STDIN (FORMAT BINARY)");
+
+        foreach (TEntity entity in batch)
+        {
+            await writer.StartRowAsync();
+
+            foreach (KeyValuePair<string, PropertyInfo> pair in properties)
+            {
+                await writer.WriteAsync(pair.Value.GetValue(entity), GetNpgsqlDbTypeFast(pair.Value.PropertyType), CancellationToken.None);
+            }
+        }
+
+        await writer.CompleteAsync();
+    }
+
+    public static NpgsqlDbType GetNpgsqlDbTypeFast(Type propertyType)
+    {
+        if (TypeMap.TryGetValue(propertyType, out var npgsqlType))
+        {
+            return npgsqlType;
+        }
+
+        // Проверяем, является ли тип nullable и есть ли базовый тип в словаре
+        var underlyingType = Nullable.GetUnderlyingType(propertyType);
+        if (underlyingType != null && TypeMap.TryGetValue(underlyingType, out npgsqlType))
+        {
+            return npgsqlType;
+        }
+
+        // Проверяем массивы
+        if (propertyType.IsArray)
+        {
+            var elementType = propertyType.GetElementType();
+            if (elementType != null && TypeMap.TryGetValue(elementType, out var elementNpgsqlType))
+            {
+                return NpgsqlDbType.Array | elementNpgsqlType;
+            }
+        }
+
+        return NpgsqlDbType.Text;
+    }
+
+    private static readonly Dictionary<Type, NpgsqlDbType> TypeMap = new()
+    {
+        // Целочисленные
+        [typeof(int)] = NpgsqlDbType.Integer,
+        [typeof(uint)] = NpgsqlDbType.Integer,
+        [typeof(int?)] = NpgsqlDbType.Integer,  // Явно для nullable
+        [typeof(uint?)] = NpgsqlDbType.Integer, // Явно для nullable
+
+        [typeof(long)] = NpgsqlDbType.Bigint,
+        [typeof(ulong)] = NpgsqlDbType.Bigint,
+        [typeof(long?)] = NpgsqlDbType.Bigint,
+        [typeof(ulong?)] = NpgsqlDbType.Bigint,
+
+        [typeof(short)] = NpgsqlDbType.Smallint,
+        [typeof(ushort)] = NpgsqlDbType.Smallint,
+        [typeof(short?)] = NpgsqlDbType.Smallint,
+        [typeof(ushort?)] = NpgsqlDbType.Smallint,
+
+        // Числа с плавающей точкой
+        [typeof(float)] = NpgsqlDbType.Real,
+        [typeof(float?)] = NpgsqlDbType.Real,
+        [typeof(double)] = NpgsqlDbType.Double,
+        [typeof(double?)] = NpgsqlDbType.Double,
+        [typeof(decimal)] = NpgsqlDbType.Numeric,
+        [typeof(decimal?)] = NpgsqlDbType.Numeric,
+
+        // Логический
+        [typeof(bool)] = NpgsqlDbType.Boolean,
+        [typeof(bool?)] = NpgsqlDbType.Boolean,
+
+        // Строковые
+        [typeof(string)] = NpgsqlDbType.Text,
+        [typeof(char)] = NpgsqlDbType.Char,
+        [typeof(char?)] = NpgsqlDbType.Char,
+
+        // Дата и время
+        [typeof(DateTime)] = NpgsqlDbType.Timestamp,
+        [typeof(DateTime?)] = NpgsqlDbType.Timestamp,
+        [typeof(DateTimeOffset)] = NpgsqlDbType.TimestampTz,
+        [typeof(DateTimeOffset?)] = NpgsqlDbType.TimestampTz,
+        [typeof(DateOnly)] = NpgsqlDbType.Date,
+        [typeof(DateOnly?)] = NpgsqlDbType.Date,
+        [typeof(TimeOnly)] = NpgsqlDbType.Time,
+        [typeof(TimeOnly?)] = NpgsqlDbType.Time,
+        [typeof(TimeSpan)] = NpgsqlDbType.Interval,
+        [typeof(TimeSpan?)] = NpgsqlDbType.Interval,
+
+        // Прочие
+        [typeof(byte[])] = NpgsqlDbType.Bytea,
+        [typeof(Guid)] = NpgsqlDbType.Uuid,
+        [typeof(Guid?)] = NpgsqlDbType.Uuid,
+    };
 }

@@ -49,14 +49,15 @@ namespace InvestLens.Data.DataContext.Migrations
                     b.HasIndex("EntityName")
                         .IsUnique();
 
-                    b.ToTable("RefreshStatus");
+                    b.ToTable("refresh_status");
                 });
 
             modelBuilder.Entity("InvestLens.Data.Entities.Security", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasDefaultValueSql("gen_random_uuid()");
 
                     b.Property<int?>("EmitentId")
                         .HasColumnType("integer")
@@ -90,7 +91,7 @@ namespace InvestLens.Data.DataContext.Migrations
 
                     b.Property<bool>("IsTraded")
                         .HasColumnType("boolean")
-                        .HasColumnName("is_trade")
+                        .HasColumnName("is_traded")
                         .HasAnnotation("Relational:JsonPropertyName", "is_traded");
 
                     b.Property<string>("Isin")
@@ -115,7 +116,7 @@ namespace InvestLens.Data.DataContext.Migrations
                     b.Property<string>("PrimaryBoardId")
                         .HasMaxLength(12)
                         .HasColumnType("character varying(12)")
-                        .HasColumnName("primaryprice_boardid")
+                        .HasColumnName("primary_boardid")
                         .HasAnnotation("Relational:JsonPropertyName", "primary_boardid");
 
                     b.Property<string>("RegNumber")
@@ -152,7 +153,7 @@ namespace InvestLens.Data.DataContext.Migrations
                     b.HasIndex("SecId")
                         .IsUnique();
 
-                    b.ToTable("Security");
+                    b.ToTable("security");
                 });
 #pragma warning restore 612, 618
         }

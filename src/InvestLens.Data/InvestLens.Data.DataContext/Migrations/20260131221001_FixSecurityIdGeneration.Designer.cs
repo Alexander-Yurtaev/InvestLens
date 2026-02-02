@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace InvestLens.Data.DataContext.Migrations
 {
     [DbContext(typeof(InvestLensDataContext))]
-    [Migration("20260104143757_RemoveIsRequired")]
-    partial class RemoveIsRequired
+    [Migration("20260131221001_FixSecurityIdGeneration")]
+    partial class FixSecurityIdGeneration
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -59,7 +59,8 @@ namespace InvestLens.Data.DataContext.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasDefaultValueSql("gen_random_uuid()");
 
                     b.Property<int?>("EmitentId")
                         .HasColumnType("integer")
@@ -116,7 +117,6 @@ namespace InvestLens.Data.DataContext.Migrations
                         .HasAnnotation("Relational:JsonPropertyName", "name");
 
                     b.Property<string>("PrimaryBoardId")
-                        .IsRequired()
                         .HasMaxLength(12)
                         .HasColumnType("character varying(12)")
                         .HasColumnName("primary_boardid")
@@ -137,8 +137,10 @@ namespace InvestLens.Data.DataContext.Migrations
 
                     b.Property<string>("ShortName")
                         .IsRequired()
+                        .ValueGeneratedOnAdd()
                         .HasMaxLength(189)
                         .HasColumnType("character varying(189)")
+                        .HasDefaultValue("")
                         .HasColumnName("shortname")
                         .HasAnnotation("Relational:JsonPropertyName", "shortname");
 
