@@ -1,63 +1,63 @@
 ﻿using System.ComponentModel;
-using System.Text.Json.Serialization;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace InvestLens.Data.Entities;
 
 public class Security : BaseEntity
 {
     [DisplayName("ID")]
-    [JsonPropertyName("secid")]
+    [Column("secid")]
     public string SecId { get; set; } = string.Empty;
 
     [DisplayName("Кор. название")]
-    [JsonPropertyName("shortname")]
+    [Column("shortname")]
     public string ShortName { get; set; } = string.Empty;
 
     [DisplayName("Рег. номер")]
-    [JsonPropertyName("regnumber")]
+    [Column("regnumber")]
     public string? RegNumber { get; set; } = string.Empty;
 
     [DisplayName("Название")]
-    [JsonPropertyName("name")]
+    [Column("name")]
     public string Name { get; set; } = string.Empty;
 
     [DisplayName("ИСИН")]
-    [JsonPropertyName("isin")]
+    [Column("isin")]
     public string? Isin { get; set; } = string.Empty;
 
     [DisplayName("Торгуется")]
-    [JsonPropertyName("is_traded")]
+    [Column("is_traded")]
     public bool IsTraded { get; set; }
 
     [DisplayName("ID эмитента")]
-    [JsonPropertyName("emitent_id")]
+    [Column("emitent_id")]
     public int? EmitentId { get; set; }
 
     [DisplayName("Эмитент")]
-    [JsonPropertyName("emitent_title")]
+    [Column("emitent_title")]
     public string? EmitentTitle { get; set; } = string.Empty;
 
     [DisplayName("ИНН эмитента")]
-    [JsonPropertyName("emitent_inn")]
+    [Column("emitent_inn")]
     public string? EmitentInn { get; set; } = string.Empty;
 
     [DisplayName("ОКПО эмитента")]
-    [JsonPropertyName("emitent_okpo")]
+    [Column("emitent_okpo")]
     public string? EmitentOkpo { get; set; } = string.Empty;
 
     [DisplayName("Тип")]
-    [JsonPropertyName("type")]
+    [Column("type")]
     public string Type { get; set; } = string.Empty;
 
     [DisplayName("Группа")]
-    [JsonPropertyName("group")]
+    [Column("group")]
     public string Group { get; set; } = string.Empty;
 
     [DisplayName("Главная площадка")]
-    [JsonPropertyName("primary_boardid")]
+    [Column("primary_boardid")]
     public string? PrimaryBoardId { get; set; } = string.Empty;
 
     [DisplayName("ID торг. площадки")]
-    [JsonPropertyName("marketprice_boardid")]
+    [Column("marketprice_boardid")]
     public string? MarketpriceBoardId { get; set; } = string.Empty;
 }

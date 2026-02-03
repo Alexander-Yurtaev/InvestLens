@@ -1,4 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using DotNetEnv.Configuration;
+using InvestLens.Shared.Validators;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
 
@@ -18,18 +20,26 @@ public abstract class BaseDataContextFactory<T> : IDesignTimeDbContextFactory<T>
 
         Console.WriteLine($"Текущая директория: {Directory.GetCurrentDirectory()}");
         Console.WriteLine($"Директория исполняемого файла: {AppDomain.CurrentDomain.BaseDirectory}");
-        Console.WriteLine($"Путь к .env: {Path.GetFullPath(@"..\..\.env")}");
+        Console.WriteLine($"Путь к общему .env: {Path.GetFullPath(@"..\..\..\.env")}");
+        Console.WriteLine($"Путь к локальному .env: {Path.GetFullPath(@"..\InvestLens.Data.Api\.env")}");
 
         Console.WriteLine("1. Загружаем .env");
         DotNetEnv.Env.Load();
 
         var configuration = new ConfigurationBuilder()
             .AddEnvironmentVariables()  // Берём из переменных ОС (включая .env после Env.Load())
+            .AddDotNetEnv(Path.GetFullPath(@"..\..\..\.env"))
+            .AddDotNetEnv(Path.GetFullPath(@"..\InvestLens.Data.Api\.env"))
             .Build();
 
-        Console.WriteLine("2. Получаем строку подключения");
-        var connectionString = ConnectionStringHelper.GetTargetConnectionString(configuration);
+        configuration["DB_HOST"] = "postgres_multi_db";
 
+        CommonValidator.CommonValidate(configuration);
+        CommonValidator.UserValidate(configuration);
+        
+        Console.WriteLine("2. Получаем строку подключения");
+        var connectionString = ConnectionStringHelper.GetTargetLocalhostConnectionString(configuration);
+        Console.WriteLine($"connectionString: {connectionString}");
         Console.WriteLine("3. Настраиваем опции контекста");
         var optionsBuilder = new DbContextOptionsBuilder<T>();
         optionsBuilder.UseNpgsql(connectionString);

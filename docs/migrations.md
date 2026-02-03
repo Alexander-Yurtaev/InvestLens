@@ -7,3 +7,5 @@ dotnet ef migrations add InitialMigration
 ```
 dotnet ef database update
 ```
+
+docker exec -it investlens.data.api dotnet ef database update

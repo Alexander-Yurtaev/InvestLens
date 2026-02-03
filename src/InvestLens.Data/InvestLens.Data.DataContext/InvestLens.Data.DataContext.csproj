@@ -21,4 +21,8 @@
     <ProjectReference Include="..\InvestLens.Data.Entities\InvestLens.Data.Entities.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Migrations\" />
+  </ItemGroup>
+
 </Project>

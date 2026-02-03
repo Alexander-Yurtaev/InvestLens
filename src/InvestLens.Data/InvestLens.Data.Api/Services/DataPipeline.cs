@@ -1,15 +1,16 @@
 ﻿using InvestLens.Abstraction.Redis.Services;
 using InvestLens.Abstraction.Services;
 using InvestLens.Data.Api.Converter;
+using InvestLens.Data.Entities;
+using InvestLens.Data.Entities.Index;
 using InvestLens.Data.Shared.Responses;
 using InvestLens.Shared.Exceptions;
 using System.Collections.Concurrent;
 using System.Text.Json;
-using InvestLens.Data.Entities;
 
 namespace InvestLens.Data.Api.Services;
 
-public class DataPipeline<TEntity, TResponse> : IDataPipeline 
+public abstract class DataPipeline<TEntity, TResponse> : IDataPipeline 
     where TEntity : BaseEntity
     where TResponse : IBaseResponse
 {
@@ -18,19 +19,23 @@ public class DataPipeline<TEntity, TResponse> : IDataPipeline
     private readonly IRefreshStatusService _statusService;
     private readonly ICorrelationIdService _correlationIdService;
     private readonly ILogger<DataPipeline<TEntity, TResponse>> _logger;
-    private readonly int _maxConcurrentDownloads = 3;
+    private readonly int _maxConcurrentDownloads;
     private readonly int _batchSize = 100;
-    private readonly int _saveBatchSize = 10_000; // Сохраняем пачками по 10к
+    private readonly int _saveBatchSize;
 
-    public DataPipeline(HttpClient httpClient, IDataService dataService,
+    protected DataPipeline(HttpClient httpClient, IDataService dataService,
         IRefreshStatusService statusService,
         ICorrelationIdService correlationIdService,
-        ILogger<DataPipeline<TEntity, TResponse>> logger)
+        ILogger<DataPipeline<TEntity, TResponse>> logger,
+        int maxConcurrentDownloads=3,
+        int saveBatchSize=10_000)
     {
         _httpClient = httpClient;
         _dataService = dataService;
         _statusService = statusService;
         _correlationIdService = correlationIdService;
+        _maxConcurrentDownloads = maxConcurrentDownloads;
+        _saveBatchSize = saveBatchSize;
         _logger = logger;
     }
 
@@ -137,6 +142,8 @@ public class DataPipeline<TEntity, TResponse> : IDataPipeline
         return null;
     }
 
+    protected virtual string GetKeyName => "id";
+
     private async Task ImportInBatches(BlockingCollection<List<TEntity>> queue, Func<Exception, Task> failBack)
     {
         var totalSaved = 0;
@@ -146,7 +153,7 @@ public class DataPipeline<TEntity, TResponse> : IDataPipeline
 
         foreach (var batch in queue.GetConsumingEnumerable())
         {
-            var savedCount = await _dataService.SaveDataAsync<TEntity>(batch, batchId, failBack);
+            var savedCount = await _dataService.SaveDataAsync(GetKeyName, batch, batchId, failBack);
             _logger.LogInformation($"Сохранено {batch.Count} записей.");
             totalSaved += savedCount;
             batchId++;
@@ -156,7 +163,7 @@ public class DataPipeline<TEntity, TResponse> : IDataPipeline
         // Сохраняем остатки
         if (_accumulator.Any())
         {
-            var savedCount = await _dataService.SaveDataAsync<TEntity>(_accumulator, batchId, failBack);
+            var savedCount = await _dataService.SaveDataAsync(GetKeyName, _accumulator, batchId, failBack);
             _logger.LogInformation($"Сохранены оставшиеся {savedCount} записей.");
             totalSaved += savedCount;
             await _statusService.SetSaving(
@@ -183,7 +190,7 @@ public class DataPipeline<TEntity, TResponse> : IDataPipeline
                 throw new MoexApiException("Метаданные не пришли с MOEX.");
             }
 
-            return securitiesResponse.Securities.Metadata;
+            return securitiesResponse.Sections["securities"].Metadata;
         }
         catch (Exception ex)
         {
@@ -192,9 +199,13 @@ public class DataPipeline<TEntity, TResponse> : IDataPipeline
         }
     }
 
+    protected abstract string GetUrl(params int[] args);
+
     private async Task<List<TEntity>> DownloadBatchAsync(int page, int batchSize)
     {
-        string url = $"/iss/securities.json?start={page * batchSize}&limit={batchSize}";
+        string url = GetUrl(page, batchSize);
+
+        if (string.IsNullOrEmpty(url)) return [];
 
         try
         {
@@ -209,16 +220,66 @@ public class DataPipeline<TEntity, TResponse> : IDataPipeline
                 throw new MoexApiException($"Не пришли данные.");
             }
 
-            var securities = ResponseToEntityConverters.ResponseToEntityConverter(response, page, batchSize);
-            return securities.Cast<TEntity>().ToList();
+            var entities = ResponseToEntityConverters.ResponseToEntityConverter(response, page, batchSize);
+            return entities.Cast<TEntity>().ToList();
         }
         catch (Exception ex)
         {
             // Логирование ошибки
             Console.WriteLine($"Ошибка при загрузке страницы {page}: {ex.Message}");
-            return new List<TEntity>();
+            return [];
         }
     }
 
     #endregion Privare Methods
+}
+
+public class SecurityDataPipeline : DataPipeline<Security, SecuritiesResponse>, ISecurityDataPipeline
+{
+    public SecurityDataPipeline(HttpClient httpClient, IDataService dataService, IRefreshStatusService statusService,
+        ICorrelationIdService correlationIdService, ILogger<DataPipeline<Security, SecuritiesResponse>> logger) : base(
+        httpClient, dataService, statusService, correlationIdService, logger, 3, 10_000)
+
+    {
+    }
+
+    protected override string GetKeyName => "secid";
+
+    protected override string GetUrl(params int[] args)
+    {
+        var page = args[0];
+        var batchSize = args[1];
+
+        return $"/iss/securities.json?start={page * batchSize}&limit={batchSize}";
+    }
+}
+
+public class EngineDataPipeline : DataPipeline<Engine, IndexDataResponse>, IEngineDataPipeline
+{
+    public EngineDataPipeline(HttpClient httpClient, IDataService dataService, IRefreshStatusService statusService,
+        ICorrelationIdService correlationIdService, ILogger<EngineDataPipeline> logger) : base(
+        httpClient, dataService, statusService, correlationIdService, logger, 1, 100)
+
+    {
+    }
+
+    protected override string GetUrl(params int[] args)
+    {
+        return args[0] != 0 ? string.Empty : $"/iss/index.json";
+    }
+}
+
+public class MarketDataPipeline : DataPipeline<Market, IndexDataResponse>, IMarketDataPipeline
+{
+    public MarketDataPipeline(HttpClient httpClient, IDataService dataService, IRefreshStatusService statusService,
+        ICorrelationIdService correlationIdService, ILogger<MarketDataPipeline> logger) : base(
+        httpClient, dataService, statusService, correlationIdService, logger, 1, 100)
+
+    {
+    }
+
+    protected override string GetUrl(params int[] args)
+    {
+        return args[0] != 0 ? string.Empty : $"/iss/index.json";
+    }
 }

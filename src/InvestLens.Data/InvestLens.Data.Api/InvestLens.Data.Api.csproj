@@ -36,6 +36,7 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" />
     <PackageReference Include="Microsoft.Extensions.DependencyModel" />
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" />
+    <PackageReference Include="Polly.Caching.Memory" />
   </ItemGroup>
 
   <ItemGroup Label="Serilog">

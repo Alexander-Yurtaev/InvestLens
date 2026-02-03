@@ -1,7 +1,6 @@
 ﻿using CorrelationId;
 using CorrelationId.Abstractions;
 using CorrelationId.DependencyInjection;
-using CorrelationId.HttpClient;
 using HealthChecks.UI.Client;
 using InvestLens.Abstraction.MessageBus.Data;
 using InvestLens.Abstraction.MessageBus.Services;
@@ -14,9 +13,7 @@ using InvestLens.Data.Api.Handlers;
 using InvestLens.Data.Api.Models.Settings;
 using InvestLens.Data.Api.Services;
 using InvestLens.Data.DataContext;
-using InvestLens.Data.Entities;
 using InvestLens.Data.Repositories;
-using InvestLens.Data.Shared.Responses;
 using InvestLens.Shared.Constants;
 using InvestLens.Shared.Helpers;
 using InvestLens.Shared.MessageBus.Extensions;
@@ -25,6 +22,7 @@ using InvestLens.Shared.Redis.Extensions;
 using InvestLens.Shared.Redis.Services;
 using InvestLens.Shared.Services;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Polly.Caching.Memory;
 using Serilog;
 using Serilog.Context;
 
@@ -81,14 +79,12 @@ public static class Program
             builder.Services.AddScoped<IDataService, DataService>();
             builder.Services.AddScoped<ISecurityDataService, SecurityDataService>();
 
-            builder.Services
-                .AddHttpClient<IDataPipeline, DataPipeline<Security, SecuritiesResponse>>(client => client.BaseAddress = new Uri(commonSettings.MoexBaseUrl))
-                .AddCorrelationIdForwarding()
-                .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
-                {
-                    ServerCertificateCustomValidationCallback = (_, _, _, _) => true
-                })
-                .AddPolicyHandler((provider, _) => provider.GetRequiredService<IPollyService>().GetHttpResilientPolicy());
+            // Регистрация с кэшированием
+            builder.Services.AddMemoryCache();
+            builder.Services.AddSingleton<Polly.Caching.IAsyncCacheProvider, MemoryCacheProvider>();
+
+            builder.Services.AddSecurityDataPipeline(commonSettings.MoexBaseUrl);
+            builder.Services.AddIndexDataPipeline(commonSettings.MoexBaseUrl);
 
             builder.Services.AddSingleton<IRefreshStatusService, RefreshStatusService>();
 

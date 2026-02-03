@@ -1,7 +1,8 @@
-﻿using InvestLens.Data.Shared.Responses;
+﻿using InvestLens.Data.Entities;
+using InvestLens.Data.Entities.Index;
+using InvestLens.Data.Shared.Responses;
 using InvestLens.Shared.Helpers;
 using System.Text.Json;
-using InvestLens.Data.Entities;
 
 namespace InvestLens.Data.Api.Converter;
 
@@ -12,7 +13,7 @@ public static class ResponseToEntityConverters
         return response switch
         {
             SecuritiesResponse securitiesResponse => SecurityResponseToEntityConverter(securitiesResponse, page, pageSize),
-            IndexDataResponse indexDataResponse => IndexDataResponseToEntityConverter(indexDataResponse, page, pageSize),
+            IndexDataResponse indexDataResponse => IndexDataResponseToEntityConverter(indexDataResponse),
             _ => throw new ArgumentException($"Unknown response type: {response.GetType()}")
         };
     }
@@ -23,7 +24,7 @@ public static class ResponseToEntityConverters
     {
         var result = new List<Security>();
 
-        foreach (object[] row in securitiesResponse.Securities.Data)
+        foreach (object[] row in securitiesResponse.Sections["securities"].Data)
         {
             var security = new SecurityEx
             {
@@ -31,11 +32,11 @@ public static class ResponseToEntityConverters
                 PageSize = pageSize
             };
 
-            for (int i = 0; i < securitiesResponse.Securities.Columns.Length; i++)
+            for (int i = 0; i < securitiesResponse.Sections["securities"].Columns.Length; i++)
             {
-                var column = securitiesResponse.Securities.Columns[i];
-                var metaData = securitiesResponse.Securities.Metadata[column];
-                var propertyInfo = PropertyHelper.GetPropertyByJsonNameCached<Security>(column);
+                var column = securitiesResponse.Sections["securities"].Columns[i];
+                var metaData = securitiesResponse.Sections["securities"].Metadata[column];
+                var propertyInfo = PropertyHelper.GetPropertyByColumnCached<Security>(column);
 
                 if (propertyInfo is null)
                 {
@@ -43,10 +44,6 @@ public static class ResponseToEntityConverters
                 }
 
                 var value = GetValue((JsonElement?)row[i], metaData, propertyInfo.PropertyType);
-                if (value is null && string.Compare(column, "shortname", StringComparison.OrdinalIgnoreCase) == 0)
-                {
-                    System.Diagnostics.Debugger.Break();
-                }
                 propertyInfo.SetValue(security, value);
             }
             result.Add(security);
@@ -55,9 +52,32 @@ public static class ResponseToEntityConverters
         return result.Cast<BaseEntity>().ToList();
     }
 
-    private static List<BaseEntity> IndexDataResponseToEntityConverter(IndexDataResponse indexDataResponse, int page, int pageSize)
+    private static List<BaseEntity> IndexDataResponseToEntityConverter(IndexDataResponse indexDataResponse)
     {
-        throw new NotImplementedException();
+        var result = new List<Engine>();
+
+        foreach (object[] row in indexDataResponse.Engines.Data)
+        {
+            var engine = new Engine();
+
+            for (int i = 0; i < indexDataResponse.Engines.Columns.Length; i++)
+            {
+                var column = indexDataResponse.Engines.Columns[i];
+                var metaData = indexDataResponse.Engines.Metadata[column];
+                var propertyInfo = PropertyHelper.GetPropertyByColumnCached<Engine>(column);
+
+                if (propertyInfo is null)
+                {
+                    throw new InvalidDataException($"Invalid property '{column}'");
+                }
+
+                var value = GetValue((JsonElement?)row[i], metaData, propertyInfo.PropertyType);
+                propertyInfo.SetValue(engine, value);
+            }
+            result.Add(engine);
+        }
+
+        return result.Cast<BaseEntity>().ToList();
     }
 
     private static dynamic? GetValue(JsonElement? element, ColumnMetadata metadata, Type propertyType)

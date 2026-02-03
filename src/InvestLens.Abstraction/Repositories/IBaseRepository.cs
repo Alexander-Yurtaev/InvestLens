@@ -12,9 +12,9 @@ public interface IBaseRepository<TEntity> where TEntity : BaseEntity
 
     Task<IGetResult<TEntity>> Get(int page, int pageSize, string? sort, string? filter);
 
-    Task<TEntity?> Get(Guid id);
+    Task<TEntity?> Get(int id);
 
     Task<TEntity> Update(TEntity entity);
 
-    Task Delete(Guid id);
+    Task Delete(int id);
 }

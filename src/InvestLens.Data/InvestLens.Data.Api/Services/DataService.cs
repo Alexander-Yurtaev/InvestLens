@@ -1,11 +1,11 @@
-﻿using Dapper;
+﻿using System.ComponentModel.DataAnnotations.Schema;
+using Dapper;
 using InvestLens.Abstraction.Services;
 using InvestLens.Data.Entities;
 using InvestLens.Shared.Helpers;
 using Npgsql;
 using NpgsqlTypes;
 using System.Reflection;
-using System.Text.Json.Serialization;
 
 namespace InvestLens.Data.Api.Services;
 
@@ -22,15 +22,17 @@ public class DataService : IDataService
         _logger = logger;
     }
 
-    public async Task<int> SaveDataAsync<TEntity>(IEnumerable<TEntity> batch, int batchId,
-        Func<Exception, Task>? failBack) where TEntity : BaseEntity
+    public async Task<int> SaveDataAsync<TEntity>(string keyName, IEnumerable<TEntity> batch, int batchId,
+        Func<Exception, Task> failBack) where TEntity : BaseEntity
     {
-        string tempTableName = $"temp_security_batch_{batchId}";
-        var columns = typeof(Security)
+        var tableName = typeof(TEntity).Name.ToLower();
+        var tempTableName = $"temp_{tableName}_batch_{batchId}";
+        var columns = typeof(TEntity)
             .GetProperties()
-            .Where(p => p.GetCustomAttribute<JsonPropertyNameAttribute>() != null)
-            .Select(p => p.GetCustomAttribute<JsonPropertyNameAttribute>()!.Name)
-            .Where(name => !string.Equals(name, "id", StringComparison.OrdinalIgnoreCase))
+            .Where(p => p.GetCustomAttribute<ColumnAttribute>() != null)
+            .Select(p => p.GetCustomAttribute<ColumnAttribute>()!.Name)
+            .Where(name => string.Equals(keyName, "id", StringComparison.OrdinalIgnoreCase) ||
+                           (!string.Equals(keyName, "id", StringComparison.OrdinalIgnoreCase) && !string.Equals(name, "id", StringComparison.OrdinalIgnoreCase)))
             .Select(name =>
                 string.Equals(name, "group", StringComparison.OrdinalIgnoreCase) ? $"\"{name}\"" : name)
             .ToList();
@@ -45,10 +47,10 @@ public class DataService : IDataService
 
             // 1. Создаем временную таблицу
             await connection.ExecuteAsync($@"
-                CREATE TABLE public.{tempTableName} (LIKE public.security INCLUDING ALL);
+                CREATE TABLE public.{tempTableName} (LIKE public.{tableName} INCLUDING ALL);
                 ALTER TABLE public.{tempTableName} ADD COLUMN Page INTEGER;
                 ALTER TABLE public.{tempTableName} ADD COLUMN PageSize INTEGER;
-                CREATE INDEX idx_{tempTableName}_secid ON {tempTableName}(secid);
+                CREATE INDEX idx_{tempTableName}_{keyName} ON {tempTableName}({keyName});
             ");
             _logger.LogInformation("Создана временная таблица: {TempTableName}", tempTableName);
 
@@ -58,9 +60,9 @@ public class DataService : IDataService
 
             // 3. Синхронизируем с основной таблицей
             var savedCount = await connection.ExecuteAsync($@"
-                INSERT INTO public.security ({selectColumns})
+                INSERT INTO public.{tableName} ({selectColumns})
                 SELECT {selectColumns} FROM public.{tempTableName}
-                ON CONFLICT (secid) DO UPDATE
+                ON CONFLICT ({keyName}) DO UPDATE
                 SET {string.Join(',', conflictColumns)};
             ");
             _logger.LogInformation("Данные из временной таблицы синхронизированны: {TempTableName}", tempTableName);
@@ -87,8 +89,8 @@ public class DataService : IDataService
     {
         var properties = typeof(TEntity)
             .GetProperties()
-            .Where(p => p.GetCustomAttribute<JsonPropertyNameAttribute>() is not null)
-            .ToDictionary(k => k.GetCustomAttribute<JsonPropertyNameAttribute>()!.Name, v => v);
+            .Where(p => !string.IsNullOrEmpty(p.GetCustomAttribute<ColumnAttribute>()?.Name))
+            .ToDictionary(k => k.GetCustomAttribute<ColumnAttribute>()!.Name!, v => v);
 
         await using var writer = await connection.BeginBinaryImportAsync(
             $"COPY public.{tempTableName} ({selectColumns}) FROM STDIN (FORMAT BINARY)");

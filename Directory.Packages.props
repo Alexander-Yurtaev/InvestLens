@@ -13,6 +13,7 @@
     <PackageVersion Include="Grpc.Tools" Version="2.76.0" />
     <PackageVersion Include="IdentityModel" Version="5.2.0" />
     <PackageVersion Include="IdentityModel.OidcClient" Version="5.2.1" />
+    <PackageVersion Include="Polly.Caching.Memory" Version="3.0.2" />
     <PackageVersion Include="Serilog.Enrichers.CorrelationId" Version="3.0.1" />
     <PackageVersion Include="System.Text.Encodings.Web" Version="9.0.0" />
     <PackageVersion Include="Telegram.Bot" Version="22.8.1" />

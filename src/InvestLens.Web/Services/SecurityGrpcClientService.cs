@@ -36,7 +36,7 @@ public class SecurityGrpcClientService : ISecurityGrpcClientService
             result.TotalItems = response.TotlaItems;
             result.Data = response.Data.Select(s => new Security
             {
-                Id = Guid.Parse(s.Id),
+                Id = int.Parse(s.Id),
                 SecId = s.SecId ?? string.Empty,
                 ShortName = s.ShortName ?? string.Empty,
                 RegNumber = s.RegNumber ?? string.Empty,

@@ -14,23 +14,26 @@ public class IndexDataResponse : IBaseResponse
     public required Boards Boards { get; set; }
 
     [JsonPropertyName("boardgroups")]
-    public required Boardgroups BoardGroups { get; set; }
+    public required BoardGroups BoardGroups { get; set; }
 
     [JsonPropertyName("durations")]
     public required Durations Durations { get; set; }
 
     [JsonPropertyName("securitytypes")]
-    public required Securitytypes SecurityTypes { get; set; }
+    public required SecurityTypes SecurityTypes { get; set; }
 
     [JsonPropertyName("securitygroups")]
-    public required Securitygroups SecurityGroups { get; set; }
+    public required SecurityGroups SecurityGroups { get; set; }
 
     [JsonPropertyName("securitycollections")]
-    public required Securitycollections SecurityCollections { get; set; }
+    public required SecurityCollections SecurityCollections { get; set; }
 }
 
 public class Engines
 {
+    [JsonPropertyName("metadata")]
+    public Dictionary<string, ColumnMetadata> Metadata { get; set; } = new Dictionary<string, ColumnMetadata>();
+
     [JsonPropertyName("columns")]
     public string[] Columns { get; set; } = [];
 
@@ -40,6 +43,9 @@ public class Engines
 
 public class Markets
 {
+    [JsonPropertyName("metadata")]
+    public Dictionary<string, ColumnMetadata> Metadata { get; set; } = new Dictionary<string, ColumnMetadata>();
+
     [JsonPropertyName("columns")]
     public string[] Columns { get; set; } = [];
 
@@ -49,6 +55,9 @@ public class Markets
 
 public class Boards
 {
+    [JsonPropertyName("metadata")]
+    public Dictionary<string, ColumnMetadata> Metadata { get; set; } = new Dictionary<string, ColumnMetadata>();
+
     [JsonPropertyName("columns")]
     public string[] Columns { get; set; } = [];
 
@@ -56,8 +65,11 @@ public class Boards
     public object[][] Data { get; set; } = [];
 }
 
-public class Boardgroups
+public class BoardGroups
 {
+    [JsonPropertyName("metadata")]
+    public Dictionary<string, ColumnMetadata> Metadata { get; set; } = new Dictionary<string, ColumnMetadata>();
+
     [JsonPropertyName("columns")]
     public string[] Columns { get; set; } = [];
 
@@ -67,6 +79,9 @@ public class Boardgroups
 
 public class Durations
 {
+    [JsonPropertyName("metadata")]
+    public Dictionary<string, ColumnMetadata> Metadata { get; set; } = new Dictionary<string, ColumnMetadata>();
+
     [JsonPropertyName("columns")]
     public string[] Columns { get; set; } = [];
 
@@ -74,8 +89,11 @@ public class Durations
     public object[][] Data { get; set; } = [];
 }
 
-public class Securitytypes
+public class SecurityTypes
 {
+    [JsonPropertyName("metadata")]
+    public Dictionary<string, ColumnMetadata> Metadata { get; set; } = new Dictionary<string, ColumnMetadata>();
+
     [JsonPropertyName("columns")]
     public string[] Columns { get; set; } = [];
 
@@ -83,8 +101,11 @@ public class Securitytypes
     public object[][] Data { get; set; } = [];
 }
 
-public class Securitygroups
+public class SecurityGroups
 {
+    [JsonPropertyName("metadata")]
+    public Dictionary<string, ColumnMetadata> Metadata { get; set; } = new Dictionary<string, ColumnMetadata>();
+
     [JsonPropertyName("columns")]
     public string[] Columns { get; set; } = [];
 
@@ -92,8 +113,11 @@ public class Securitygroups
     public object[][] Data { get; set; } = [];
 }
 
-public class Securitycollections
+public class SecurityCollections
 {
+    [JsonPropertyName("metadata")]
+    public Dictionary<string, ColumnMetadata> Metadata { get; set; } = new Dictionary<string, ColumnMetadata>();
+
     [JsonPropertyName("columns")]
     public string[] Columns { get; set; } = [];
 

@@ -153,7 +153,7 @@ public abstract class BaseRepository<TEntity> : IBaseRepository<TEntity> where T
         return query;
     }
 
-    public virtual async Task<TEntity?> Get(Guid id)
+    public virtual async Task<TEntity?> Get(int id)
     {
         try
         {
@@ -191,7 +191,7 @@ public abstract class BaseRepository<TEntity> : IBaseRepository<TEntity> where T
         }
     }
 
-    public virtual async Task Delete(Guid id)
+    public virtual async Task Delete(int id)
     {
         try
         {
@@ -217,7 +217,7 @@ public abstract class BaseRepository<TEntity> : IBaseRepository<TEntity> where T
 
     #region Private Methods
 
-    private async Task<TEntity?> Find(Guid id, bool throwIfNotFound = false)
+    private async Task<TEntity?> Find(int id, bool throwIfNotFound = false)
     {
         var entity = await ResilientPolicy.ExecuteAsync(async () => await DbSet.FindAsync(id));
         if (entity is not null || !throwIfNotFound) return entity;

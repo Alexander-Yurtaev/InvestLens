@@ -1,4 +1,5 @@
 ﻿using InvestLens.Data.Entities;
+using InvestLens.Data.Entities.Index;
 using Microsoft.EntityFrameworkCore;
 
 namespace InvestLens.Data.DataContext;
@@ -9,7 +10,8 @@ public class InvestLensDataContext : DbContext
     {
     }
 
-    public DbSet<Security> Security { get; set; }
+    public DbSet<Security> Securities { get; set; }
+    public DbSet<Engine> Engines { get; set; }
 
     public DbSet<RefreshStatus> RefreshStatus { get; set; }
 
@@ -17,6 +19,7 @@ public class InvestLensDataContext : DbContext
     {
         OnSecurityCreating(modelBuilder);
         OnRefreshStatusCreating(modelBuilder);
+        OnEngineCreating(modelBuilder);
     }
 
     private void OnSecurityCreating(ModelBuilder modelBuilder)
@@ -28,8 +31,8 @@ public class InvestLensDataContext : DbContext
             security.HasKey(s => s.Id);
             
             security.Property(s => s.Id)
-                .HasDefaultValueSql("gen_random_uuid()")
-                .ValueGeneratedOnAdd();
+                .ValueGeneratedOnAdd()
+                .HasColumnName("id");
 
             security.Property(s => s.SecId)
                 .HasColumnName("secid")
@@ -102,7 +105,6 @@ public class InvestLensDataContext : DbContext
                 .HasMaxLength(12)
                 .IsRequired(false);
         });
-
     }
 
     private void OnRefreshStatusCreating(ModelBuilder modelBuilder)
@@ -112,6 +114,10 @@ public class InvestLensDataContext : DbContext
             rs.ToTable("refresh_status");
 
             rs.HasKey(p => p.Id);
+
+            rs.Property(s => s.Id)
+                .ValueGeneratedOnAdd()
+                .HasColumnName("id");
 
             rs.Property(p => p.EntityName)
                 .HasColumnName("entity_name")
@@ -127,6 +133,30 @@ public class InvestLensDataContext : DbContext
             rs.Property(p => p.LastError)
                 .HasColumnName("last_error")
                 .HasMaxLength(150);
+        });
+    }
+
+    private void OnEngineCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<Engine>(engine =>
+        {
+            engine.ToTable("engine");
+
+            engine.HasKey(e => e.Id);
+
+            engine.Property(s => s.Id)
+                .ValueGeneratedOnAdd()
+                .HasColumnName("id");
+
+            engine.Property(e => e.Name)
+                .HasColumnName("name")
+                .HasMaxLength(45)
+                .IsRequired();
+
+            engine.Property(e => e.Title)
+                .HasColumnName("title")
+                .HasMaxLength(765)
+                .IsRequired();
         });
     }
 }

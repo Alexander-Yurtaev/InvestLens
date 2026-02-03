@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace InvestLens.Data.DataContext.Migrations
 {
     [DbContext(typeof(InvestLensDataContext))]
-    [Migration("20260104143757_RemoveIsRequired")]
-    partial class RemoveIsRequired
+    [Migration("20260203131215_InitialMigration")]
+    partial class InitialMigration
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -25,11 +25,40 @@ namespace InvestLens.Data.DataContext.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("InvestLens.Data.Entities.Index.Engine", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(45)
+                        .HasColumnType("character varying(45)")
+                        .HasColumnName("name");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(765)
+                        .HasColumnType("character varying(765)")
+                        .HasColumnName("title");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("engine", (string)null);
+                });
+
             modelBuilder.Entity("InvestLens.Data.Entities.RefreshStatus", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("EntityName")
                         .IsRequired()
@@ -52,109 +81,99 @@ namespace InvestLens.Data.DataContext.Migrations
                     b.HasIndex("EntityName")
                         .IsUnique();
 
-                    b.ToTable("refresh_status");
+                    b.ToTable("refresh_status", (string)null);
                 });
 
             modelBuilder.Entity("InvestLens.Data.Entities.Security", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<int?>("EmitentId")
                         .HasColumnType("integer")
-                        .HasColumnName("emitent_id")
-                        .HasAnnotation("Relational:JsonPropertyName", "emitent_id");
+                        .HasColumnName("emitent_id");
 
                     b.Property<string>("EmitentInn")
                         .HasMaxLength(30)
                         .HasColumnType("character varying(30)")
-                        .HasColumnName("emitent_inn")
-                        .HasAnnotation("Relational:JsonPropertyName", "emitent_inn");
+                        .HasColumnName("emitent_inn");
 
                     b.Property<string>("EmitentOkpo")
                         .HasMaxLength(21)
                         .HasColumnType("character varying(21)")
-                        .HasColumnName("emitent_okpo")
-                        .HasAnnotation("Relational:JsonPropertyName", "emitent_okpo");
+                        .HasColumnName("emitent_okpo");
 
                     b.Property<string>("EmitentTitle")
                         .HasMaxLength(765)
                         .HasColumnType("character varying(765)")
-                        .HasColumnName("emitent_title")
-                        .HasAnnotation("Relational:JsonPropertyName", "emitent_title");
+                        .HasColumnName("emitent_title");
 
                     b.Property<string>("Group")
                         .IsRequired()
                         .HasMaxLength(93)
                         .HasColumnType("character varying(93)")
-                        .HasColumnName("group")
-                        .HasAnnotation("Relational:JsonPropertyName", "group");
+                        .HasColumnName("group");
 
                     b.Property<bool>("IsTraded")
                         .HasColumnType("boolean")
-                        .HasColumnName("is_traded")
-                        .HasAnnotation("Relational:JsonPropertyName", "is_traded");
+                        .HasColumnName("is_traded");
 
                     b.Property<string>("Isin")
                         .HasMaxLength(51)
                         .HasColumnType("character varying(51)")
-                        .HasColumnName("isin")
-                        .HasAnnotation("Relational:JsonPropertyName", "isin");
+                        .HasColumnName("isin");
 
                     b.Property<string>("MarketpriceBoardId")
                         .HasMaxLength(12)
                         .HasColumnType("character varying(12)")
-                        .HasColumnName("marketprice_boardid")
-                        .HasAnnotation("Relational:JsonPropertyName", "marketprice_boardid");
+                        .HasColumnName("marketprice_boardid");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(765)
                         .HasColumnType("character varying(765)")
-                        .HasColumnName("name")
-                        .HasAnnotation("Relational:JsonPropertyName", "name");
+                        .HasColumnName("name");
 
                     b.Property<string>("PrimaryBoardId")
-                        .IsRequired()
                         .HasMaxLength(12)
                         .HasColumnType("character varying(12)")
-                        .HasColumnName("primary_boardid")
-                        .HasAnnotation("Relational:JsonPropertyName", "primary_boardid");
+                        .HasColumnName("primary_boardid");
 
                     b.Property<string>("RegNumber")
                         .HasMaxLength(189)
                         .HasColumnType("character varying(189)")
-                        .HasColumnName("regnumber")
-                        .HasAnnotation("Relational:JsonPropertyName", "regnumber");
+                        .HasColumnName("regnumber");
 
                     b.Property<string>("SecId")
                         .IsRequired()
                         .HasMaxLength(51)
                         .HasColumnType("character varying(51)")
-                        .HasColumnName("secid")
-                        .HasAnnotation("Relational:JsonPropertyName", "secid");
+                        .HasColumnName("secid");
 
                     b.Property<string>("ShortName")
                         .IsRequired()
+                        .ValueGeneratedOnAdd()
                         .HasMaxLength(189)
                         .HasColumnType("character varying(189)")
-                        .HasColumnName("shortname")
-                        .HasAnnotation("Relational:JsonPropertyName", "shortname");
+                        .HasDefaultValue("")
+                        .HasColumnName("shortname");
 
                     b.Property<string>("Type")
                         .IsRequired()
                         .HasMaxLength(93)
                         .HasColumnType("character varying(93)")
-                        .HasColumnName("type")
-                        .HasAnnotation("Relational:JsonPropertyName", "type");
+                        .HasColumnName("type");
 
                     b.HasKey("Id");
 
                     b.HasIndex("SecId")
                         .IsUnique();
 
-                    b.ToTable("security");
+                    b.ToTable("security", (string)null);
                 });
 #pragma warning restore 612, 618
         }

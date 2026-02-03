@@ -51,6 +51,21 @@ public static class ConnectionStringHelper
         return builder.ConnectionString;
     }
 
+    public static string GetTargetLocalhostConnectionString(IConfiguration configuration)
+    {
+        NpgsqlConnectionStringBuilder builder = new()
+        {
+            Host = "localhost",
+            Port = 5432, // порт по умолчанию для PostgreSQL
+            Database = GetDatabaseName(configuration),
+            Username = configuration["DB_USER"],
+            Password = configuration["DB_PASSWORD"],
+            CommandTimeout = 30 // таймаут выполнения команд
+        };
+
+        return builder.ConnectionString;
+    }
+
     public static string GetDatabaseName(IConfiguration configuration)
     {
         return configuration["DB_NAME"]!;

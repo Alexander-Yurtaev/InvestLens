@@ -9,7 +9,10 @@ namespace InvestLens.Data.Api.Handlers;
 
 public class SecurityRefreshEventHandler : IMessageHandler<SecurityRefreshMessage>
 {
-    private readonly IDataPipeline _dataPipeline;
+    private readonly ISecurityDataPipeline _securityDataPipeline;
+    private readonly IEngineDataPipeline _engineDataPipeline;
+    private readonly IMarketDataPipeline _marketDataPipeline;
+
     private readonly IPollyService _pollyService;
     private readonly IRefreshStatusService _statusService;
     private readonly ICorrelationIdService _correlationIdService;
@@ -17,14 +20,16 @@ public class SecurityRefreshEventHandler : IMessageHandler<SecurityRefreshMessag
     private readonly ILogger<SecurityRefreshEventHandler> _logger;
 
     public SecurityRefreshEventHandler(
-        IDataPipeline dataPipeline,
+        ISecurityDataPipeline securityDataPipeline,
+        IEngineDataPipeline engineDataPipeline,
         IPollyService pollyService,
         IRefreshStatusService statusService,
         ICorrelationIdService correlationIdService,
         IMessageBusClient messageBus,
         ILogger<SecurityRefreshEventHandler> logger)
     {
-        _dataPipeline = dataPipeline;
+        _securityDataPipeline = securityDataPipeline;
+        _engineDataPipeline = engineDataPipeline;
         _pollyService = pollyService;
         _statusService = statusService;
         _correlationIdService = correlationIdService;
@@ -61,17 +66,8 @@ public class SecurityRefreshEventHandler : IMessageHandler<SecurityRefreshMessag
 
             try
             {
-                await SendStartMessage(correlationId, startedAt, cancellationToken);
-                var totalRecords = await _dataPipeline.ProcessAllDataAsync(async (ex) =>
-                {
-                    await SendErrorMessage(correlationId, startedAt, ex, cancellationToken);
-                });
-
-                _logger.LogInformation("Cписок ценных бумаг обновлен: {MessageId} от {MessageCreatedAt}.",
-                    message.MessageId, message.CreatedAt);
-
-                await _statusService.SetCompleted(correlationId, totalRecords);
-                await SendCompleteMessage(correlationId, startedAt, totalRecords, cancellationToken);
+                await Engine(correlationId, startedAt, message.MessageId, message.CreatedAt, cancellationToken);
+                await Security(correlationId, startedAt, message.MessageId, message.CreatedAt, cancellationToken);
 
                 return true;
             }
@@ -138,6 +134,48 @@ public class SecurityRefreshEventHandler : IMessageHandler<SecurityRefreshMessag
             await _messageBus.PublishAsync(message, BusClientConstants.TelegramExchangeName,
                 BusClientConstants.TelegramErrorKey, cancellationToken);
         });
+    }
+
+    private async Task Security(string correlationId, DateTime startedAt, Guid messageId, DateTime createdAt, CancellationToken cancellationToken)
+    {
+        await SendStartMessage(correlationId, startedAt, cancellationToken);
+        var totalRecords = await _securityDataPipeline.ProcessAllDataAsync(async (ex) =>
+        {
+            await SendErrorMessage(correlationId, startedAt, ex, cancellationToken);
+        });
+
+        _logger.LogInformation("Cписок ценных бумаг обновлен: {MessageId} от {MessageCreatedAt}.", messageId, createdAt);
+
+        await _statusService.SetCompleted(correlationId, totalRecords);
+        await SendCompleteMessage(correlationId, startedAt, totalRecords, cancellationToken);
+    }
+
+    private async Task Engine(string correlationId, DateTime startedAt, Guid messageId, DateTime createdAt, CancellationToken cancellationToken)
+    {
+        await SendStartMessage(correlationId, startedAt, cancellationToken);
+        var totalRecords = await _engineDataPipeline.ProcessAllDataAsync(async (ex) =>
+        {
+            await SendErrorMessage(correlationId, startedAt, ex, cancellationToken);
+        });
+
+        _logger.LogInformation("Список доступных торговых систем обновлен: {MessageId} от {MessageCreatedAt}.", messageId, createdAt);
+
+        await _statusService.SetCompleted(correlationId, totalRecords);
+        await SendCompleteMessage(correlationId, startedAt, totalRecords, cancellationToken);
+    }
+
+    private async Task Market(string correlationId, DateTime startedAt, Guid messageId, DateTime createdAt, CancellationToken cancellationToken)
+    {
+        await SendStartMessage(correlationId, startedAt, cancellationToken);
+        var totalRecords = await _marketDataPipeline.ProcessAllDataAsync(async (ex) =>
+        {
+            await SendErrorMessage(correlationId, startedAt, ex, cancellationToken);
+        });
+
+        _logger.LogInformation("Справочник доступных рынков обновлен: {MessageId} от {MessageCreatedAt}.", messageId, createdAt);
+
+        await _statusService.SetCompleted(correlationId, totalRecords);
+        await SendCompleteMessage(correlationId, startedAt, totalRecords, cancellationToken);
     }
 
     # endregion Private Methods

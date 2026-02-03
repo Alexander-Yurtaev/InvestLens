@@ -1,6 +1,9 @@
-﻿namespace InvestLens.Data.Entities;
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace InvestLens.Data.Entities;
 
 public abstract class BaseEntity
 {
-    public Guid Id { get; set; }
+    [Column("id")]
+    public int Id { get; set; }
 }
