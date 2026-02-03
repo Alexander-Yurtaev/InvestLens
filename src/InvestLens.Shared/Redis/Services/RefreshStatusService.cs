@@ -8,12 +8,12 @@ using Polly;
 
 namespace InvestLens.Shared.Redis.Services;
 
-public class SecuritiesRefreshStatusService : ISecuritiesRefreshStatusService
+public class RefreshStatusService : IRefreshStatusService
 {
     private readonly IRedisClient _redisClient;
     private readonly AsyncPolicy _resilientPolicy;
 
-    public SecuritiesRefreshStatusService(IPollyService pollyService, IRedisClient redisClient)
+    public RefreshStatusService(IPollyService pollyService, IRedisClient redisClient)
     {
         _resilientPolicy = pollyService.GetRedisResilientPolicy();
         _redisClient = redisClient;
@@ -21,24 +21,24 @@ public class SecuritiesRefreshStatusService : ISecuritiesRefreshStatusService
 
     public async Task<DateTime> Init(string correlationId)
     {
-        var progress = new SecuritiesRefreshProgress(correlationId);
+        var progress = new RefreshProgress(correlationId);
         await _resilientPolicy.ExecuteAsync(async () => await _redisClient.SetAsync(RedisKeys.SecuritiesRefreshStatusRedisKey, progress));
 
         return progress.StartedAt;
     }
 
-    public async Task<ISecuritiesRefreshProgress> TryGetProgress(string correlationId)
+    public async Task<IRefreshProgress> TryGetProgress(string correlationId)
     {
-        var progress = await _resilientPolicy.ExecuteAsync(async () => await _redisClient.GetAsync<SecuritiesRefreshProgress>(RedisKeys.SecuritiesRefreshStatusRedisKey));
+        var progress = await _resilientPolicy.ExecuteAsync(async () => await _redisClient.GetAsync<RefreshProgress>(RedisKeys.SecuritiesRefreshStatusRedisKey));
         if (progress is null)
         {
             await Init(correlationId);
-            progress = await _resilientPolicy.ExecuteAsync(async () => await _redisClient.GetAsync<SecuritiesRefreshProgress>(RedisKeys.SecuritiesRefreshStatusRedisKey));
+            progress = await _resilientPolicy.ExecuteAsync(async () => await _redisClient.GetAsync<RefreshProgress>(RedisKeys.SecuritiesRefreshStatusRedisKey));
         }
 
         if (progress is null)
         {
-            throw new InvalidOperationException($"Проблема при получении {nameof(SecuritiesRefreshProgress)}.");
+            throw new InvalidOperationException($"Проблема при получении {nameof(RefreshProgress)}.");
         }
 
         return progress;
@@ -48,7 +48,7 @@ public class SecuritiesRefreshStatusService : ISecuritiesRefreshStatusService
     {
         var progress = await TryGetProgress(correlationId);
         progress.UpdatedAt = DateTime.UtcNow;
-        progress.Status = SecuritiesRefreshStatus.None;
+        progress.Status = RefreshStatus.None;
         await _resilientPolicy.ExecuteAsync(async () => await _redisClient.SetAsync(RedisKeys.SecuritiesRefreshStatusRedisKey, progress));
     }
 
@@ -56,7 +56,7 @@ public class SecuritiesRefreshStatusService : ISecuritiesRefreshStatusService
     {
         var progress = await TryGetProgress(correlationId);
         progress.UpdatedAt = DateTime.UtcNow;
-        progress.Status = SecuritiesRefreshStatus.Scheduled;
+        progress.Status = RefreshStatus.Scheduled;
         await _resilientPolicy.ExecuteAsync(async () => await _redisClient.SetAsync(RedisKeys.SecuritiesRefreshStatusRedisKey, progress));
     }
 
@@ -65,7 +65,7 @@ public class SecuritiesRefreshStatusService : ISecuritiesRefreshStatusService
         var progress = await TryGetProgress(correlationId);
         progress.UpdatedAt = DateTime.UtcNow;
         progress.DownloadedCount = count;
-        progress.Status = SecuritiesRefreshStatus.Processing;
+        progress.Status = RefreshStatus.Processing;
         await _resilientPolicy.ExecuteAsync(async () => await _redisClient.SetAsync(RedisKeys.SecuritiesRefreshStatusRedisKey, progress));
     }
 
@@ -73,7 +73,7 @@ public class SecuritiesRefreshStatusService : ISecuritiesRefreshStatusService
     {
         var progress = await TryGetProgress(correlationId);
         progress.UpdatedAt = DateTime.UtcNow;
-        progress.Status = SecuritiesRefreshStatus.Processing;
+        progress.Status = RefreshStatus.Processing;
         await _resilientPolicy.ExecuteAsync(async () => await _redisClient.SetAsync(RedisKeys.SecuritiesRefreshStatusRedisKey, progress));
     }
 
@@ -82,7 +82,7 @@ public class SecuritiesRefreshStatusService : ISecuritiesRefreshStatusService
         var progress = await TryGetProgress(correlationId);
         progress.UpdatedAt = DateTime.UtcNow;
         progress.SavedCount = count;
-        progress.Status = SecuritiesRefreshStatus.Processing;
+        progress.Status = RefreshStatus.Processing;
         await _resilientPolicy.ExecuteAsync(async () => await _redisClient.SetAsync(RedisKeys.SecuritiesRefreshStatusRedisKey, progress));
     }
 
@@ -91,7 +91,7 @@ public class SecuritiesRefreshStatusService : ISecuritiesRefreshStatusService
         var progress = await TryGetProgress(correlationId);
         progress.UpdatedAt = DateTime.UtcNow;
         progress.SavedCount = affected;
-        progress.Status = SecuritiesRefreshStatus.Completed;
+        progress.Status = RefreshStatus.Completed;
         await _resilientPolicy.ExecuteAsync(async () => await _redisClient.SetAsync(RedisKeys.SecuritiesRefreshStatusRedisKey, progress));
     }
 
@@ -99,7 +99,7 @@ public class SecuritiesRefreshStatusService : ISecuritiesRefreshStatusService
     {
         var progress = await TryGetProgress(correlationId);
         progress.UpdatedAt = DateTime.UtcNow;
-        progress.Status = SecuritiesRefreshStatus.Failed;
+        progress.Status = RefreshStatus.Failed;
         progress.ErrorMessage = errorMessage;
         await _resilientPolicy.ExecuteAsync(async () => await _redisClient.SetAsync(RedisKeys.SecuritiesRefreshStatusRedisKey, progress));
     }

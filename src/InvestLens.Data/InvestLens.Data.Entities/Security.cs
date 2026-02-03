@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace InvestLens.Data.Entities;
 
-public class Security : BaseEntity<Guid>
+public class Security : BaseEntity
 {
     [DisplayName("ID")]
     [JsonPropertyName("secid")]

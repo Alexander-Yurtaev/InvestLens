@@ -1,13 +1,25 @@
-﻿using InvestLens.Data.Entities;
-using InvestLens.Data.Shared.Responses;
+﻿using InvestLens.Data.Shared.Responses;
 using InvestLens.Shared.Helpers;
 using System.Text.Json;
+using InvestLens.Data.Entities;
 
 namespace InvestLens.Data.Api.Converter;
 
 public static class ResponseToEntityConverters
 {
-    public static List<Security> SecurityResponseToEntityConverter(SecuritiesResponse securitiesResponse, int page, int pageSize)
+    public static List<BaseEntity> ResponseToEntityConverter(IBaseResponse response, int page, int pageSize)
+    {
+        return response switch
+        {
+            SecuritiesResponse securitiesResponse => SecurityResponseToEntityConverter(securitiesResponse, page, pageSize),
+            IndexDataResponse indexDataResponse => IndexDataResponseToEntityConverter(indexDataResponse, page, pageSize),
+            _ => throw new ArgumentException($"Unknown response type: {response.GetType()}")
+        };
+    }
+
+    #region Private Methods
+
+    private static List<BaseEntity> SecurityResponseToEntityConverter(SecuritiesResponse securitiesResponse, int page, int pageSize)
     {
         var result = new List<Security>();
 
@@ -40,7 +52,12 @@ public static class ResponseToEntityConverters
             result.Add(security);
         }
 
-        return result;
+        return result.Cast<BaseEntity>().ToList();
+    }
+
+    private static List<BaseEntity> IndexDataResponseToEntityConverter(IndexDataResponse indexDataResponse, int page, int pageSize)
+    {
+        throw new NotImplementedException();
     }
 
     private static dynamic? GetValue(JsonElement? element, ColumnMetadata metadata, Type propertyType)
@@ -61,4 +78,6 @@ public static class ResponseToEntityConverters
 
         throw new Exception($"Unknown type: {metadata.Type}");
     }
+
+    #endregion Private Methods
 }

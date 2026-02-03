@@ -2,7 +2,7 @@
 
 namespace InvestLens.Abstraction.Repositories;
 
-public interface IBaseRepository<TEntity, TKey> where TEntity : BaseEntity<TKey> where TKey : struct
+public interface IBaseRepository<TEntity> where TEntity : BaseEntity
 {
     Task<TEntity> Add(TEntity entity, bool orUpdate = false);
 
@@ -10,11 +10,11 @@ public interface IBaseRepository<TEntity, TKey> where TEntity : BaseEntity<TKey>
 
     Task<List<TEntity>> Get();
 
-    Task<IGetResult<TEntity, TKey>> Get(int page, int pageSize, string? sort, string? filter);
+    Task<IGetResult<TEntity>> Get(int page, int pageSize, string? sort, string? filter);
 
-    Task<TEntity?> Get(TKey id);
+    Task<TEntity?> Get(Guid id);
 
     Task<TEntity> Update(TEntity entity);
 
-    Task Delete(TKey id);
+    Task Delete(Guid id);
 }

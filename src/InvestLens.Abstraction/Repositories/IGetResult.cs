@@ -2,7 +2,7 @@
 
 namespace InvestLens.Abstraction.Repositories;
 
-public interface IGetResult<TEntity, TKey> where TEntity : BaseEntity<TKey> where TKey : struct
+public interface IGetResult<TEntity> where TEntity : BaseEntity
 {
     int Page { get; set; }
     int PageSize { get; set; }

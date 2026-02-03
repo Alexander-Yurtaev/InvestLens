@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace InvestLens.Abstraction.Redis.Enums;
 
-public enum SecuritiesRefreshStatus
+public enum RefreshStatus
 {
     [Display(Name = "Не начато")]
     [Description("Процесс обновления данных ещё не запущен")]

@@ -4,9 +4,9 @@ namespace InvestLens.Shared.Extensions;
 
 public static class QueryableExtensions
 {
-    public static IQueryable<TEntity> Filter<TEntity, TKey>(this IQueryable<TEntity> query,
+    public static IQueryable<TEntity> Filter<TEntity>(this IQueryable<TEntity> query,
         Func<IQueryable<TEntity>, string, IQueryable<TEntity>> whereCause, string? filter)
-        where TEntity : BaseEntity<TKey> where TKey : struct
+        where TEntity : BaseEntity
     {
         if (!string.IsNullOrEmpty(filter))
         {
@@ -16,9 +16,9 @@ public static class QueryableExtensions
         return query;
     }
 
-    public static IEnumerable<TEntity> OrderByEx<TEntity, TKey>(this IEnumerable<TEntity> query,
+    public static IEnumerable<TEntity> OrderByEx<TEntity>(this IEnumerable<TEntity> query,
         Func<IEnumerable<TEntity>, string, IEnumerable<TEntity>> sortCause, string? sort)
-        where TEntity : BaseEntity<TKey> where TKey : struct
+        where TEntity : BaseEntity
     {
         if (!string.IsNullOrEmpty(sort))
         {

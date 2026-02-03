@@ -8,7 +8,7 @@ using Microsoft.Extensions.Logging;
 
 namespace InvestLens.Data.Repositories;
 
-public class RefreshStatusRepository : BaseRepository<RefreshStatus, Guid>, IRefreshStatusRepository
+public class RefreshStatusRepository : BaseRepository<RefreshStatus>, IRefreshStatusRepository
 {
     public RefreshStatusRepository(
         InvestLensDataContext context,

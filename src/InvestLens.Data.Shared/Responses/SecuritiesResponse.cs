@@ -2,7 +2,7 @@
 
 namespace InvestLens.Data.Shared.Responses;
 
-public record SecuritiesResponse
+public record SecuritiesResponse : IBaseResponse
 {
     [JsonPropertyName("securities")]
     public required Securities Securities { get; set; }

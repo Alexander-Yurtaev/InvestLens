@@ -8,7 +8,7 @@ using Microsoft.Extensions.Logging;
 
 namespace InvestLens.Data.Repositories;
 
-public class SecurityRepository : BaseRepository<Security, Guid>, ISecurityRepository
+public class SecurityRepository : BaseRepository<Security>, ISecurityRepository
 {
     public SecurityRepository(InvestLensDataContext context, IPollyService pollyService, ILogger<SecurityRepository> logger) : base(context, pollyService, logger)
     {

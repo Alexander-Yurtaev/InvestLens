@@ -8,15 +8,15 @@ using Polly;
 
 namespace InvestLens.Shared.Repositories;
 
-public abstract class BaseRepository<TEntity, TKey> : IBaseRepository<TEntity, TKey> where TEntity : BaseEntity<TKey> where TKey : struct
+public abstract class BaseRepository<TEntity> : IBaseRepository<TEntity> where TEntity : BaseEntity
 {
     protected readonly DbContext Context;
     protected readonly IPollyService PollyService;
     protected AsyncPolicy ResilientPolicy;
-    protected readonly ILogger<BaseRepository<TEntity, TKey>> Logger;
+    protected readonly ILogger<BaseRepository<TEntity>> Logger;
     protected readonly DbSet<TEntity> DbSet;
 
-    protected BaseRepository(DbContext context, IPollyService pollyService, ILogger<BaseRepository<TEntity, TKey>> logger)
+    protected BaseRepository(DbContext context, IPollyService pollyService, ILogger<BaseRepository<TEntity>> logger)
     {
         Context = context;
         PollyService = pollyService;
@@ -110,20 +110,20 @@ public abstract class BaseRepository<TEntity, TKey> : IBaseRepository<TEntity, T
         }
     }
 
-    public virtual async Task<IGetResult<TEntity, TKey>> Get(int page, int pageSize, string? sort = "", string? filter = "")
+    public virtual async Task<IGetResult<TEntity>> Get(int page, int pageSize, string? sort = "", string? filter = "")
     {
         try
         {
             var entities = await ResilientPolicy.ExecuteAsync(async () =>
             {
-                var items = await DbSet.AsNoTracking().Filter<TEntity, TKey>(GetWhereCause, filter).ToListAsync();
+                var items = await DbSet.AsNoTracking().Filter(GetWhereCause, filter).ToListAsync();
                 var query = items
-                    .OrderByEx<TEntity, TKey>(GetSortAction, sort)
+                    .OrderByEx(GetSortAction, sort)
                     .Skip((page - 1) * pageSize)
                     .Take(pageSize);
 
                 var data = query.ToList();
-                var result = new GetResult<TEntity, TKey>
+                var result = new GetResult<TEntity>
                 {
                     Page = page,
                     PageSize = pageSize,
@@ -153,7 +153,7 @@ public abstract class BaseRepository<TEntity, TKey> : IBaseRepository<TEntity, T
         return query;
     }
 
-    public virtual async Task<TEntity?> Get(TKey id)
+    public virtual async Task<TEntity?> Get(Guid id)
     {
         try
         {
@@ -191,7 +191,7 @@ public abstract class BaseRepository<TEntity, TKey> : IBaseRepository<TEntity, T
         }
     }
 
-    public virtual async Task Delete(TKey id)
+    public virtual async Task Delete(Guid id)
     {
         try
         {
@@ -217,7 +217,7 @@ public abstract class BaseRepository<TEntity, TKey> : IBaseRepository<TEntity, T
 
     #region Private Methods
 
-    private async Task<TEntity?> Find(TKey id, bool throwIfNotFound = false)
+    private async Task<TEntity?> Find(Guid id, bool throwIfNotFound = false)
     {
         var entity = await ResilientPolicy.ExecuteAsync(async () => await DbSet.FindAsync(id));
         if (entity is not null || !throwIfNotFound) return entity;

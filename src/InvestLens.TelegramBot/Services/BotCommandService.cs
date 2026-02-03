@@ -10,9 +10,9 @@ public class BotCommandService : IBotCommandService
 {
     private readonly ITelegramBotClient _telegramBotClient;
     private readonly ICorrelationIdService _correlationIdService;
-    private readonly ISecuritiesRefreshStatusService _statusService;
+    private readonly IRefreshStatusService _statusService;
 
-    public BotCommandService(ITelegramBotClient telegramBotClient, ICorrelationIdService correlationIdService, ISecuritiesRefreshStatusService statusService)
+    public BotCommandService(ITelegramBotClient telegramBotClient, ICorrelationIdService correlationIdService, IRefreshStatusService statusService)
     {
         _telegramBotClient = telegramBotClient;
         _correlationIdService = correlationIdService;
@@ -45,22 +45,22 @@ public class BotCommandService : IBotCommandService
         
         switch (refreshStatus.Status)
         {
-            case SecuritiesRefreshStatus.None:
+            case RefreshStatus.None:
                 await _telegramBotClient.NotifyInfoAsync(refreshStatus.Status.GetDisplayName(), refreshStatus.Status.GetDescription(), cancellationToken);
                 break;
-            case SecuritiesRefreshStatus.Scheduled:
+            case RefreshStatus.Scheduled:
                 await _telegramBotClient.NotifyInfoAsync(refreshStatus.Status.GetDisplayName(), refreshStatus.Status.GetDescription(), cancellationToken);
                 break;
-            case SecuritiesRefreshStatus.Processing:
+            case RefreshStatus.Processing:
                 await _telegramBotClient.NotifyStatusAsync($"Обновление данных: {refreshStatus.Duration:dd\\.hh\\:mm\\:ss}", $"{refreshStatus.Status.GetDisplayName()}: {refreshStatus.SavedCount:N0}/{refreshStatus.DownloadedCount:N0}", cancellationToken);
                 break;
-            case SecuritiesRefreshStatus.Completed:
+            case RefreshStatus.Completed:
                 await _telegramBotClient.NotifyOperationCompleteAsync(
                     $"{refreshStatus.Status.GetDescription()}: {refreshStatus.SavedCount}/{refreshStatus.DownloadedCount}",
                     refreshStatus.Duration,
                     cancellationToken);
                 break;
-            case SecuritiesRefreshStatus.Failed:
+            case RefreshStatus.Failed:
                 await _telegramBotClient.NotifyErrorAsync(refreshStatus.ErrorMessage, cancellationToken);
                 break;
             default:

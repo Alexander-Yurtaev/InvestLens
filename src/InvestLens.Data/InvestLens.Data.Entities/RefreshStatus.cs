@@ -1,6 +1,6 @@
 ﻿namespace InvestLens.Data.Entities;
 
-public class RefreshStatus : BaseEntity<Guid>
+public class RefreshStatus : BaseEntity
 {
     public RefreshStatus(string entityName)
     {

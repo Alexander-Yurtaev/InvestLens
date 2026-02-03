@@ -2,10 +2,10 @@
 
 namespace InvestLens.Abstraction.Redis.Services;
 
-public interface ISecuritiesRefreshStatusService
+public interface IRefreshStatusService
 {
     Task<DateTime> Init(string correlationId);
-    Task<ISecuritiesRefreshProgress> TryGetProgress(string correlationId);
+    Task<IRefreshProgress> TryGetProgress(string correlationId);
     Task Reset(string correlationId);
     Task SetScheduled(string correlationId);
     Task SetDownloading(string correlationId, int count);

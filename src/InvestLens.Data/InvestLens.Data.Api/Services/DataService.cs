@@ -1,5 +1,4 @@
 ﻿using Dapper;
-using InvestLens.Abstraction.Repositories;
 using InvestLens.Abstraction.Services;
 using InvestLens.Data.Entities;
 using InvestLens.Shared.Helpers;
@@ -13,26 +12,18 @@ namespace InvestLens.Data.Api.Services;
 public class DataService : IDataService
 {
     private readonly string _connectionString;
-    private readonly ISecurityRepository _securityRepository;
     private readonly ILogger<DataService> _logger;
 
     public DataService(
         IConfiguration configuration,
-        ISecurityRepository securityRepository,
         ILogger<DataService> logger)
     {
         _connectionString = ConnectionStringHelper.GetTargetConnectionString(configuration);
-        _securityRepository = securityRepository;
         _logger = logger;
     }
 
-    public async Task<IGetResult<Security, Guid>> GetSecurities(int page, int pageSize, string? sort = "", string? filter = "")
-    {
-        return await _securityRepository.Get(page, pageSize, sort, filter);
-    }
-
-    public async Task<int> SaveDataAsync<TEntity, TKey>(IEnumerable<TEntity> batch, int batchId,
-        Func<Exception, Task>? failBack) where TEntity : BaseEntity<TKey> where TKey : struct
+    public async Task<int> SaveDataAsync<TEntity>(IEnumerable<TEntity> batch, int batchId,
+        Func<Exception, Task>? failBack) where TEntity : BaseEntity
     {
         string tempTableName = $"temp_security_batch_{batchId}";
         var columns = typeof(Security)
@@ -62,7 +53,7 @@ public class DataService : IDataService
             _logger.LogInformation("Создана временная таблица: {TempTableName}", tempTableName);
 
             // 2. Загружаем данные
-            await LoadDataToTempTable<TEntity, TKey>(connection, tempTableName, batch, selectColumns);
+            await LoadDataToTempTable(connection, tempTableName, batch, selectColumns);
             _logger.LogInformation("Данные загружены во временную таблицу: {TempTableName}", tempTableName);
 
             // 3. Синхронизируем с основной таблицей
@@ -90,8 +81,8 @@ public class DataService : IDataService
         }
     }
 
-    private async Task LoadDataToTempTable<TEntity, TKey>(NpgsqlConnection connection, string tempTableName,
-        IEnumerable<TEntity> batch, string selectColumns) where TEntity : BaseEntity<TKey> where TKey : struct
+    private async Task LoadDataToTempTable<TEntity>(NpgsqlConnection connection, string tempTableName,
+        IEnumerable<TEntity> batch, string selectColumns) where TEntity : BaseEntity
 
     {
         var properties = typeof(TEntity)

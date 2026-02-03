@@ -1,29 +1,31 @@
 ﻿using InvestLens.Abstraction.Redis.Services;
 using InvestLens.Abstraction.Services;
 using InvestLens.Data.Api.Converter;
-using InvestLens.Data.Entities;
 using InvestLens.Data.Shared.Responses;
 using InvestLens.Shared.Exceptions;
 using System.Collections.Concurrent;
 using System.Text.Json;
+using InvestLens.Data.Entities;
 
 namespace InvestLens.Data.Api.Services;
 
-public class DataPipeline : IDataPipeline
+public class DataPipeline<TEntity, TResponse> : IDataPipeline 
+    where TEntity : BaseEntity
+    where TResponse : IBaseResponse
 {
     private readonly HttpClient _httpClient;
     private readonly IDataService _dataService;
-    private readonly ISecuritiesRefreshStatusService _statusService;
+    private readonly IRefreshStatusService _statusService;
     private readonly ICorrelationIdService _correlationIdService;
-    private readonly ILogger<DataPipeline> _logger;
+    private readonly ILogger<DataPipeline<TEntity, TResponse>> _logger;
     private readonly int _maxConcurrentDownloads = 3;
     private readonly int _batchSize = 100;
     private readonly int _saveBatchSize = 10_000; // Сохраняем пачками по 10к
 
     public DataPipeline(HttpClient httpClient, IDataService dataService,
-        ISecuritiesRefreshStatusService statusService,
+        IRefreshStatusService statusService,
         ICorrelationIdService correlationIdService,
-        ILogger<DataPipeline> logger)
+        ILogger<DataPipeline<TEntity, TResponse>> logger)
     {
         _httpClient = httpClient;
         _dataService = dataService;
@@ -35,7 +37,7 @@ public class DataPipeline : IDataPipeline
     public async Task<int> ProcessAllDataAsync(Func<Exception, Task> failBack)
     {
         var downloadSemaphore = new SemaphoreSlim(_maxConcurrentDownloads);
-        var saveQueue = new BlockingCollection<List<Security>>(10); // Буфер на 10 пачек
+        var saveQueue = new BlockingCollection<List<TEntity>>(10); // Буфер на 10 пачек
 
         // Запускаем задачу сохранения в отдельном потоке
         var saveTask = Task.Run(() => ImportInBatches(saveQueue, failBack))
@@ -64,7 +66,9 @@ public class DataPipeline : IDataPipeline
                     if (batch.Any())
                     {
                         Interlocked.Add(ref totalRecords, batch.Count);
-                        await _statusService.SetDownloading(_correlationIdService.GetOrCreateCorrelationId(nameof(DataPipeline)), totalRecords);
+                        await _statusService.SetDownloading(
+                            _correlationIdService.GetOrCreateCorrelationId(
+                                nameof(DataPipeline<TEntity, TResponse>)), totalRecords);
                     }
                     else
                     {
@@ -104,9 +108,9 @@ public class DataPipeline : IDataPipeline
 
     #region Privare Methods
 
-    private readonly ConcurrentQueue<Security> _accumulator = new ConcurrentQueue<Security>();
+    private readonly ConcurrentQueue<TEntity> _accumulator = new ConcurrentQueue<TEntity>();
 
-    private List<Security>? AccumulateForSaving(List<Security> batch, int threshold)
+    private List<TEntity>? AccumulateForSaving(List<TEntity> batch, int threshold)
     {
         // Добавляем без блокировок
         foreach (var item in batch)
@@ -118,7 +122,7 @@ public class DataPipeline : IDataPipeline
         if (_accumulator.Count >= threshold)
         {
             // Извлекаем пачку
-            var toSave = new List<Security>();
+            var toSave = new List<TEntity>();
             int count = 0;
 
             while (count < threshold && _accumulator.TryDequeue(out var item))
@@ -133,7 +137,7 @@ public class DataPipeline : IDataPipeline
         return null;
     }
 
-    private async Task ImportInBatches(BlockingCollection<List<Security>> queue, Func<Exception, Task> failBack)
+    private async Task ImportInBatches(BlockingCollection<List<TEntity>> queue, Func<Exception, Task> failBack)
     {
         var totalSaved = 0;
         var batchId = 0;
@@ -142,20 +146,22 @@ public class DataPipeline : IDataPipeline
 
         foreach (var batch in queue.GetConsumingEnumerable())
         {
-            var savedCount = await _dataService.SaveDataAsync<Security, Guid>(batch, batchId, failBack);
+            var savedCount = await _dataService.SaveDataAsync<TEntity>(batch, batchId, failBack);
             _logger.LogInformation($"Сохранено {batch.Count} записей.");
             totalSaved += savedCount;
             batchId++;
-            await _statusService.SetSaving(_correlationIdService.GetOrCreateCorrelationId(nameof(DataPipeline)), totalSaved);
+            await _statusService.SetSaving(_correlationIdService.GetOrCreateCorrelationId(nameof(DataPipeline<TEntity, TResponse>)), totalSaved);
         }
 
         // Сохраняем остатки
         if (_accumulator.Any())
         {
-            var savedCount = await _dataService.SaveDataAsync<Security, Guid>(_accumulator, batchId, failBack);
+            var savedCount = await _dataService.SaveDataAsync<TEntity>(_accumulator, batchId, failBack);
             _logger.LogInformation($"Сохранены оставшиеся {savedCount} записей.");
             totalSaved += savedCount;
-            await _statusService.SetSaving(_correlationIdService.GetOrCreateCorrelationId(nameof(DataPipeline)), totalSaved);
+            await _statusService.SetSaving(
+                _correlationIdService.GetOrCreateCorrelationId(nameof(DataPipeline<TEntity, TResponse>)),
+                totalSaved);
         }
 
         _logger.LogInformation("Завершилась задача для сохранения данных.");
@@ -186,31 +192,31 @@ public class DataPipeline : IDataPipeline
         }
     }
 
-    private async Task<List<Security>> DownloadBatchAsync(int page, int batchSize)
+    private async Task<List<TEntity>> DownloadBatchAsync(int page, int batchSize)
     {
         string url = $"/iss/securities.json?start={page * batchSize}&limit={batchSize}";
 
         try
         {
-            var response = await _httpClient.GetAsync(url);
-            response.EnsureSuccessStatusCode();
+            var responseMessage = await _httpClient.GetAsync(url);
+            responseMessage.EnsureSuccessStatusCode();
 
-            var json = await response.Content.ReadAsStringAsync();
-            var securitiesResponse = JsonSerializer.Deserialize<SecuritiesResponse>(json);
+            var json = await responseMessage.Content.ReadAsStringAsync();
+            var response = JsonSerializer.Deserialize<TResponse>(json);
 
-            if (securitiesResponse is null)
+            if (response is null)
             {
                 throw new MoexApiException($"Не пришли данные.");
             }
 
-            var securities = ResponseToEntityConverters.SecurityResponseToEntityConverter(securitiesResponse, page, batchSize);
-            return securities;
+            var securities = ResponseToEntityConverters.ResponseToEntityConverter(response, page, batchSize);
+            return securities.Cast<TEntity>().ToList();
         }
         catch (Exception ex)
         {
             // Логирование ошибки
             Console.WriteLine($"Ошибка при загрузке страницы {page}: {ex.Message}");
-            return new List<Security>();
+            return new List<TEntity>();
         }
     }
 

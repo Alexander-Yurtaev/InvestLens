@@ -11,10 +11,10 @@
 //{
 //    private readonly ILogger<MoexClient> _logger;
 //    private readonly HttpClient _httpClient;
-//    private readonly ISecuritiesRefreshStatusService _statusService;
+//    private readonly IRefreshStatusService _statusService;
 //    private readonly IPollyService _pollyService;
 
-//    public MoexClient(HttpClient httpClient, ISecuritiesRefreshStatusService statusService, IPollyService pollyService, ILogger<MoexClient> logger)
+//    public MoexClient(HttpClient httpClient, IRefreshStatusService statusService, IPollyService pollyService, ILogger<MoexClient> logger)
 //    {
 //        _httpClient = httpClient;
 //        _statusService = statusService;

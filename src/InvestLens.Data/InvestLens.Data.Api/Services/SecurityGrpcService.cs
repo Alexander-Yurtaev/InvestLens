@@ -6,11 +6,11 @@ namespace InvestLens.Data.Api.Services;
 
 public class SecurityGrpcService : SecurityServices.SecurityServicesBase
 {
-    private readonly IDataService _dataService;
+    private readonly ISecurityDataService _dataService;
     private readonly ILogger<SecurityGrpcService> _logger;
 
     public SecurityGrpcService(
-        IDataService dataService,
+        ISecurityDataService dataService,
         ILogger<SecurityGrpcService> logger)
     {
         _dataService = dataService;

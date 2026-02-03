@@ -87,7 +87,7 @@ public static class Program
             builder.Services.AddScoped<InformationEventHandler>();
             builder.Services.AddScoped<ErrorEventHandler>();
 
-            builder.Services.AddSingleton<ISecuritiesRefreshStatusService, SecuritiesRefreshStatusService>();
+            builder.Services.AddSingleton<IRefreshStatusService, RefreshStatusService>();
             builder.Services.AddHostedService<InvestLensBot>();
 
             var host = builder.Build();

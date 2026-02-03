@@ -14,7 +14,9 @@ using InvestLens.Data.Api.Handlers;
 using InvestLens.Data.Api.Models.Settings;
 using InvestLens.Data.Api.Services;
 using InvestLens.Data.DataContext;
+using InvestLens.Data.Entities;
 using InvestLens.Data.Repositories;
+using InvestLens.Data.Shared.Responses;
 using InvestLens.Shared.Constants;
 using InvestLens.Shared.Helpers;
 using InvestLens.Shared.MessageBus.Extensions;
@@ -77,9 +79,10 @@ public static class Program
             builder.Services.AddScoped<IRefreshStatusRepository, RefreshStatusRepository>();
             
             builder.Services.AddScoped<IDataService, DataService>();
+            builder.Services.AddScoped<ISecurityDataService, SecurityDataService>();
 
             builder.Services
-                .AddHttpClient<IDataPipeline, DataPipeline>(client => client.BaseAddress = new Uri(commonSettings.MoexBaseUrl))
+                .AddHttpClient<IDataPipeline, DataPipeline<Security, SecuritiesResponse>>(client => client.BaseAddress = new Uri(commonSettings.MoexBaseUrl))
                 .AddCorrelationIdForwarding()
                 .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
                 {
@@ -87,7 +90,7 @@ public static class Program
                 })
                 .AddPolicyHandler((provider, _) => provider.GetRequiredService<IPollyService>().GetHttpResilientPolicy());
 
-            builder.Services.AddSingleton<ISecuritiesRefreshStatusService, SecuritiesRefreshStatusService>();
+            builder.Services.AddSingleton<IRefreshStatusService, RefreshStatusService>();
 
             // Redis
             builder.Services.AddRedisSettings(builder.Configuration).AddRedisClient();
@@ -162,8 +165,6 @@ public static class Program
             });
 
             app.MapGet("/", () => "Data Service");
-
-            app.MapGet("/securities", (IDataService dataService) => dataService.GetSecurities(1, 10));
 
             app.MapGrpcService<SecurityGrpcService>();
 

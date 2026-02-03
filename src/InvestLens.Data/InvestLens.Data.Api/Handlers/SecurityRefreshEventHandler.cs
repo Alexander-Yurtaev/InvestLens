@@ -11,7 +11,7 @@ public class SecurityRefreshEventHandler : IMessageHandler<SecurityRefreshMessag
 {
     private readonly IDataPipeline _dataPipeline;
     private readonly IPollyService _pollyService;
-    private readonly ISecuritiesRefreshStatusService _statusService;
+    private readonly IRefreshStatusService _statusService;
     private readonly ICorrelationIdService _correlationIdService;
     private readonly IMessageBusClient _messageBus;
     private readonly ILogger<SecurityRefreshEventHandler> _logger;
@@ -19,7 +19,7 @@ public class SecurityRefreshEventHandler : IMessageHandler<SecurityRefreshMessag
     public SecurityRefreshEventHandler(
         IDataPipeline dataPipeline,
         IPollyService pollyService,
-        ISecuritiesRefreshStatusService statusService,
+        IRefreshStatusService statusService,
         ICorrelationIdService correlationIdService,
         IMessageBusClient messageBus,
         ILogger<SecurityRefreshEventHandler> logger)

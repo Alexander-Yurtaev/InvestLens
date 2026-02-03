@@ -19,8 +19,8 @@ public class SecurityRefreshEventHandler : IMessageHandler<SecurityRefreshMessag
     private readonly ICorrelationIdService _correlationIdService;
     private readonly ILogger<SecurityRefreshEventHandler> _logger;
 
-    private readonly SecuritiesRefreshStatus[] _idleStatuses =
-        [SecuritiesRefreshStatus.None, SecuritiesRefreshStatus.Completed, SecuritiesRefreshStatus.Failed];
+    private readonly RefreshStatus[] _idleStatuses =
+        [RefreshStatus.None, RefreshStatus.Completed, RefreshStatus.Failed];
 
     public SecurityRefreshEventHandler(
         IRedisClient redisClient,
@@ -58,7 +58,7 @@ public class SecurityRefreshEventHandler : IMessageHandler<SecurityRefreshMessag
             try
             {
                 // 1. Проверяем, что в данный момент не выполняется задача обновления данных
-                var securitiesRefreshStatus = await _redisClient.GetAsync<SecuritiesRefreshProgress?>(RedisKeys.SecuritiesRefreshStatusRedisKey);
+                var securitiesRefreshStatus = await _redisClient.GetAsync<RefreshProgress?>(RedisKeys.SecuritiesRefreshStatusRedisKey);
 
                 if (securitiesRefreshStatus is not null)
                 {

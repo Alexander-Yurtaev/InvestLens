@@ -3,9 +3,9 @@ using InvestLens.Abstraction.Redis.Enums;
 
 namespace InvestLens.Shared.Redis.Models;
 
-public class SecuritiesRefreshProgress : ISecuritiesRefreshProgress
+public class RefreshProgress : IRefreshProgress
 {
-    public SecuritiesRefreshProgress(string correlationId)
+    public RefreshProgress(string correlationId)
     {
         CorrelationId = correlationId;
         var now = DateTime.UtcNow;
@@ -17,7 +17,7 @@ public class SecuritiesRefreshProgress : ISecuritiesRefreshProgress
     
     public string CorrelationId { get; set; }
 
-    public SecuritiesRefreshStatus Status { get; set; } = SecuritiesRefreshStatus.None;
+    public RefreshStatus Status { get; set; } = RefreshStatus.None;
 
     public DateTime StartedAt { get; set; }
 
@@ -31,7 +31,7 @@ public class SecuritiesRefreshProgress : ISecuritiesRefreshProgress
 
     public TimeSpan Duration => UpdatedAt - StartedAt;
 
-    public void SetStatus(SecuritiesRefreshStatus status)
+    public void SetStatus(RefreshStatus status)
     {
         Status = status;
         UpdatedAt = DateTime.UtcNow;

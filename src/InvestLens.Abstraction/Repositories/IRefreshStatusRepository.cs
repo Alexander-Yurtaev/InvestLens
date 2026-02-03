@@ -2,7 +2,7 @@
 
 namespace InvestLens.Abstraction.Repositories;
 
-public interface IRefreshStatusRepository : IBaseRepository<RefreshStatus, Guid>
+public interface IRefreshStatusRepository : IBaseRepository<RefreshStatus>
 {
     Task<RefreshStatus?> GetRefreshStatus(string entityName);
 

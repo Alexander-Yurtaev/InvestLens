@@ -3,7 +3,7 @@ using InvestLens.Data.Entities;
 
 namespace InvestLens.Shared.Repositories;
 
-public class GetResult<TEntity, TKey> : IGetResult<TEntity, TKey> where TEntity : BaseEntity<TKey> where TKey : struct
+public class GetResult<TEntity> : IGetResult<TEntity> where TEntity : BaseEntity
 {
     public int Page { get; set; }
     public int PageSize { get; set; }
