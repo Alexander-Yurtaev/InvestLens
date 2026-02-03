@@ -16,7 +16,6 @@
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" />
     <PackageReference Include="Polly" />
     <PackageReference Include="Microsoft.Extensions.Http.Polly" />
-    <PackageReference Include="YamlDotNet" />
     <PackageReference Include="CorrelationId" />
     <PackageReference Include="Serilog.Enrichers.CorrelationId" />
   </ItemGroup>
