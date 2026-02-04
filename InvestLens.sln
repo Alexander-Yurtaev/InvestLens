@@ -63,7 +63,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "readme", "readme", "{EC20DA
 		docs\readme\architecture.md = docs\readme\architecture.md
 		docs\readme\loading-processing-saving.md = docs\readme\loading-processing-saving.md
 		docs\readme\mindmap.md = docs\readme\mindmap.md
-		docs\readme\RefreshSecurities.md = docs\readme\RefreshSecurities.md
 	EndProjectSection
 EndProject
 Global

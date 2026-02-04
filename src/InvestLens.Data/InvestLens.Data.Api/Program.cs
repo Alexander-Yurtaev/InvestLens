@@ -94,6 +94,7 @@ public static class Program
             // RabbitMQ
             builder.Services.AddRabbitMqSettings(builder.Configuration).AddRabbitMqClient();
             builder.Services.AddScoped<SecurityRefreshEventHandler>();
+            builder.Services.AddScoped<GlobalIssDictionariesRefreshEventHandler>();
 
             builder.Services.AddHealthChecks()
                 .AddNpgSql(ConnectionStringHelper.GetTargetConnectionString(builder.Configuration))
@@ -153,6 +154,10 @@ public static class Program
                 queueName: BusClientConstants.SecretesRefreshQueue,
                 exchangeName: BusClientConstants.SecuritiesExchangeName,
                 routingKey: BusClientConstants.DataSecuritiesRefreshKey);
+            await messageBus.SubscribeAsync<GlobalIssDictionariesRefreshMessage, GlobalIssDictionariesRefreshEventHandler>(
+                queueName: BusClientConstants.GlobalIssDictionariesRefreshQueue,
+                exchangeName: BusClientConstants.GlobalIssDictionariesExchangeName,
+                routingKey: BusClientConstants.DataGlobalIssDictionariesRefreshKey);
 
             app.MapHealthChecks("/health", new HealthCheckOptions
             {

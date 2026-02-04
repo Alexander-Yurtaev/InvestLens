@@ -7,26 +7,48 @@ using Serilog.Context;
 
 namespace InvestLens.Data.Api.Handlers;
 
-public class SecurityRefreshEventHandler : IMessageHandler<SecurityRefreshMessage>
+public class GlobalIssDictionariesRefreshEventHandler : IMessageHandler<GlobalIssDictionariesRefreshMessage>
 {
-    private readonly ISecurityDataPipeline _securityDataPipeline;
+    private readonly IEngineDataPipeline _engineDataPipeline;
+    private readonly IMarketDataPipeline _marketDataPipeline;
+    private readonly IBoardDataPipeline _boardDataPipeline;
+    private readonly IBoardGroupDataPipeline _boardGroupDataPipeline;
+    private readonly IDurationDataPipeline _durationDataPipeline;
+    private readonly ISecurityTypeDataPipeline _securityTypeDataPipeline;
+    private readonly ISecurityGroupDataPipeline _securityGroupDataPipeline;
+    private readonly ISecurityCollectionDataPipeline _securityCollectionDataPipeline;
 
     private readonly IPollyService _pollyService;
     private readonly IRefreshStatusService _statusService;
     private readonly ICorrelationIdService _correlationIdService;
     private readonly IMessageBusClient _messageBus;
-    private readonly ILogger<SecurityRefreshEventHandler> _logger;
+    private readonly ILogger<GlobalIssDictionariesRefreshEventHandler> _logger;
 
-    public SecurityRefreshEventHandler(
-        ISecurityDataPipeline securityDataPipeline,
+    public GlobalIssDictionariesRefreshEventHandler(
+        IEngineDataPipeline engineDataPipeline,
+        IMarketDataPipeline marketDataPipeline,
+        IBoardDataPipeline boardDataPipeline,
+        IBoardGroupDataPipeline boardGroupDataPipeline,
+        IDurationDataPipeline durationDataPipeline,
+        ISecurityTypeDataPipeline securityTypeDataPipeline,
+        ISecurityGroupDataPipeline securityGroupDataPipeline,
+        ISecurityCollectionDataPipeline securityCollectionDataPipeline,
+
         IPollyService pollyService,
         IRefreshStatusService statusService,
         ICorrelationIdService correlationIdService,
         IMessageBusClient messageBus,
-        ILogger<SecurityRefreshEventHandler> logger)
+        ILogger<GlobalIssDictionariesRefreshEventHandler> logger)
     {
-        _securityDataPipeline = securityDataPipeline;
-        
+        _engineDataPipeline = engineDataPipeline;
+        _marketDataPipeline = marketDataPipeline;
+        _boardDataPipeline = boardDataPipeline;
+        _boardGroupDataPipeline = boardGroupDataPipeline;
+        _durationDataPipeline = durationDataPipeline;
+        _securityTypeDataPipeline = securityTypeDataPipeline;
+        _securityGroupDataPipeline = securityGroupDataPipeline;
+        _securityCollectionDataPipeline = securityCollectionDataPipeline;
+
         _pollyService = pollyService;
         _statusService = statusService;
         _correlationIdService = correlationIdService;
@@ -34,7 +56,7 @@ public class SecurityRefreshEventHandler : IMessageHandler<SecurityRefreshMessag
         _logger = logger;
     }
 
-    public async Task<bool> HandleAsync(SecurityRefreshMessage message, CancellationToken cancellationToken = default)
+    public async Task<bool> HandleAsync(GlobalIssDictionariesRefreshMessage message, CancellationToken cancellationToken = default)
     {
         var correlationHeader = message.Headers
             .FirstOrDefault(h => h.Key.Equals(HeaderConstants.CorrelationHeader, StringComparison.OrdinalIgnoreCase));
@@ -56,25 +78,39 @@ public class SecurityRefreshEventHandler : IMessageHandler<SecurityRefreshMessag
         using (LogContext.PushProperty("CorrelationId", correlationId))
         {
             _logger.LogInformation(
-                "Получено поручение обновить список ценных бумаг: {MessageId} от {MessageCreatedAt}.",
+                "Получено поручение обновить Global ISS Dictionaries: {MessageId} от {MessageCreatedAt}.",
                 message.MessageId, message.CreatedAt);
 
             var startedAt = await _statusService.Init(correlationId);
 
             try
             {
-                await ProcessAllDataAsync(_securityDataPipeline, correlationId, startedAt, message.MessageId, message.CreatedAt, cancellationToken);
+                await SendStartMessage("Global_Iss_Dictionaries", 
+                    $"Началась загрузка: Global ISS Dictionaries.", startedAt, cancellationToken);
+
+                var totalRecords = 0;
+
+                totalRecords += await ProcessAllDataAsync(_engineDataPipeline, correlationId, startedAt, message.MessageId, message.CreatedAt, cancellationToken);
+                totalRecords += await ProcessAllDataAsync(_marketDataPipeline, correlationId, startedAt, message.MessageId, message.CreatedAt, cancellationToken);
+                totalRecords += await ProcessAllDataAsync(_boardDataPipeline, correlationId, startedAt, message.MessageId, message.CreatedAt, cancellationToken);
+                totalRecords += await ProcessAllDataAsync(_boardGroupDataPipeline, correlationId, startedAt, message.MessageId, message.CreatedAt, cancellationToken);
+                totalRecords += await ProcessAllDataAsync(_durationDataPipeline, correlationId, startedAt, message.MessageId, message.CreatedAt, cancellationToken);
+                totalRecords += await ProcessAllDataAsync(_securityTypeDataPipeline, correlationId, startedAt, message.MessageId, message.CreatedAt, cancellationToken);
+                totalRecords += await ProcessAllDataAsync(_securityGroupDataPipeline, correlationId, startedAt, message.MessageId, message.CreatedAt, cancellationToken);
+                totalRecords += await ProcessAllDataAsync(_securityCollectionDataPipeline, correlationId, startedAt, message.MessageId, message.CreatedAt, cancellationToken);
 
                 _logger.LogInformation(
-                    "Завершено обновление: Securities: {MessageId} от {MessageCreatedAt}.",
+                    "Завершено обновление: Global ISS Dictionaries: {MessageId} от {MessageCreatedAt}.",
                     message.MessageId, message.CreatedAt);
+
+                await SendCompleteMessage("Global_Iss_Dictionaries", startedAt, totalRecords, cancellationToken);
 
                 return true;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex,
-                    "Ошибка при обновлении списка ценных бумаг: {MessageId} от {MessageCreatedAt}.",
+                    "Ошибка при обновлении Global ISS Dictionaries: {MessageId} от {MessageCreatedAt}.",
                     message.MessageId, message.CreatedAt);
 
                 await _statusService.SetFailed(correlationId, ex.Message);
@@ -136,7 +172,7 @@ public class SecurityRefreshEventHandler : IMessageHandler<SecurityRefreshMessag
         });
     }
 
-    private async Task ProcessAllDataAsync(IDataPipeline dataPipeline, string correlationId, DateTime startedAt, Guid messageId, DateTime createdAt, CancellationToken cancellationToken)
+    private async Task<int> ProcessAllDataAsync(IDataPipeline dataPipeline, string correlationId, DateTime startedAt, Guid messageId, DateTime createdAt, CancellationToken cancellationToken)
     {
         await SendStartMessage(correlationId, $"Началась загрузка: {dataPipeline.Info}.", startedAt, cancellationToken);
         var totalRecords = await dataPipeline.ProcessAllDataAsync(async (ex) =>
@@ -148,6 +184,8 @@ public class SecurityRefreshEventHandler : IMessageHandler<SecurityRefreshMessag
 
         await _statusService.SetCompleted(correlationId, totalRecords);
         await SendCompleteMessage(correlationId, startedAt, totalRecords, cancellationToken);
+
+        return totalRecords;
     }
 
     # endregion Private Methods
