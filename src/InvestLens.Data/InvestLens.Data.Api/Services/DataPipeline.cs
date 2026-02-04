@@ -39,6 +39,8 @@ public abstract class DataPipeline<TEntity, TResponse> : IDataPipeline
         _logger = logger;
     }
 
+    public abstract string Info { get; }
+
     public async Task<int> ProcessAllDataAsync(Func<Exception, Task> failBack)
     {
         var downloadSemaphore = new SemaphoreSlim(_maxConcurrentDownloads);
@@ -190,7 +192,7 @@ public abstract class DataPipeline<TEntity, TResponse> : IDataPipeline
                 throw new MoexApiException("Метаданные не пришли с MOEX.");
             }
 
-            return securitiesResponse.Sections["securities"].Metadata;
+            return securitiesResponse.Section.Metadata;
         }
         catch (Exception ex)
         {
@@ -234,15 +236,34 @@ public abstract class DataPipeline<TEntity, TResponse> : IDataPipeline
     #endregion Privare Methods
 }
 
-public class SecurityDataPipeline : DataPipeline<Security, SecuritiesResponse>, ISecurityDataPipeline
+public abstract class IndexDataPipeline<TEntity, TResponse> : DataPipeline<TEntity, TResponse>
+    where TEntity : IndexBaseEntity
+    where TResponse : IBaseIndexResponse
 {
-    public SecurityDataPipeline(HttpClient httpClient, IDataService dataService, IRefreshStatusService statusService,
-        ICorrelationIdService correlationIdService, ILogger<DataPipeline<Security, SecuritiesResponse>> logger) : base(
-        httpClient, dataService, statusService, correlationIdService, logger, 3, 10_000)
+    protected IndexDataPipeline(HttpClient httpClient, IDataService dataService, IRefreshStatusService statusService,
+        ICorrelationIdService correlationIdService, ILogger<DataPipeline<TEntity, TResponse>> logger,
+        int maxConcurrentDownloads = 3, int saveBatchSize = 10000) : base(httpClient, dataService, statusService,
+        correlationIdService, logger, maxConcurrentDownloads, saveBatchSize)
 
     {
     }
 
+    protected override string GetUrl(params int[] args)
+    {
+        return args[0] != 0 ? string.Empty : $"/iss/index.json";
+    }
+}
+
+public class SecurityDataPipeline : DataPipeline<Security, SecuritiesResponse>, ISecurityDataPipeline
+{
+    public SecurityDataPipeline(HttpClient httpClient, IDataService dataService, IRefreshStatusService statusService,
+        ICorrelationIdService correlationIdService, ILogger<DataPipeline<Security, SecuritiesResponse>> logger) : base(
+        httpClient, dataService, statusService, correlationIdService, logger)
+
+    {
+    }
+
+    public override string Info => "Список ценных бумаг";
     protected override string GetKeyName => "secid";
 
     protected override string GetUrl(params int[] args)
@@ -254,7 +275,7 @@ public class SecurityDataPipeline : DataPipeline<Security, SecuritiesResponse>, 
     }
 }
 
-public class EngineDataPipeline : DataPipeline<Engine, IndexDataResponse>, IEngineDataPipeline
+public class EngineDataPipeline : IndexDataPipeline<Engine, EngineIndexDataResponse>, IEngineDataPipeline
 {
     public EngineDataPipeline(HttpClient httpClient, IDataService dataService, IRefreshStatusService statusService,
         ICorrelationIdService correlationIdService, ILogger<EngineDataPipeline> logger) : base(
@@ -263,13 +284,10 @@ public class EngineDataPipeline : DataPipeline<Engine, IndexDataResponse>, IEngi
     {
     }
 
-    protected override string GetUrl(params int[] args)
-    {
-        return args[0] != 0 ? string.Empty : $"/iss/index.json";
-    }
+    public override string Info => "Список доступных торговых систем";
 }
 
-public class MarketDataPipeline : DataPipeline<Market, IndexDataResponse>, IMarketDataPipeline
+public class MarketDataPipeline : IndexDataPipeline<Market, MarketIndexDataResponse>, IMarketDataPipeline
 {
     public MarketDataPipeline(HttpClient httpClient, IDataService dataService, IRefreshStatusService statusService,
         ICorrelationIdService correlationIdService, ILogger<MarketDataPipeline> logger) : base(
@@ -278,8 +296,79 @@ public class MarketDataPipeline : DataPipeline<Market, IndexDataResponse>, IMark
     {
     }
 
-    protected override string GetUrl(params int[] args)
+    public override string Info => "Справочник доступных рынков";
+}
+
+public class BoardDataPipeline : IndexDataPipeline<Board, BoardIndexDataResponse>, IBoardDataPipeline
+{
+    public BoardDataPipeline(HttpClient httpClient, IDataService dataService, IRefreshStatusService statusService,
+        ICorrelationIdService correlationIdService, ILogger<BoardDataPipeline> logger) : base(
+        httpClient, dataService, statusService, correlationIdService, logger, 1, 100)
+
     {
-        return args[0] != 0 ? string.Empty : $"/iss/index.json";
     }
+
+    public override string Info => "Справочник режимов торгов";
+}
+
+public class BoardGroupDataPipeline : IndexDataPipeline<BoardGroup, BoardGroupIndexDataResponse>, IBoardGroupDataPipeline
+{
+    public BoardGroupDataPipeline(HttpClient httpClient, IDataService dataService, IRefreshStatusService statusService,
+        ICorrelationIdService correlationIdService, ILogger<BoardGroupDataPipeline> logger) : base(
+        httpClient, dataService, statusService, correlationIdService, logger, 1, 100)
+
+    {
+    }
+
+    public override string Info => "Справочник групп режимов торгов";
+}
+
+public class DurationDataPipeline : IndexDataPipeline<Duration, DurationIndexDataResponse>, IDurationDataPipeline
+{
+    public DurationDataPipeline(HttpClient httpClient, IDataService dataService, IRefreshStatusService statusService,
+        ICorrelationIdService correlationIdService, ILogger<DurationDataPipeline> logger) : base(
+        httpClient, dataService, statusService, correlationIdService, logger, 1, 100)
+
+    {
+    }
+
+    public override string Info => "Справочник доступных расчетных интервалов свечей в формате HLOCV";
+
+    protected override string GetKeyName => "interval";
+}
+
+public class SecurityTypeDataPipeline : IndexDataPipeline<SecurityType, SecurityTypeIndexDataResponse>, ISecurityTypeDataPipeline
+{
+    public SecurityTypeDataPipeline(HttpClient httpClient, IDataService dataService, IRefreshStatusService statusService,
+        ICorrelationIdService correlationIdService, ILogger<SecurityTypeDataPipeline> logger) : base(
+        httpClient, dataService, statusService, correlationIdService, logger, 1, 100)
+
+    {
+    }
+
+    public override string Info => "Типы инструментов для торговой системы";
+}
+
+public class SecurityGroupDataPipeline : IndexDataPipeline<SecurityGroup, SecurityGroupIndexDataResponse>, ISecurityGroupDataPipeline
+{
+    public SecurityGroupDataPipeline(HttpClient httpClient, IDataService dataService, IRefreshStatusService statusService,
+        ICorrelationIdService correlationIdService, ILogger<SecurityGroupDataPipeline> logger) : base(
+        httpClient, dataService, statusService, correlationIdService, logger, 1, 100)
+
+    {
+    }
+
+    public override string Info => "Группы инструментов для торговой системы";
+}
+
+public class SecurityCollectionDataPipeline : IndexDataPipeline<SecurityCollection, SecurityCollectionIndexDataResponse>, ISecurityCollectionDataPipeline
+{
+    public SecurityCollectionDataPipeline(HttpClient httpClient, IDataService dataService, IRefreshStatusService statusService,
+        ICorrelationIdService correlationIdService, ILogger<SecurityCollectionDataPipeline> logger) : base(
+        httpClient, dataService, statusService, correlationIdService, logger, 1, 100)
+
+    {
+    }
+
+    public override string Info => "Коллекции инструментов для торговой системы";
 }

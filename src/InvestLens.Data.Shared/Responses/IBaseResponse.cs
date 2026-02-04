@@ -2,5 +2,5 @@
 
 public interface IBaseResponse
 {
-    
+    Section Section { get; set; }
 }

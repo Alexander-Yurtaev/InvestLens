@@ -13,7 +13,14 @@ public static class ResponseToEntityConverters
         return response switch
         {
             SecuritiesResponse securitiesResponse => SecurityResponseToEntityConverter(securitiesResponse, page, pageSize),
-            IndexDataResponse indexDataResponse => IndexDataResponseToEntityConverter(indexDataResponse),
+            EngineIndexDataResponse engineIndexDataResponse => SectionIndexDataResponseToEntityConverter<Engine>(engineIndexDataResponse.Section),
+            MarketIndexDataResponse marketIndexDataResponse => SectionIndexDataResponseToEntityConverter<Market>(marketIndexDataResponse.Section),
+            BoardIndexDataResponse boardIndexDataResponse => SectionIndexDataResponseToEntityConverter<Board>(boardIndexDataResponse.Section),
+            BoardGroupIndexDataResponse boardGroupIndexDataResponse => SectionIndexDataResponseToEntityConverter<BoardGroup>(boardGroupIndexDataResponse.Section),
+            DurationIndexDataResponse durationIndexDataResponse => SectionIndexDataResponseToEntityConverter<Duration>(durationIndexDataResponse.Section),
+            SecurityTypeIndexDataResponse securityTypeIndexDataResponse => SectionIndexDataResponseToEntityConverter<SecurityType>(securityTypeIndexDataResponse.Section),
+            SecurityGroupIndexDataResponse securityGroupIndexDataResponse => SectionIndexDataResponseToEntityConverter<SecurityGroup>(securityGroupIndexDataResponse.Section),
+            SecurityCollectionIndexDataResponse securityCollectionIndexDataResponse => SectionIndexDataResponseToEntityConverter<SecurityCollection>(securityCollectionIndexDataResponse.Section),
             _ => throw new ArgumentException($"Unknown response type: {response.GetType()}")
         };
     }
@@ -24,7 +31,7 @@ public static class ResponseToEntityConverters
     {
         var result = new List<Security>();
 
-        foreach (object[] row in securitiesResponse.Sections["securities"].Data)
+        foreach (object[] row in securitiesResponse.Section.Data)
         {
             var security = new SecurityEx
             {
@@ -32,10 +39,10 @@ public static class ResponseToEntityConverters
                 PageSize = pageSize
             };
 
-            for (int i = 0; i < securitiesResponse.Sections["securities"].Columns.Length; i++)
+            for (int i = 0; i < securitiesResponse.Section.Columns.Length; i++)
             {
-                var column = securitiesResponse.Sections["securities"].Columns[i];
-                var metaData = securitiesResponse.Sections["securities"].Metadata[column];
+                var column = securitiesResponse.Section.Columns[i];
+                var metaData = securitiesResponse.Section.Metadata[column];
                 var propertyInfo = PropertyHelper.GetPropertyByColumnCached<Security>(column);
 
                 if (propertyInfo is null)
@@ -52,19 +59,19 @@ public static class ResponseToEntityConverters
         return result.Cast<BaseEntity>().ToList();
     }
 
-    private static List<BaseEntity> IndexDataResponseToEntityConverter(IndexDataResponse indexDataResponse)
+    private static List<BaseEntity> SectionIndexDataResponseToEntityConverter<TEntity>(Section section) where TEntity : IndexBaseEntity
     {
-        var result = new List<Engine>();
+        var result = new List<TEntity>();
 
-        foreach (object[] row in indexDataResponse.Engines.Data)
+        foreach (object[] row in section.Data)
         {
-            var engine = new Engine();
+            var entity = Activator.CreateInstance<TEntity>();
 
-            for (int i = 0; i < indexDataResponse.Engines.Columns.Length; i++)
+            for (int i = 0; i < section.Columns.Length; i++)
             {
-                var column = indexDataResponse.Engines.Columns[i];
-                var metaData = indexDataResponse.Engines.Metadata[column];
-                var propertyInfo = PropertyHelper.GetPropertyByColumnCached<Engine>(column);
+                var column = section.Columns[i];
+                var metaData = section.Metadata[column];
+                var propertyInfo = PropertyHelper.GetPropertyByColumnCached<TEntity>(column);
 
                 if (propertyInfo is null)
                 {
@@ -72,9 +79,9 @@ public static class ResponseToEntityConverters
                 }
 
                 var value = GetValue((JsonElement?)row[i], metaData, propertyInfo.PropertyType);
-                propertyInfo.SetValue(engine, value);
+                propertyInfo.SetValue(entity, value);
             }
-            result.Add(engine);
+            result.Add(entity);
         }
 
         return result.Cast<BaseEntity>().ToList();

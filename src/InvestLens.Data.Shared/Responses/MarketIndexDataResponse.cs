@@ -2,8 +2,8 @@
 
 namespace InvestLens.Data.Shared.Responses;
 
-public class SecuritiesResponse : IBaseResponse
+public class MarketIndexDataResponse : IBaseIndexResponse
 {
-    [JsonPropertyName("securities")]
+    [JsonPropertyName("markets")]
     public required Section Section { get; set; }
 }

@@ -12,6 +12,12 @@ public class SecurityRefreshEventHandler : IMessageHandler<SecurityRefreshMessag
     private readonly ISecurityDataPipeline _securityDataPipeline;
     private readonly IEngineDataPipeline _engineDataPipeline;
     private readonly IMarketDataPipeline _marketDataPipeline;
+    private readonly IBoardDataPipeline _boardDataPipeline;
+    private readonly IBoardGroupDataPipeline _boardGroupDataPipeline;
+    private readonly IDurationDataPipeline _durationDataPipeline;
+    private readonly ISecurityTypeDataPipeline _securityTypeDataPipeline;
+    private readonly ISecurityGroupDataPipeline _securityGroupDataPipeline;
+    private readonly ISecurityCollectionDataPipeline _securityCollectionDataPipeline;
 
     private readonly IPollyService _pollyService;
     private readonly IRefreshStatusService _statusService;
@@ -22,6 +28,13 @@ public class SecurityRefreshEventHandler : IMessageHandler<SecurityRefreshMessag
     public SecurityRefreshEventHandler(
         ISecurityDataPipeline securityDataPipeline,
         IEngineDataPipeline engineDataPipeline,
+        IMarketDataPipeline marketDataPipeline,
+        IBoardDataPipeline boardDataPipeline,
+        IBoardGroupDataPipeline boardGroupDataPipeline,
+        IDurationDataPipeline durationDataPipeline,
+        ISecurityTypeDataPipeline securityTypeDataPipeline,
+        ISecurityGroupDataPipeline securityGroupDataPipeline,
+        ISecurityCollectionDataPipeline securityCollectionDataPipeline,
         IPollyService pollyService,
         IRefreshStatusService statusService,
         ICorrelationIdService correlationIdService,
@@ -30,6 +43,13 @@ public class SecurityRefreshEventHandler : IMessageHandler<SecurityRefreshMessag
     {
         _securityDataPipeline = securityDataPipeline;
         _engineDataPipeline = engineDataPipeline;
+        _marketDataPipeline = marketDataPipeline;
+        _boardDataPipeline = boardDataPipeline;
+        _boardGroupDataPipeline = boardGroupDataPipeline;
+        _durationDataPipeline = durationDataPipeline;
+        _securityTypeDataPipeline = securityTypeDataPipeline;
+        _securityGroupDataPipeline = securityGroupDataPipeline;
+        _securityCollectionDataPipeline = securityCollectionDataPipeline;
         _pollyService = pollyService;
         _statusService = statusService;
         _correlationIdService = correlationIdService;
@@ -66,8 +86,15 @@ public class SecurityRefreshEventHandler : IMessageHandler<SecurityRefreshMessag
 
             try
             {
-                await Engine(correlationId, startedAt, message.MessageId, message.CreatedAt, cancellationToken);
-                await Security(correlationId, startedAt, message.MessageId, message.CreatedAt, cancellationToken);
+                await ProcessAllDataAsync(_engineDataPipeline, correlationId, startedAt, message.MessageId, message.CreatedAt, cancellationToken);
+                await ProcessAllDataAsync(_marketDataPipeline, correlationId, startedAt, message.MessageId, message.CreatedAt, cancellationToken);
+                await ProcessAllDataAsync(_boardDataPipeline, correlationId, startedAt, message.MessageId, message.CreatedAt, cancellationToken);
+                await ProcessAllDataAsync(_boardGroupDataPipeline, correlationId, startedAt, message.MessageId, message.CreatedAt, cancellationToken);
+                await ProcessAllDataAsync(_durationDataPipeline, correlationId, startedAt, message.MessageId, message.CreatedAt, cancellationToken);
+                await ProcessAllDataAsync(_securityTypeDataPipeline, correlationId, startedAt, message.MessageId, message.CreatedAt, cancellationToken);
+                await ProcessAllDataAsync(_securityGroupDataPipeline, correlationId, startedAt, message.MessageId, message.CreatedAt, cancellationToken);
+                await ProcessAllDataAsync(_securityCollectionDataPipeline, correlationId, startedAt, message.MessageId, message.CreatedAt, cancellationToken);
+                await ProcessAllDataAsync(_securityDataPipeline, correlationId, startedAt, message.MessageId, message.CreatedAt, cancellationToken);
 
                 return true;
             }
@@ -87,12 +114,12 @@ public class SecurityRefreshEventHandler : IMessageHandler<SecurityRefreshMessag
 
     #region Private Methods
 
-    private async Task SendStartMessage(string correlationId, DateTime startedAt, CancellationToken cancellationToken)
+    private async Task SendStartMessage(string correlationId, string details, DateTime startedAt, CancellationToken cancellationToken)
     {
         var message = new StartMessage()
         {
             CreatedAt = startedAt,
-            Details = "Началась загрузка списка ценных бумаг на MOEX."
+            Details = details
         };
         message.Headers.Add(HeaderConstants.CorrelationHeader, correlationId);
 
@@ -136,43 +163,15 @@ public class SecurityRefreshEventHandler : IMessageHandler<SecurityRefreshMessag
         });
     }
 
-    private async Task Security(string correlationId, DateTime startedAt, Guid messageId, DateTime createdAt, CancellationToken cancellationToken)
+    private async Task ProcessAllDataAsync(IDataPipeline dataPipeline, string correlationId, DateTime startedAt, Guid messageId, DateTime createdAt, CancellationToken cancellationToken)
     {
-        await SendStartMessage(correlationId, startedAt, cancellationToken);
-        var totalRecords = await _securityDataPipeline.ProcessAllDataAsync(async (ex) =>
+        await SendStartMessage(correlationId, $"Началась загрузка: {dataPipeline.Info}.", startedAt, cancellationToken);
+        var totalRecords = await dataPipeline.ProcessAllDataAsync(async (ex) =>
         {
             await SendErrorMessage(correlationId, startedAt, ex, cancellationToken);
         });
 
-        _logger.LogInformation("Cписок ценных бумаг обновлен: {MessageId} от {MessageCreatedAt}.", messageId, createdAt);
-
-        await _statusService.SetCompleted(correlationId, totalRecords);
-        await SendCompleteMessage(correlationId, startedAt, totalRecords, cancellationToken);
-    }
-
-    private async Task Engine(string correlationId, DateTime startedAt, Guid messageId, DateTime createdAt, CancellationToken cancellationToken)
-    {
-        await SendStartMessage(correlationId, startedAt, cancellationToken);
-        var totalRecords = await _engineDataPipeline.ProcessAllDataAsync(async (ex) =>
-        {
-            await SendErrorMessage(correlationId, startedAt, ex, cancellationToken);
-        });
-
-        _logger.LogInformation("Список доступных торговых систем обновлен: {MessageId} от {MessageCreatedAt}.", messageId, createdAt);
-
-        await _statusService.SetCompleted(correlationId, totalRecords);
-        await SendCompleteMessage(correlationId, startedAt, totalRecords, cancellationToken);
-    }
-
-    private async Task Market(string correlationId, DateTime startedAt, Guid messageId, DateTime createdAt, CancellationToken cancellationToken)
-    {
-        await SendStartMessage(correlationId, startedAt, cancellationToken);
-        var totalRecords = await _marketDataPipeline.ProcessAllDataAsync(async (ex) =>
-        {
-            await SendErrorMessage(correlationId, startedAt, ex, cancellationToken);
-        });
-
-        _logger.LogInformation("Справочник доступных рынков обновлен: {MessageId} от {MessageCreatedAt}.", messageId, createdAt);
+        _logger.LogInformation("Загрузка завершена: {Info} {MessageId} от {MessageCreatedAt}.", dataPipeline.Info, messageId, createdAt);
 
         await _statusService.SetCompleted(correlationId, totalRecords);
         await SendCompleteMessage(correlationId, startedAt, totalRecords, cancellationToken);

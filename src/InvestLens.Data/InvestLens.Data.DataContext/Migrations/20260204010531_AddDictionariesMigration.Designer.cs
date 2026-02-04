@@ -3,6 +3,7 @@ using System;
 using InvestLens.Data.DataContext;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace InvestLens.Data.DataContext.Migrations
 {
     [DbContext(typeof(InvestLensDataContext))]
-    partial class InvestLensDataContextModelSnapshot : ModelSnapshot
+    [Migration("20260204010531_AddDictionariesMigration")]
+    partial class AddDictionariesMigration
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -359,7 +362,7 @@ namespace InvestLens.Data.DataContext.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("ecuritygroup", (string)null);
+                    b.ToTable("securitygroup", (string)null);
                 });
 
             modelBuilder.Entity("InvestLens.Data.Entities.Index.SecurityType", b =>

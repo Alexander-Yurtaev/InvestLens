@@ -55,7 +55,7 @@ public class DataService : IDataService
             _logger.LogInformation("Создана временная таблица: {TempTableName}", tempTableName);
 
             // 2. Загружаем данные
-            await LoadDataToTempTable(connection, tempTableName, batch, selectColumns);
+            await LoadDataToTempTable(connection, tempTableName, keyName, batch, selectColumns);
             _logger.LogInformation("Данные загружены во временную таблицу: {TempTableName}", tempTableName);
 
             // 3. Синхронизируем с основной таблицей
@@ -83,13 +83,16 @@ public class DataService : IDataService
         }
     }
 
-    private async Task LoadDataToTempTable<TEntity>(NpgsqlConnection connection, string tempTableName,
+    private async Task LoadDataToTempTable<TEntity>(NpgsqlConnection connection, string tempTableName, string keyName,
         IEnumerable<TEntity> batch, string selectColumns) where TEntity : BaseEntity
 
     {
         var properties = typeof(TEntity)
             .GetProperties()
-            .Where(p => !string.IsNullOrEmpty(p.GetCustomAttribute<ColumnAttribute>()?.Name))
+            .Where(p => p.GetCustomAttribute<ColumnAttribute>() != null)
+            .Where(p => string.Equals(keyName, "id", StringComparison.OrdinalIgnoreCase) ||
+                        (!string.Equals(keyName, "id", StringComparison.OrdinalIgnoreCase) && 
+                         !string.Equals(p.GetCustomAttribute<ColumnAttribute>()!.Name, "id", StringComparison.OrdinalIgnoreCase)))
             .ToDictionary(k => k.GetCustomAttribute<ColumnAttribute>()!.Name!, v => v);
 
         await using var writer = await connection.BeginBinaryImportAsync(
