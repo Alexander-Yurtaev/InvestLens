@@ -60,7 +60,9 @@ public class SecurityRefreshEventHandler : IMessageHandler<SecurityRefreshMessag
                 // 1. Проверяем, что в данный момент не выполняется задача обновления данных
                 var securitiesRefreshStatus = await _redisClient.GetAsync<RefreshProgress?>(RedisKeys.SecuritiesRefreshStatusRedisKey);
 
-                if (securitiesRefreshStatus is not null)
+                var busyStatuses = new List<RefreshStatus>() { RefreshStatus.Scheduled, RefreshStatus.Processing };
+
+                if (securitiesRefreshStatus is not null && busyStatuses.Contains(securitiesRefreshStatus.Status))
                 {
                     // Проверяем, выполняется ли задача в данный момент
                     if (!_idleStatuses.Contains(securitiesRefreshStatus.Status))

@@ -30,10 +30,4 @@ public class RefreshProgress : IRefreshProgress
     public string ErrorMessage { get; set; } = string.Empty;
 
     public TimeSpan Duration => UpdatedAt - StartedAt;
-
-    public void SetStatus(RefreshStatus status)
-    {
-        Status = status;
-        UpdatedAt = DateTime.UtcNow;
-    }
 }
