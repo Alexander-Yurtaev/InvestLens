@@ -1,38 +1,38 @@
 ﻿using Grpc.Core;
 using InvestLens.Abstraction.Services;
-using InvestLens.Data.Securities.Service;
+using InvestLens.Grpc.Service;
 
 namespace InvestLens.Data.Api.Services;
 
 public class SecurityGrpcService : SecurityServices.SecurityServicesBase
 {
-    private readonly ISecurityDataService _dataService;
+    private readonly IMoexDataService _moexService;
     private readonly ILogger<SecurityGrpcService> _logger;
 
     public SecurityGrpcService(
-        ISecurityDataService dataService,
+        IMoexDataService moexService,
         ILogger<SecurityGrpcService> logger)
     {
-        _dataService = dataService;
+        _moexService = moexService;
         _logger = logger;
     }
 
-    public override async Task<GetSecuritiesResponse> GetSecurities(GetSecuritiesRequest request, ServerCallContext context)
+    public override async Task<GetSecuritiesResponse> GetSecurities(GetPaginationRequest request, ServerCallContext context)
     {
         try
         {
-            var securities = await _dataService.GetSecurities(request.Page, request.PageSize, request.Sort, request.Filter);
+            var securities = await _moexService.GetSecurities(request.Page, request.PageSize, request.Sort, request.Filter);
             var response = new GetSecuritiesResponse
             {
                 Page = securities.Page,
                 PageSize = securities.PageSize,
                 TotalPages = securities.TotalPages,
-                TotlaItems = securities.TotalItems
+                TotalItems = securities.TotalItems
             };
 
             response.Data.AddRange(securities.Data.Select(s => new Security
             {
-                Id = s.Id.ToString(),
+                Id = s.Id,
                 SecId = s.SecId,
                 ShortName = s.ShortName,
                 RegNumber = s.RegNumber, 

@@ -1,20 +1,20 @@
 ﻿using InvestLens.Abstraction.Services;
-using InvestLens.Data.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.ComponentModel;
 using System.Reflection;
+using InvestLens.Data.Entities.Index;
 
 namespace InvestLens.Web.Pages;
 
-public class SecuritiesModel : PageModel
+public class EnginesModel : PageModel
 {
-    private readonly ISecurityGrpcClientService _service;
-    private readonly ILogger<SecuritiesModel> _logger;
+    private readonly IGlobalDictionariesGrpcClientService _service;
+    private readonly ILogger<EnginesModel> _logger;
 
     public IEnumerable<string> Columns { get; set; } = [];
 
-    public List<Security> Securities { get; set; } = [];
+    public List<Engine> Engines { get; set; } = [];
 
     // Свойства для пагинации и сортировки
     public int CurrentPage { get; set; } = 1;
@@ -25,7 +25,7 @@ public class SecuritiesModel : PageModel
     public string CurrentFilter { get; set; } = "";
     public Dictionary<string, string> SortColumns { get; set; } = new();
 
-    public SecuritiesModel(ISecurityGrpcClientService service, ILogger<SecuritiesModel> logger)
+    public EnginesModel(IGlobalDictionariesGrpcClientService service, ILogger<EnginesModel> logger)
     {
         _service = service;
         _logger = logger;
@@ -44,19 +44,19 @@ public class SecuritiesModel : PageModel
         CurrentFilter = filter ?? "";
 
         Columns = GetColumns();
-        var securitiesDto = await _service.GetSecuritiesAsync(CurrentPage, PageSize, sort, filter);
+        var enginesDto = await _service.GetEnginesAsync(CurrentPage, PageSize, sort, filter);
 
-        if (securitiesDto is null)
+        if (enginesDto is null)
         {
-            _logger.LogWarning($"Метод {nameof(ISecurityGrpcClientService.GetSecuritiesAsync)} не вернул данные.");
+            _logger.LogWarning($"Метод {nameof(IGlobalDictionariesGrpcClientService.GetEnginesAsync)} не вернул данные.");
         }
         else
         {
-            _logger.LogInformation("От gRPC-сервера получено {SecuritiesCount} записей.", securitiesDto.Data.Count);
+            _logger.LogInformation("От gRPC-сервера получено {EnginesCount} записей.", enginesDto.Data.Count);
 
-            Securities = securitiesDto.Data;
-            TotalPages = securitiesDto.TotalPages;
-            TotalItems = securitiesDto.TotalItems;
+            Engines = enginesDto.Data;
+            TotalPages = enginesDto.TotalPages;
+            TotalItems = enginesDto.TotalItems;
         }
             
         return Page();
@@ -97,14 +97,14 @@ public class SecuritiesModel : PageModel
         if (!string.IsNullOrEmpty(sortOrder))
             queryParams["sort"] = sortOrder;
 
-        return $"/Securities?{string.Join("&", queryParams.Select(kv => $"{kv.Key}={kv.Value}"))}";
+        return $"/Engines?{string.Join("&", queryParams.Select(kv => $"{kv.Key}={kv.Value}"))}";
     }
 
     #region Private Methods
 
     private IEnumerable<string> GetColumns()
     {
-        var props = typeof(Security).GetProperties();
+        var props = typeof(Engine).GetProperties();
         foreach (var prop in props)
         {
             var attrs = prop.GetCustomAttributes<DisplayNameAttribute>();
@@ -119,12 +119,8 @@ public class SecuritiesModel : PageModel
     {
         SortColumns = new Dictionary<string, string>
         {
-            { "Код", "SecId" },
-            { "Краткое название", "ShortName" },
-            { "Полное название", "Name" },
-            { "Тип", "Type" },
-            { "Группа", "Group" },
-            { "Торгуется", "IsTraded" }
+            { "Название", "Name" },
+            { "описание", "Title" }
         };
     }
 

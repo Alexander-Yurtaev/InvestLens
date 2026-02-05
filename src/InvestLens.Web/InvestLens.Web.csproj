@@ -13,6 +13,7 @@
 
   <ItemGroup>
 	<PackageReference Include="AspNetCore.HealthChecks.Uris" />
+	<PackageReference Include="AutoMapper" />
 	<PackageReference Include="Google.Protobuf" />
 	<PackageReference Include="Grpc.Net.Client" />
 	<PackageReference Include="Grpc.Tools">
@@ -46,7 +47,9 @@
   </ItemGroup>
 
   <ItemGroup>
+	<Protobuf Include="..\InvestLens.Data.Shared\Proto\Api\common.proto" GrpcServices="None" Link="Protos\common.proto" />
 	<Protobuf Include="..\InvestLens.Data.Shared\Proto\Api\securities.proto" GrpcServices="Client" Link="Protos\securities.proto" />
+	<Protobuf Include="..\InvestLens.Data.Shared\Proto\Api\general_dictionaries.proto" GrpcServices="Client" Link="Protos\general_dictionaries.proto" />
   </ItemGroup>
 
 </Project>

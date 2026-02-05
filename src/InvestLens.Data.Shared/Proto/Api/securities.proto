@@ -1,32 +1,26 @@
 syntax = "proto3";
 
-package securities.api.v1;
+package investlens.moex.grpc;
 
-option csharp_namespace = "InvestLens.Data.Securities.Service";
+option csharp_namespace = "InvestLens.Grpc.Service";
 
 import "google/protobuf/wrappers.proto";
+import "common.proto";
 
 service SecurityServices {
-    rpc GetSecurities (GetSecuritiesRequest) returns (GetSecuritiesResponse);
-}
-
-message GetSecuritiesRequest {
-    int32 page = 1;
-    int32 pageSize = 2;
-    google.protobuf.StringValue sort = 3;
-    google.protobuf.StringValue filter = 4;
+    rpc GetSecurities (investlens.moex.grpc.GetPaginationRequest) returns (GetSecuritiesResponse);
 }
 
 message GetSecuritiesResponse {
     int32 page = 1;
     int32 pageSize = 2;
     int32 totalPages = 3;
-    int32 totlaItems = 4;
+    int32 totalItems = 4;
     repeated Security data = 5;
 }
 
 message Security {
-    google.protobuf.StringValue id = 1;
+    int32 id = 1;
     google.protobuf.StringValue sec_id = 2;
     google.protobuf.StringValue short_name = 3;
     google.protobuf.StringValue reg_number = 4;

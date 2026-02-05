@@ -2,13 +2,13 @@
 
 namespace InvestLens.Abstraction.DTOs;
 
-public class SecuritiesDto
+public abstract class BaseEntityDto<TEntity> where TEntity : BaseEntity
 {
     public int Page { get; set; }
     public int PageSize { get; set; }
     public int TotalPages { get; set; }
     public int TotalItems { get; set; }
-    public List<Security> Data { get; set; } = [];
+    public List<TEntity> Data { get; set; } = [];
     public string? CurrentSort { get; set; }
     public string? CurrentFilter { get; set; }
 }

@@ -1,0 +1,204 @@
+﻿@page
+@model InvestLens.Web.Pages.EnginesModel
+@{
+    ViewData["Title"] = "Справочник доступных рынков";
+}
+
+<div class="container mt-4">
+    <h2>Финансовые инструменты</h2>
+
+    <!-- Фильтрация -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-8">
+                    <input type="text" class="form-control" name="filter"
+                           value="@Model.CurrentFilter" placeholder="Поиск по названию, коду или типу...">
+                </div>
+                <div class="col-md-2">
+                    <select class="form-select" name="size">
+                        <option value="10" selected="@(Model.PageSize == 10)">10 записей</option>
+                        <option value="25" selected="@(Model.PageSize == 25)">25 записей</option>
+                        <option value="50" selected="@(Model.PageSize == 50)">50 записей</option>
+                        <option value="100" selected="@(Model.PageSize == 100)">100 записей</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">Поиск</button>
+                </div>
+                <input type="hidden" name="page" value="1">
+                <input type="hidden" name="sort" value="@Model.CurrentSort">
+            </form>
+        </div>
+    </div>
+
+    <!-- Таблица с сортировкой -->
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>
+                        <a href="@Model.GetSortUrl("Name")" class="text-white text-decoration-none">
+                            Код
+                            @if (Model.GetSortClass("Name") == "sort-asc")
+                            {
+                                <i class="fas fa-sort-up"></i>
+                            }
+                            else if (Model.GetSortClass("Name") == "sort-desc")
+                            {
+
+                                <i class="fas fa-sort-down"></i>
+                            }
+                            else
+                            {
+
+                                <i class="fas fa-sort"></i>
+                            }
+                        </a>
+                    </th>
+                    <th>
+                        <a href="@Model.GetSortUrl("Title")" class="text-white text-decoration-none">
+                            Краткое название
+                            @if (Model.GetSortClass("Title") == "sort-asc")
+                            {
+                                <i class="fas fa-sort-up"></i>
+                            }
+                            else if (Model.GetSortClass("Title") == "sort-desc")
+                            {
+
+                                <i class="fas fa-sort-down"></i>
+                            }
+                            else
+                            {
+
+                                <i class="fas fa-sort"></i>
+                            }
+                        </a>
+                    </th>
+                    <th>Действия</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.Engines)
+                {
+                    <tr>
+                        <td><strong>@(item.Name)</strong></td>
+                        <td>@(item.Title)</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary"
+                                    onclick="showDetails('@(item.Id)')">
+                                Подробнее
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Пагинация -->
+    @if (Model.TotalPages > 1)
+    {
+        <nav aria-label="Навигация по страницам">
+            <ul class="pagination justify-content-center">
+                <!-- Первая страница -->
+                <li class="page-item @(Model.CurrentPage == 1 ? "disabled" : "")">
+                    <a class="page-link" href="@GetPageUrl(1)" aria-label="Первая">
+                        <span aria-hidden="true">&laquo;&laquo;</span>
+                    </a>
+                </li>
+
+                <!-- Предыдущая страница -->
+                <li class="page-item @(Model.CurrentPage == 1 ? "disabled" : "")">
+                    <a class="page-link" href="@GetPageUrl(Model.CurrentPage - 1)" aria-label="Предыдущая">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+
+                <!-- Номера страниц -->
+                @for (int i = Math.Max(1, Model.CurrentPage - 2); i <= Math.Min(Model.TotalPages, Model.CurrentPage + 2); i++)
+                {
+                    <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
+                        <a class="page-link" href="@GetPageUrl(i)">@i</a>
+                    </li>
+                }
+
+                <!-- Следующая страница -->
+                <li class="page-item @(Model.CurrentPage == Model.TotalPages ? "disabled" : "")">
+                    <a class="page-link" href="@GetPageUrl(Model.CurrentPage + 1)" aria-label="Следующая">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+
+                <!-- Последняя страница -->
+                <li class="page-item @(Model.CurrentPage == Model.TotalPages ? "disabled" : "")">
+                    <a class="page-link" href="@GetPageUrl(Model.TotalPages)" aria-label="Последняя">
+                        <span aria-hidden="true">&raquo;&raquo;</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    }
+
+    <!-- Информация о пагинации -->
+    <div class="text-center text-muted mt-2">
+        Показано @(Math.Min((Model.CurrentPage - 1) * Model.PageSize + 1, Model.TotalItems).ToString("# ##0"))-@(Math.Min(Model.CurrentPage * Model.PageSize, Model.TotalItems).ToString("# ##0"))
+        из @Model.TotalItems.ToString("# ##0") записей
+    </div>
+</div>
+
+<style>
+    .table th {
+        background-color: #343a40;
+        color: white;
+    }
+
+    .table-hover tbody tr:hover {
+        background-color: rgba(0, 123, 255, 0.1);
+    }
+
+    .page-item.active .page-link {
+        background-color: #343a40;
+        border-color: #343a40;
+    }
+
+    .page-link {
+        color: #343a40;
+    }
+
+        .page-link:hover {
+            color: #000;
+        }
+
+    .sort-asc .fas,
+    .sort-desc .fas {
+        opacity: 1;
+    }
+
+    .fas.fa-sort {
+        opacity: 0.3;
+    }
+</style>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script>
+    function showDetails(id) {
+        // Реализация просмотра деталей
+        alert('Детали для ID: ' + id);
+    }
+</script>
+
+@functions {
+    private string GetPageUrl(int pageNumber)
+    {
+        var queryParams = new Dictionary<string, string>
+        {
+            { "page", pageNumber.ToString() },
+            { "size", Model.PageSize.ToString() },
+            { "filter", Model.CurrentFilter },
+            { "sort", Model.CurrentSort }
+        };
+
+        return $"/Engines?{string.Join("&", queryParams.Where(kv => !string.IsNullOrEmpty(kv.Value)).Select(kv => $"{kv.Key}={kv.Value}"))}";
+    }
+}

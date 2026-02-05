@@ -56,7 +56,10 @@ public static class Program
             builder.Services.AddSingleton<IPollyService, PollyService>();
             builder.Services.AddSingleton<IRabbitMqService, RabbitMqService>();
 
+            builder.Services.AddAutoMapper(_ => { }, typeof(Program).Assembly);
+
             builder.Services.AddScoped<ISecurityGrpcClientService, SecurityGrpcClientService>();
+            builder.Services.AddScoped<IGlobalDictionariesGrpcClientService, GlobalDictionariesGrpcClientService>();
 
             builder.Services.AddHealthChecks()
                 .AddUrlGroup(new Uri("https://investlens.worker:8081/health"),

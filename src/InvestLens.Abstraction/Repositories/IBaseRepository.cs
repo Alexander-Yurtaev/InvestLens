@@ -2,17 +2,11 @@
 
 namespace InvestLens.Abstraction.Repositories;
 
-public interface IBaseRepository<TEntity> where TEntity : BaseEntity
+public interface IBaseRepository<TEntity> : IBaseReadOnlyRepository<TEntity> where TEntity : BaseEntity
 {
     Task<TEntity> Add(TEntity entity, bool orUpdate = false);
 
     Task<int> Add(List<TEntity> entities, bool orUpdate = false);
-
-    Task<List<TEntity>> Get();
-
-    Task<IGetResult<TEntity>> Get(int page, int pageSize, string? sort, string? filter);
-
-    Task<TEntity?> Get(int id);
 
     Task<TEntity> Update(TEntity entity);
 

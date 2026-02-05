@@ -1,0 +1,187 @@
+syntax = "proto3";
+
+package investlens.moex.grpc;
+
+option csharp_namespace = "InvestLens.Grpc.Service";
+
+import "google/protobuf/wrappers.proto";
+import "common.proto";
+
+service GeneralDictionariesServices {
+    rpc GetEngines (investlens.moex.grpc.GetPaginationRequest) returns (GetEnginesResponse);
+    rpc GetMarkets (investlens.moex.grpc.GetPaginationRequest) returns (GetMarketsResponse);
+    rpc GetBoards (investlens.moex.grpc.GetPaginationRequest) returns (GetBoardsResponse);
+    rpc GetBoardGroups (investlens.moex.grpc.GetPaginationRequest) returns (GetBoardGroupsResponse);
+    rpc GetDurations (investlens.moex.grpc.GetPaginationRequest) returns (GetDurationsResponse);
+    rpc GetSecurityTypes (investlens.moex.grpc.GetPaginationRequest) returns (GetSecurityTypesResponse);
+    rpc GetSecurityGroups (investlens.moex.grpc.GetPaginationRequest) returns (GetSecurityGroupsResponse);
+    rpc GetSecurityCollections (investlens.moex.grpc.GetPaginationRequest) returns (GetSecurityCollectionsResponse);
+}
+
+// Engines
+
+message GetEnginesResponse {
+    int32 page = 1;
+    int32 pageSize = 2;
+    int32 totalPages = 3;
+    int32 totalItems = 4;
+    repeated Engine data = 5;
+}
+
+message Engine {
+    int32 id = 1;
+    google.protobuf.StringValue name = 2;
+    google.protobuf.StringValue title = 3;
+}
+
+// Markets
+
+message GetMarketsResponse {
+    int32 page = 1;
+    int32 pageSize = 2;
+    int32 totalPages = 3;
+    int32 totalItems = 4;
+    repeated Market data = 5;
+}
+
+message Market {
+    int32 id = 1;
+    google.protobuf.Int32Value tradeEngineId = 2;
+    google.protobuf.StringValue tradeEngineName = 3;
+    google.protobuf.StringValue tradeEngineTitle = 4;
+    google.protobuf.StringValue marketName = 5;
+    google.protobuf.StringValue marketTitle = 6;
+    google.protobuf.Int32Value marketId = 7;
+    google.protobuf.StringValue marketplace = 8;
+    bool isOtc = 9;
+    bool hasHistoryFiles = 10;
+    bool hasHistoryTradesFiles = 11;
+    bool hasTrades = 12;
+    bool hasHistory = 13;
+    bool hasCandles = 14;
+    bool hasOrderbook = 15;
+    bool hasTradingSession = 16;
+    bool hasExtraYields = 17;
+    bool hasDelay = 18;
+}
+
+// Boards
+
+message GetBoardsResponse {
+    int32 page = 1;
+    int32 pageSize = 2;
+    int32 totalPages = 3;
+    int32 totalItems = 4;
+    repeated Board data = 5;
+}
+
+message Board {
+    int32 id = 1;
+    int32 boardGroupId = 2;
+    int32 engineId = 3;
+    int32 marketId = 4;
+    google.protobuf.StringValue boardId = 5;
+    google.protobuf.StringValue boardTitle = 6;
+    bool isTraded = 7;
+    bool hasCandles = 8;
+    bool isPrimary = 9;
+}
+
+// BoardGroups
+
+message GetBoardGroupsResponse {
+    int32 page = 1;
+    int32 pageSize = 2;
+    int32 totalPages = 3;
+    int32 totalItems = 4;
+    repeated BoardGroup data = 5;
+}
+
+message BoardGroup {
+    int32 id = 1;
+    google.protobuf.Int32Value tradeEngineId = 2;
+    google.protobuf.StringValue tradeEngineName = 3;
+    google.protobuf.StringValue tradeEngineTitle = 4;
+    google.protobuf.Int32Value marketId = 5;
+    google.protobuf.StringValue marketName = 6;
+    google.protobuf.StringValue name = 7;
+    google.protobuf.StringValue title = 8;
+    bool isDefault = 9;
+    google.protobuf.Int32Value boardGroupId = 10;
+    bool isTraded = 11;
+    bool isOrderDriven = 12;
+    google.protobuf.StringValue category = 13;
+}
+
+// Durations
+
+message GetDurationsResponse {
+    int32 page = 1;
+    int32 pageSize = 2;
+    int32 totalPages = 3;
+    int32 totalItems = 4;
+    repeated Duration data = 5;
+}
+
+message Duration {
+    int32 interval = 1;
+    int32 durationValue = 2;
+    int32 days = 3;
+    google.protobuf.StringValue title = 4;
+    google.protobuf.StringValue hint = 5;
+}
+
+// SecurityTypes
+
+message GetSecurityTypesResponse {
+    int32 page = 1;
+    int32 pageSize = 2;
+    int32 totalPages = 3;
+    int32 totalItems = 4;
+    repeated SecurityType data = 5;
+}
+
+message SecurityType {
+    int32 id = 1;
+    google.protobuf.Int32Value tradeEngineId = 2;
+    google.protobuf.StringValue tradeEngineName = 3;
+    google.protobuf.StringValue tradeEngineTitle = 4;
+    google.protobuf.StringValue securityTypeName = 5;
+    google.protobuf.StringValue securityTypeTitle = 6;
+    google.protobuf.StringValue securityGroupName = 7;
+    google.protobuf.StringValue stockType = 8;
+}
+
+// SecurityGroups
+
+message GetSecurityGroupsResponse {
+    int32 page = 1;
+    int32 pageSize = 2;
+    int32 totalPages = 3;
+    int32 totalItems = 4;
+    repeated SecurityGroup data = 5;
+}
+
+message SecurityGroup {
+    int32 id = 1;
+    google.protobuf.StringValue name = 2;
+    google.protobuf.StringValue title = 3;
+    bool isHidden = 4;
+}
+
+// SecurityCollections
+
+message GetSecurityCollectionsResponse {
+    int32 page = 1;
+    int32 pageSize = 2;
+    int32 totalPages = 3;
+    int32 totalItems = 4;
+    repeated SecurityCollection data = 5;
+}
+
+message SecurityCollection {
+    int32 id = 1;
+    google.protobuf.StringValue name = 2;
+    google.protobuf.StringValue title = 3;
+    int32 securityGroupId = 4;
+}

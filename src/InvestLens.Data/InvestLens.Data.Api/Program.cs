@@ -74,10 +74,19 @@ public static class Program
 
             builder.Services.AddInvestLensDatabaseInfrastructure(builder.Configuration);
             builder.Services.AddScoped<ISecurityRepository, SecurityRepository>();
+            builder.Services.AddScoped<IEngineRepository, EngineRepository>();
+            builder.Services.AddScoped<IMarketRepository, MarketRepository>();
+            builder.Services.AddScoped<IBoardRepository, BoardRepository>();
+            builder.Services.AddScoped<IBoardGroupRepository, BoardGroupRepository>();
+            builder.Services.AddScoped<IDurationRepository, DurationRepository>();
+            builder.Services.AddScoped<ISecurityTypeRepository, SecurityTypeRepository>();
+            builder.Services.AddScoped<ISecurityGroupRepository, SecurityGroupRepository>();
+            builder.Services.AddScoped<ISecurityCollectionRepository, SecurityCollectionRepository>();
+
             builder.Services.AddScoped<IRefreshStatusRepository, RefreshStatusRepository>();
             
             builder.Services.AddScoped<IDataService, DataService>();
-            builder.Services.AddScoped<ISecurityDataService, SecurityDataService>();
+            builder.Services.AddScoped<IMoexDataService, MoexDataService>();
 
             // Регистрация с кэшированием
             builder.Services.AddMemoryCache();
@@ -168,6 +177,7 @@ public static class Program
             app.MapGet("/", () => "Data Service");
 
             app.MapGrpcService<SecurityGrpcService>();
+            app.MapGrpcService<GlobalDictionariesGrpcService>();
 
             await app.RunAsync();
         }

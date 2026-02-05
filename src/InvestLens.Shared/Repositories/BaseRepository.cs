@@ -8,92 +8,22 @@ using Polly;
 
 namespace InvestLens.Shared.Repositories;
 
-public abstract class BaseRepository<TEntity> : IBaseRepository<TEntity> where TEntity : BaseEntity
+public abstract class BaseReadOnlyRepository<TEntity> : IBaseReadOnlyRepository<TEntity> where TEntity : BaseEntity
 {
     protected readonly DbContext Context;
     protected readonly IPollyService PollyService;
     protected AsyncPolicy ResilientPolicy;
-    protected readonly ILogger<BaseRepository<TEntity>> Logger;
+    protected readonly ILogger<BaseReadOnlyRepository<TEntity>> Logger;
     protected readonly DbSet<TEntity> DbSet;
 
-    protected BaseRepository(DbContext context, IPollyService pollyService, ILogger<BaseRepository<TEntity>> logger)
+    protected BaseReadOnlyRepository(DbContext context, IPollyService pollyService, ILogger<BaseReadOnlyRepository<TEntity>> logger)
     {
         Context = context;
         PollyService = pollyService;
-        // ToDo изменить System.Net.Sockets.SocketException на более конкретный тип.
         ResilientPolicy = PollyService.GetResilientPolicy<System.Net.Sockets.SocketException>();
 
         DbSet = context.Set<TEntity>();
         Logger = logger;
-    }
-
-    public virtual async Task<TEntity> Add(TEntity entity, bool orUpdate = false)
-    {
-        try
-        {
-            if (orUpdate)
-            {
-                var savedEntity = await Get(entity.Id);
-                if (savedEntity is not null)
-                {
-                    await ResilientPolicy.ExecuteAsync(async () => await Task.FromResult(DbSet.Update(entity)));
-                }
-                else
-                {
-                    await ResilientPolicy.ExecuteAsync(async () => await Task.FromResult(DbSet.Add(entity)));
-                }
-            }
-            else
-            {
-                await ResilientPolicy.ExecuteAsync(async () => await Task.FromResult(DbSet.Add(entity)));
-            }
-
-            await ResilientPolicy.ExecuteAsync(async () => await Context.SaveChangesAsync());
-            return entity;
-        }
-        catch (Exception ex)
-        {
-            Logger.LogError(ex, "Ошибка при создании сущности Id: {Id}", entity.Id);
-            throw;
-        }
-    }
-
-    public virtual async Task<int> Add(List<TEntity> entities, bool orUpdate = false)
-    {
-        try
-        {
-            if (orUpdate)
-            {
-                foreach (var entity in entities)
-                {
-                    var savedEntity = await Get(entity.Id);
-                    if (savedEntity is not null)
-                    {
-                        await ResilientPolicy.ExecuteAsync(async () => await Task.FromResult(DbSet.Update(entity)));
-                    }
-                    else
-                    {
-                        await ResilientPolicy.ExecuteAsync(async () => await Task.FromResult(DbSet.Add(entity)));
-                    }
-                }
-            }
-            else
-            {
-                await ResilientPolicy.ExecuteAsync(async () =>
-                {
-                    DbSet.AddRange(entities);
-                    await Task.CompletedTask;
-                });
-            }
-
-            var affected = await ResilientPolicy.ExecuteAsync(async () => await Context.SaveChangesAsync());
-            return affected;
-        }
-        catch (Exception ex)
-        {
-            Logger.LogError(ex, "Ошибка при создании сущности");
-            throw;
-        }
     }
 
     public virtual async Task<List<TEntity>> Get()
@@ -172,6 +102,96 @@ public abstract class BaseRepository<TEntity> : IBaseRepository<TEntity> where T
         }
     }
 
+    #region Protected Methods
+
+    protected async Task<TEntity?> Find(int id, bool throwIfNotFound = false)
+    {
+        var entity = await ResilientPolicy.ExecuteAsync(async () => await DbSet.FindAsync(id));
+        if (entity is not null || !throwIfNotFound) return entity;
+
+        Logger.LogWarning("Сущность не найдена с Id: {Id}", id);
+        throw new KeyNotFoundException($"Entity not found.");
+    }
+
+    #endregion Protected Methods
+}
+
+public abstract class BaseRepository<TEntity> : BaseReadOnlyRepository<TEntity> where TEntity : BaseEntity
+{
+    protected BaseRepository(DbContext context, IPollyService pollyService, ILogger<BaseRepository<TEntity>> logger) :
+        base(context, pollyService, logger)
+    {
+    }
+
+    public virtual async Task<TEntity> Add(TEntity entity, bool orUpdate = false)
+    {
+        try
+        {
+            if (orUpdate)
+            {
+                var savedEntity = await Get(entity.Id);
+                if (savedEntity is not null)
+                {
+                    await ResilientPolicy.ExecuteAsync(async () => await Task.FromResult(DbSet.Update(entity)));
+                }
+                else
+                {
+                    await ResilientPolicy.ExecuteAsync(async () => await Task.FromResult(DbSet.Add(entity)));
+                }
+            }
+            else
+            {
+                await ResilientPolicy.ExecuteAsync(async () => await Task.FromResult(DbSet.Add(entity)));
+            }
+
+            await ResilientPolicy.ExecuteAsync(async () => await Context.SaveChangesAsync());
+            return entity;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Ошибка при создании сущности Id: {Id}", entity.Id);
+            throw;
+        }
+    }
+
+    public virtual async Task<int> Add(List<TEntity> entities, bool orUpdate = false)
+    {
+        try
+        {
+            if (orUpdate)
+            {
+                foreach (var entity in entities)
+                {
+                    var savedEntity = await Get(entity.Id);
+                    if (savedEntity is not null)
+                    {
+                        await ResilientPolicy.ExecuteAsync(async () => await Task.FromResult(DbSet.Update(entity)));
+                    }
+                    else
+                    {
+                        await ResilientPolicy.ExecuteAsync(async () => await Task.FromResult(DbSet.Add(entity)));
+                    }
+                }
+            }
+            else
+            {
+                await ResilientPolicy.ExecuteAsync(async () =>
+                {
+                    DbSet.AddRange(entities);
+                    await Task.CompletedTask;
+                });
+            }
+
+            var affected = await ResilientPolicy.ExecuteAsync(async () => await Context.SaveChangesAsync());
+            return affected;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Ошибка при создании сущности");
+            throw;
+        }
+    }
+
     public virtual async Task<TEntity> Update(TEntity entity)
     {
         try
@@ -214,17 +234,4 @@ public abstract class BaseRepository<TEntity> : IBaseRepository<TEntity> where T
             throw;
         }
     }
-
-    #region Private Methods
-
-    private async Task<TEntity?> Find(int id, bool throwIfNotFound = false)
-    {
-        var entity = await ResilientPolicy.ExecuteAsync(async () => await DbSet.FindAsync(id));
-        if (entity is not null || !throwIfNotFound) return entity;
-
-        Logger.LogWarning("Сущность не найдена с Id: {Id}", id);
-        throw new KeyNotFoundException($"Entity not found.");
-    }
-
-    #endregion Private Methods
 }
