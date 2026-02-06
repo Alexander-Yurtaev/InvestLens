@@ -1,0 +1,61 @@
+﻿@page
+@model InvestLens.Web.Pages.Dictionaries.SecurityCollectionsModel
+@{
+    Layout = "Shared/_DictionaryLayout";
+    ViewData["Title"] = "Справочник доступных Коллекций ценных бумаг";
+    ViewData["PageTitle"] = "Коллекции ценных бумаг (SecurityCollections)";
+}
+
+@section TableHeaders {
+    <th>
+        <a href="@Model.GetSortUrl("Name")" class="text-white text-decoration-none">
+            Название
+            @if (Model.GetSortClass("Name") == "sort-asc")
+            {
+                <i class="fas fa-sort-up"></i>
+            }
+            else if (Model.GetSortClass("Name") == "sort-desc")
+            {
+                <i class="fas fa-sort-down"></i>
+            }
+            else
+            {
+                <i class="fas fa-sort"></i>
+            }
+        </a>
+    </th>
+    <th>
+        <a href="@Model.GetSortUrl("Title")" class="text-white text-decoration-none">
+            Краткое название
+            @if (Model.GetSortClass("Title") == "sort-asc")
+            {
+                <i class="fas fa-sort-up"></i>
+            }
+            else if (Model.GetSortClass("Title") == "sort-desc")
+            {
+                <i class="fas fa-sort-down"></i>
+            }
+            else
+            {
+                <i class="fas fa-sort"></i>
+            }
+        </a>
+    </th>
+    <th>Действия</th>
+}
+
+@section TableRows {
+    @foreach (var item in Model.Entities)
+    {
+        <tr>
+            <td><strong>@item.Name</strong></td>
+            <td>@item.Title</td>
+            <td>
+                <button class="btn btn-sm btn-outline-primary"
+                        onclick="showDetails('@item.Id')">
+                    Подробнее
+                </button>
+            </td>
+        </tr>
+    }
+}
