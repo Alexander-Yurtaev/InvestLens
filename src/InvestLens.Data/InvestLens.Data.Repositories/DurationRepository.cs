@@ -26,6 +26,16 @@ public class DurationRepository : BaseReadOnlyRepository<Duration>, IDurationRep
 
         sort = sort.ToLower();
 
+        if (sort == nameof(Duration.Interval).ToLower())
+        {
+            return query.OrderBy(s => s.Interval);
+        }
+
+        if (sort == nameof(Duration.DurationValue).ToLower())
+        {
+            return query.OrderBy(s => s.DurationValue);
+        }
+
         if (sort == nameof(Duration.Title).ToLower())
         {
             return query.OrderBy(s => s.Title);

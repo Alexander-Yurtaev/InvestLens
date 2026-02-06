@@ -1,0 +1,79 @@
+﻿@page
+@model InvestLens.Web.Pages.Dictionaries.DurationsModel
+@{
+    Layout = "Shared/_DictionaryLayout";
+    ViewData["Title"] = "Справочник доступных Периодов";
+    ViewData["PageTitle"] = "Периоды (Durations)";
+}
+
+@section TableHeaders {
+    <th>
+        <a href="@Model.GetSortUrl("Interval")" class="text-white text-decoration-none">
+            Интервал
+            @if (Model.GetSortClass("Interval") == "sort-asc")
+            {
+                <i class="fas fa-sort-up"></i>
+            }
+            else if (Model.GetSortClass("Interval") == "sort-desc")
+            {
+                <i class="fas fa-sort-down"></i>
+            }
+            else
+            {
+                <i class="fas fa-sort"></i>
+            }
+        </a>
+    </th>
+    <th>
+        <a href="@Model.GetSortUrl("DurationValue")" class="text-white text-decoration-none">
+            Продолжительность
+            @if (Model.GetSortClass("DurationValue") == "sort-asc")
+            {
+                <i class="fas fa-sort-up"></i>
+            }
+            else if (Model.GetSortClass("DurationValue") == "sort-desc")
+            {
+                <i class="fas fa-sort-down"></i>
+            }
+            else
+            {
+                <i class="fas fa-sort"></i>
+            }
+        </a>
+    </th>
+    <th>
+        <a href="@Model.GetSortUrl("Title")" class="text-white text-decoration-none">
+            Краткое описание
+            @if (Model.GetSortClass("Title") == "sort-asc")
+            {
+                <i class="fas fa-sort-up"></i>
+            }
+            else if (Model.GetSortClass("Title") == "sort-desc")
+            {
+                <i class="fas fa-sort-down"></i>
+            }
+            else
+            {
+                <i class="fas fa-sort"></i>
+            }
+        </a>
+    </th>
+    <th>Действия</th>
+}
+
+@section TableRows {
+    @foreach (var item in Model.Entities)
+    {
+        <tr>
+            <td><strong>@item.Interval</strong></td>
+            <td>@item.DurationValue</td>
+            <td>@item.Title</td>
+            <td>
+                <button class="btn btn-sm btn-outline-primary"
+                        onclick="showDetails('@item.Id')">
+                    Подробнее
+                </button>
+            </td>
+        </tr>
+    }
+}
