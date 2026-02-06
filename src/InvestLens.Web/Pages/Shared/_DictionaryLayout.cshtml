@@ -149,6 +149,6 @@
             { "sort", Model.CurrentSort }
         };
 
-        return $"/{Model.Route}?{string.Join("&", queryParams.Where(kv => !string.IsNullOrEmpty(kv.Value)).Select(kv => $"{kv.Key}={kv.Value}"))}";
+        return $"/Dictionaries/{Model.Route}?{string.Join("&", queryParams.Where(kv => !string.IsNullOrEmpty(kv.Value)).Select(kv => $"{kv.Key}={kv.Value}"))}";
     }
 }

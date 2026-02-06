@@ -93,7 +93,7 @@ public abstract class DictionaryBasePage<TEntity> : PageModel
         if (!string.IsNullOrEmpty(sortOrder))
             queryParams["sort"] = sortOrder;
 
-        return $"/{Route}?{string.Join("&", queryParams.Select(kv => $"{kv.Key}={kv.Value}"))}";
+        return $"/Dictionaries/{Route}?{string.Join("&", queryParams.Select(kv => $"{kv.Key}={kv.Value}"))}";
     }
 
     #region Protected Methods

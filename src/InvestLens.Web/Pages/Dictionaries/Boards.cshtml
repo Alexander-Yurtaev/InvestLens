@@ -1,0 +1,43 @@
+﻿@page
+@model InvestLens.Web.Pages.Dictionaries.BoardsModel
+@{
+    Layout = "Shared/_DictionaryLayout";
+    ViewData["Title"] = "Справочник доступных рынков";
+    ViewData["PageTitle"] = "Торговые площадки (Boards)";
+}
+
+@section TableHeaders {
+    <th>
+        <a href="@Model.GetSortUrl("BoardTitle")" class="text-white text-decoration-none">
+            Краткое название
+            @if (Model.GetSortClass("BoardTitle") == "sort-asc")
+            {
+                <i class="fas fa-sort-up"></i>
+            }
+            else if (Model.GetSortClass("BoardTitle") == "sort-desc")
+            {
+                <i class="fas fa-sort-down"></i>
+            }
+            else
+            {
+                <i class="fas fa-sort"></i>
+            }
+        </a>
+    </th>
+    <th>Действия</th>
+}
+
+@section TableRows {
+    @foreach (var item in Model.Entities)
+    {
+        <tr>
+            <td><strong>@item.BoardTitle</strong></td>
+            <td>
+                <button class="btn btn-sm btn-outline-primary"
+                        onclick="showDetails('@item.Id')">
+                    Подробнее
+                </button>
+            </td>
+        </tr>
+    }
+}
