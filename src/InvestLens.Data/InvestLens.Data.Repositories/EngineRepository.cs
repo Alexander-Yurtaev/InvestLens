@@ -20,23 +20,13 @@ public class EngineRepository : BaseReadOnlyRepository<Engine>, IEngineRepositor
         return result.Data;
     }
 
-    protected override IEnumerable<Engine> GetSortAction(IEnumerable<Engine> query, string sort)
+    protected override Dictionary<string, Func<Engine, object>> GetSortSelectors()
     {
-        if (string.IsNullOrEmpty(sort)) return query;
-
-        sort = sort.ToLower();
-
-        if (sort == nameof(Engine.Name).ToLower())
+        return new Dictionary<string, Func<Engine, object>>
         {
-            return query.OrderBy(s => s.Name);
-        }
-
-        if (sort == nameof(Engine.Title).ToLower())
-        {
-            return query.OrderBy(s => s.Title);
-        }
-
-        return query;
+            {nameof(Engine.Name).ToLower(), e => e.Name},
+            {nameof(Engine.Title).ToLower(), e => e.Title},
+        };
     }
 
     protected override IQueryable<Engine> GetWhereCause(IQueryable<Engine> query, string filter)

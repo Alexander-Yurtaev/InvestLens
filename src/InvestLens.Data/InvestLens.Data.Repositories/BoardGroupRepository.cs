@@ -20,23 +20,13 @@ public class BoardGroupRepository : BaseReadOnlyRepository<BoardGroup>, IBoardGr
         return result.Data;
     }
 
-    protected override IEnumerable<BoardGroup> GetSortAction(IEnumerable<BoardGroup> query, string sort)
+    protected override Dictionary<string, Func<BoardGroup, object>> GetSortSelectors()
     {
-        if (string.IsNullOrEmpty(sort)) return query;
-
-        sort = sort.ToLower();
-
-        if (sort == nameof(BoardGroup.Name).ToLower())
+        return new Dictionary<string, Func<BoardGroup, object>>
         {
-            return query.OrderBy(s => s.Name);
-        }
-
-        if (sort == nameof(BoardGroup.Title).ToLower())
-        {
-            return query.OrderBy(s => s.Title);
-        }
-
-        return query;
+            {nameof(BoardGroup.Name).ToLower(), bg => bg.Name},
+            {nameof(BoardGroup.Title).ToLower(), bg => bg.Title},
+        };
     }
 
     protected override IQueryable<BoardGroup> GetWhereCause(IQueryable<BoardGroup> query, string filter)

@@ -48,7 +48,7 @@ public abstract class BaseReadOnlyRepository<TEntity> : IBaseReadOnlyRepository<
             {
                 var items = await DbSet.AsNoTracking().Filter(GetWhereCause, filter).ToListAsync();
                 var query = items
-                    .OrderByEx(GetSortAction, sort)
+                    .OrderByEx(ApplySorting, sort)
                     .Skip((page - 1) * pageSize)
                     .Take(pageSize);
 
@@ -73,10 +73,7 @@ public abstract class BaseReadOnlyRepository<TEntity> : IBaseReadOnlyRepository<
         }
     }
 
-    protected virtual IEnumerable<TEntity> GetSortAction(IEnumerable<TEntity> query, string sort)
-    {
-        return query;
-    }
+    protected virtual Dictionary<string, Func<TEntity, object>> GetSortSelectors() => new();
 
     protected virtual IQueryable<TEntity> GetWhereCause(IQueryable<TEntity> query, string filter)
     {
@@ -114,6 +111,33 @@ public abstract class BaseReadOnlyRepository<TEntity> : IBaseReadOnlyRepository<
     }
 
     #endregion Protected Methods
+
+    #region Private Methods
+
+    private IEnumerable<TEntity> ApplySorting(IEnumerable<TEntity> query, string sort)
+    {
+        if (string.IsNullOrEmpty(sort)) return query;
+
+        var isDesc = false;
+        sort = sort.ToLower();
+        if (sort.EndsWith("_desc"))
+        {
+            isDesc = true;
+            sort = sort.Substring(0, sort.Length - "desc".Length - 1);
+        }
+
+        foreach (var action in GetSortSelectors())
+        {
+            if (sort == action.Key.ToLower())
+            {
+                return isDesc ? query.OrderByDescending(action.Value) : query.OrderBy(action.Value);
+            }
+        }
+
+        return query;
+    }
+
+    #endregion Private Methods
 }
 
 public abstract class BaseRepository<TEntity> : BaseReadOnlyRepository<TEntity> where TEntity : BaseEntity

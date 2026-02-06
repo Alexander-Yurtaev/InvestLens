@@ -20,28 +20,14 @@ public class DurationRepository : BaseReadOnlyRepository<Duration>, IDurationRep
         return result.Data;
     }
 
-    protected override IEnumerable<Duration> GetSortAction(IEnumerable<Duration> query, string sort)
+    protected override Dictionary<string, Func<Duration, object>> GetSortSelectors()
     {
-        if (string.IsNullOrEmpty(sort)) return query;
-
-        sort = sort.ToLower();
-
-        if (sort == nameof(Duration.Interval).ToLower())
+        return new Dictionary<string, Func<Duration, object>>
         {
-            return query.OrderBy(s => s.Interval);
-        }
-
-        if (sort == nameof(Duration.DurationValue).ToLower())
-        {
-            return query.OrderBy(s => s.DurationValue);
-        }
-
-        if (sort == nameof(Duration.Title).ToLower())
-        {
-            return query.OrderBy(s => s.Title);
-        }
-
-        return query;
+            {nameof(Duration.Interval).ToLower(), d => d.Interval},
+            {nameof(Duration.DurationValue).ToLower(), d => d.DurationValue},
+            {nameof(Duration.Title).ToLower(), d => d.Title},
+        };
     }
 
     protected override IQueryable<Duration> GetWhereCause(IQueryable<Duration> query, string filter)

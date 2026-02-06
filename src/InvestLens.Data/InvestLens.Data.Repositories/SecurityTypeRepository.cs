@@ -20,18 +20,12 @@ public class SecurityTypeRepository : BaseReadOnlyRepository<SecurityType>, ISec
         return result.Data;
     }
 
-    protected override IEnumerable<SecurityType> GetSortAction(IEnumerable<SecurityType> query, string sort)
+    protected override Dictionary<string, Func<SecurityType, object>> GetSortSelectors()
     {
-        if (string.IsNullOrEmpty(sort)) return query;
-
-        sort = sort.ToLower();
-
-        if (sort == nameof(SecurityType.SecurityTypeName).ToLower())
+        return new Dictionary<string, Func<SecurityType, object>>
         {
-            return query.OrderBy(s => s.SecurityTypeName);
-        }
-
-        return query;
+            {nameof(SecurityType.SecurityTypeName).ToLower(), st => st.SecurityTypeName},
+        };
     }
 
     protected override IQueryable<SecurityType> GetWhereCause(IQueryable<SecurityType> query, string filter)

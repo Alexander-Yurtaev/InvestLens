@@ -20,23 +20,13 @@ public class MarketRepository : BaseReadOnlyRepository<Market>, IMarketRepositor
         return result.Data;
     }
 
-    protected override IEnumerable<Market> GetSortAction(IEnumerable<Market> query, string sort)
+    protected override Dictionary<string, Func<Market, object>> GetSortSelectors()
     {
-        if (string.IsNullOrEmpty(sort)) return query;
-
-        sort = sort.ToLower();
-
-        if (sort == nameof(Market.MarketName).ToLower())
+        return new Dictionary<string, Func<Market, object>>
         {
-            return query.OrderBy(s => s.MarketName);
-        }
-
-        if (sort == nameof(Market.MarketTitle).ToLower())
-        {
-            return query.OrderBy(s => s.MarketTitle);
-        }
-
-        return query;
+            {nameof(Market.MarketName).ToLower(), m => m.MarketName},
+            {nameof(Market.MarketTitle).ToLower(), m => m.MarketTitle},
+        };
     }
 
     protected override IQueryable<Market> GetWhereCause(IQueryable<Market> query, string filter)

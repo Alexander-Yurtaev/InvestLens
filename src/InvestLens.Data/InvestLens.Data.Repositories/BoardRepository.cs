@@ -20,18 +20,12 @@ public class BoardRepository : BaseReadOnlyRepository<Board>, IBoardRepository
         return result.Data;
     }
 
-    protected override IEnumerable<Board> GetSortAction(IEnumerable<Board> query, string sort)
+    protected override Dictionary<string, Func<Board, object>> GetSortSelectors()
     {
-        if (string.IsNullOrEmpty(sort)) return query;
-
-        sort = sort.ToLower();
-
-        if (sort == nameof(Board.BoardTitle).ToLower())
+        return new Dictionary<string, Func<Board, object>>
         {
-            return query.OrderBy(s => s.BoardTitle);
-        }
-
-        return query;
+            {nameof(Board.BoardTitle).ToLower(), b => b.BoardTitle}
+        };
     }
 
     protected override IQueryable<Board> GetWhereCause(IQueryable<Board> query, string filter)

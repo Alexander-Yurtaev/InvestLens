@@ -20,23 +20,13 @@ public class SecurityCollectionRepository : BaseReadOnlyRepository<SecurityColle
         return result.Data;
     }
 
-    protected override IEnumerable<SecurityCollection> GetSortAction(IEnumerable<SecurityCollection> query, string sort)
+    protected override Dictionary<string, Func<SecurityCollection, object>> GetSortSelectors()
     {
-        if (string.IsNullOrEmpty(sort)) return query;
-
-        sort = sort.ToLower();
-
-        if (sort == nameof(SecurityGroup.Name).ToLower())
+        return new Dictionary<string, Func<SecurityCollection, object>>
         {
-            return query.OrderBy(s => s.Name);
-        }
-
-        if (sort == nameof(SecurityGroup.Title).ToLower())
-        {
-            return query.OrderBy(s => s.Title);
-        }
-
-        return query;
+            {nameof(SecurityCollection.Name).ToLower(), sc => sc.Name},
+            {nameof(SecurityCollection.Title).ToLower(), sc => sc.Title},
+        };
     }
 
     protected override IQueryable<SecurityCollection> GetWhereCause(IQueryable<SecurityCollection> query, string filter)

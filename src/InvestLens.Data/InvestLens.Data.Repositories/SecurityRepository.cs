@@ -118,43 +118,17 @@ public class SecurityRepository : BaseRepository<Security>, ISecurityRepository
         return result.Data;
     }
 
-    protected override IEnumerable<Security> GetSortAction(IEnumerable<Security> query, string sort)
+    protected override Dictionary<string, Func<Security, object>> GetSortSelectors()
     {
-        if (string.IsNullOrEmpty(sort)) return query;
-        
-        sort = sort.ToLower();
-
-        if (sort == nameof(Security.SecId).ToLower())
+        return new Dictionary<string, Func<Security, object>>
         {
-            return query.OrderBy(s => s.SecId);
-        }
-
-        if (sort == nameof(Security.Name).ToLower())
-        {
-            return query.OrderBy(s => s.Name);
-        }
-        
-        if (sort == nameof(Security.ShortName).ToLower())
-        {
-            return query.OrderBy(s => s.ShortName);
-        }
-
-        if (sort == nameof(Security.Type).ToLower())
-        {
-            return query.OrderBy(s => s.Type);
-        }
-
-        if (sort == nameof(Security.Group).ToLower())
-        {
-            return query.OrderBy(s => s.Group);
-        }
-
-        if (sort == nameof(Security.IsTraded).ToLower())
-        {
-            return query.OrderBy(s => s.IsTraded);
-        }
-
-        return query;
+            {nameof(Security.SecId).ToLower(), s => s.SecId},
+            {nameof(Security.Name).ToLower(), s => s.Name},
+            {nameof(Security.ShortName).ToLower(), s => s.ShortName},
+            {nameof(Security.Type).ToLower(), s => s.Type},
+            {nameof(Security.Group).ToLower(), s => s.Group},
+            {nameof(Security.IsTraded).ToLower(), s => s.IsTraded},
+        };
     }
 
     protected override IQueryable<Security> GetWhereCause(IQueryable<Security> query, string filter)
