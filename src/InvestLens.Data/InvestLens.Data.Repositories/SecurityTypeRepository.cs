@@ -25,6 +25,7 @@ public class SecurityTypeRepository : BaseReadOnlyRepository<SecurityType>, ISec
         return new Dictionary<string, Func<SecurityType, object>>
         {
             {nameof(SecurityType.SecurityTypeName).ToLower(), st => st.SecurityTypeName},
+            {nameof(SecurityType.SecurityTypeTitle).ToLower(), st => st.SecurityTypeTitle},
         };
     }
 
@@ -33,7 +34,8 @@ public class SecurityTypeRepository : BaseReadOnlyRepository<SecurityType>, ISec
         if (!string.IsNullOrEmpty(filter))
         {
             filter = filter.ToUpper();
-            query = query.Where(s => s.SecurityTypeName.ToUpper().Contains(filter));
+            query = query.Where(s => s.SecurityTypeName.ToUpper().Contains(filter) ||
+                                     s.SecurityTypeTitle.ToUpper().Contains(filter));
         }
         return query;
     }
