@@ -67,10 +67,10 @@ public class MoexDataService : IMoexDataService
             EmitentOkpo = d.EmitentOkpo,
 
             Type = d.Type,
-            TypeTitle = types.FirstOrDefault(t => string.Equals(t.SecurityTypeName, d.Type, StringComparison.OrdinalIgnoreCase))?.SecurityTypeTitle ?? "Unknown",
+            TypeTitle = types.FirstOrDefault(t => string.Equals(t.SecurityTypeName, d.Type, StringComparison.OrdinalIgnoreCase))?.SecurityTypeTitle ?? d.Type,
 
             Group = d.Group,
-            GroupTitle = groups.FirstOrDefault(g => string.Equals(g.Name, d.Group, StringComparison.OrdinalIgnoreCase))?.Title ?? "Unknown",
+            GroupTitle = groups.FirstOrDefault(g => string.Equals(g.Name, d.Group, StringComparison.OrdinalIgnoreCase))?.Title ?? d.Group,
 
             PrimaryBoardId = d.PrimaryBoardId,
             MarketpriceBoardId = d.MarketpriceBoardId
