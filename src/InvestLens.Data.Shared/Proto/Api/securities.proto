@@ -9,7 +9,10 @@ import "common.proto";
 
 service SecurityServices {
     rpc GetSecurities (investlens.moex.grpc.GetPaginationRequest) returns (GetSecuritiesResponse);
+    rpc GetSecuritiesWithDetails (investlens.moex.grpc.GetPaginationRequest) returns (GetSecuritiesWithDetailsResponse);
 }
+
+// Securities
 
 message GetSecuritiesResponse {
     int32 page = 1;
@@ -35,4 +38,34 @@ message Security {
     google.protobuf.StringValue group = 13;
     google.protobuf.StringValue primary_board_id = 14;
     google.protobuf.StringValue marketprice_board_id = 15;
+}
+
+// SecurityWithDetails
+
+message GetSecuritiesWithDetailsResponse {
+    int32 page = 1;
+    int32 pageSize = 2;
+    int32 totalPages = 3;
+    int32 totalItems = 4;
+    repeated SecurityWithDetails data = 5;
+}
+
+message SecurityWithDetails {
+    int32 id = 1;
+    google.protobuf.StringValue sec_id = 2;
+    google.protobuf.StringValue short_name = 3;
+    google.protobuf.StringValue reg_number = 4;
+    google.protobuf.StringValue name = 5;
+    google.protobuf.StringValue isin = 6;
+    google.protobuf.BoolValue is_traded = 7;
+    google.protobuf.Int32Value emitent_id = 8;
+    google.protobuf.StringValue emitent_title = 9;
+    google.protobuf.StringValue emitent_inn = 10;
+    google.protobuf.StringValue emitent_okpo = 11;
+    google.protobuf.StringValue type = 12;
+    google.protobuf.StringValue type_title = 13;
+    google.protobuf.StringValue group = 14;
+    google.protobuf.StringValue group_title = 15;
+    google.protobuf.StringValue primary_board_id = 16;
+    google.protobuf.StringValue marketprice_board_id = 17;    
 }

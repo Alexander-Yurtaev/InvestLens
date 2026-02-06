@@ -19,4 +19,8 @@
     </PackageReference>
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\InvestLens.Data\InvestLens.Data.Entities\InvestLens.Data.Entities.csproj" />
+  </ItemGroup>
+
 </Project>

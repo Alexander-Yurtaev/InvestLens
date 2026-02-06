@@ -60,4 +60,47 @@ public class SecurityGrpcClientService : ISecurityGrpcClientService
             return null;
         }
     }
+
+    public async Task<SecurityWithDetailsDto?> GetSecuritiesWithDetailsAsync(int page, int pageSize, string? sort = "", string? filter = "")
+    {
+        try
+        {
+            using var channel = GrpcChannel.ForAddress(_grpcServiceAddress);
+            var client = new SecurityServices.SecurityServicesClient(channel);
+
+            var result = new SecurityWithDetailsDto();
+            var response = await client.GetSecuritiesWithDetailsAsync(new GetPaginationRequest() { Page = page, PageSize = pageSize, Sort = sort, Filter = filter });
+            result.Page = response.Page;
+            result.PageSize = response.PageSize;
+            result.TotalPages = response.TotalPages;
+            result.TotalItems = response.TotalItems;
+            result.Data = response.Data.Select(s => new Data.Shared.Models.SecurityWithDetails
+            {
+                Id = s.Id,
+                SecId = s.SecId ?? string.Empty,
+                ShortName = s.ShortName ?? string.Empty,
+                RegNumber = s.RegNumber ?? string.Empty,
+                Name = s.Name ?? string.Empty,
+                Isin = s.Isin ?? string.Empty,
+                IsTraded = s.IsTraded ?? false,
+                EmitentId = s.EmitentId ?? 0,
+                EmitentTitle = s.EmitentTitle ?? string.Empty,
+                EmitentInn = s.EmitentInn ?? string.Empty,
+                EmitentOkpo = s.EmitentOkpo ?? string.Empty,
+                Type = s.Type ?? string.Empty,
+                TypeTitle = s.TypeTitle ?? string.Empty,
+                Group = s.Group ?? string.Empty,
+                GroupTitle = s.GroupTitle ?? string.Empty,
+                PrimaryBoardId = s.PrimaryBoardId ?? string.Empty,
+                MarketpriceBoardId = s.MarketpriceBoardId ?? string.Empty
+            }).ToList();
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, ex.Message);
+            return null;
+        }
+    }
 }

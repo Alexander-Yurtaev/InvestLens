@@ -2,6 +2,8 @@
 using InvestLens.Abstraction.Services;
 using InvestLens.Data.Entities;
 using InvestLens.Data.Entities.Index;
+using InvestLens.Data.Shared.Models;
+using InvestLens.Shared.Repositories;
 
 namespace InvestLens.Data.Api.Services;
 
@@ -42,6 +44,47 @@ public class MoexDataService : IMoexDataService
     public async Task<IGetResult<Security>> GetSecurities(int page, int pageSize, string? sort = "", string? filter = "")
     {
         return await _securityRepository.Get(page, pageSize, sort, filter);
+    }
+
+    public async Task<IGetResult<SecurityWithDetails>> GetSecuritiesWithDetails(int page, int pageSize, string? sort = "", string? filter = "")
+    {
+        var types = await _securityTypeRepository.GetAll();
+        var groups = await _securityGroupRepository.GetAll();
+
+        var securities = await _securityRepository.Get(page, pageSize, sort, filter);
+        var data = securities.Data.Select(d => new SecurityWithDetails
+        {
+            Id = d.Id,
+            SecId = d.SecId,
+            ShortName = d.ShortName,
+            RegNumber = d.RegNumber,
+            Name = d.Name,
+            Isin = d.Isin,
+            IsTraded = d.IsTraded,
+            EmitentId = d.EmitentId,
+            EmitentTitle = d.EmitentTitle,
+            EmitentInn = d.EmitentInn,
+            EmitentOkpo = d.EmitentOkpo,
+
+            Type = d.Type,
+            TypeTitle = types.FirstOrDefault(t => string.Equals(t.SecurityTypeName, d.Type, StringComparison.OrdinalIgnoreCase))?.SecurityTypeTitle ?? "Unknown",
+
+            Group = d.Group,
+            GroupTitle = groups.FirstOrDefault(g => string.Equals(g.Name, d.Group, StringComparison.OrdinalIgnoreCase))?.Title ?? "Unknown",
+
+            PrimaryBoardId = d.PrimaryBoardId,
+            MarketpriceBoardId = d.MarketpriceBoardId
+        }).ToList();
+
+        var result = new GetResult<SecurityWithDetails>
+        {
+            Page = securities.Page,
+            PageSize = securities.PageSize,
+            TotalPages = securities.TotalPages,
+            TotalItems = securities.TotalItems,
+            Data = data
+        };
+        return result;
     }
 
     public async Task<IGetResult<Engine>> GetEngines(int page, int pageSize, string? sort = "", string? filter = "")

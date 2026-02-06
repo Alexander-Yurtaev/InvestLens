@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.ComponentModel;
 using System.Reflection;
+using InvestLens.Data.Shared.Models;
 
 namespace InvestLens.Web.Pages;
 
@@ -14,7 +15,7 @@ public class SecuritiesModel : PageModel
 
     public IEnumerable<string> Columns { get; set; } = [];
 
-    public List<Security> Securities { get; set; } = [];
+    public List<SecurityWithDetails> Securities { get; set; } = [];
 
     // Свойства для пагинации и сортировки
     public int CurrentPage { get; set; } = 1;
@@ -44,19 +45,19 @@ public class SecuritiesModel : PageModel
         CurrentFilter = filter ?? "";
 
         Columns = GetColumns();
-        var securitiesDto = await _service.GetSecuritiesAsync(CurrentPage, PageSize, sort, filter);
+        var securitiesWithDetailsDto = await _service.GetSecuritiesWithDetailsAsync(CurrentPage, PageSize, sort, filter);
 
-        if (securitiesDto is null)
+        if (securitiesWithDetailsDto is null)
         {
             _logger.LogWarning($"Метод {nameof(ISecurityGrpcClientService.GetSecuritiesAsync)} не вернул данные.");
         }
         else
         {
-            _logger.LogInformation("От gRPC-сервера получено {SecuritiesCount} записей.", securitiesDto.Data.Count);
+            _logger.LogInformation("От gRPC-сервера получено {SecuritiesCount} записей.", securitiesWithDetailsDto.Data.Count);
 
-            Securities = securitiesDto.Data;
-            TotalPages = securitiesDto.TotalPages;
-            TotalItems = securitiesDto.TotalItems;
+            Securities = securitiesWithDetailsDto.Data;
+            TotalPages = securitiesWithDetailsDto.TotalPages;
+            TotalItems = securitiesWithDetailsDto.TotalItems;
         }
             
         return Page();

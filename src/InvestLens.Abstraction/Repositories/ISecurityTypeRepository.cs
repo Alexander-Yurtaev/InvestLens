@@ -2,4 +2,7 @@
 
 namespace InvestLens.Abstraction.Repositories;
 
-public interface ISecurityTypeRepository : IBaseReadOnlyRepository<SecurityType>;
+public interface ISecurityTypeRepository : IBaseReadOnlyRepository<SecurityType>
+{
+    Task<IEnumerable<SecurityType>> GetAll();
+}

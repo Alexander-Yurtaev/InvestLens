@@ -1,8 +1,6 @@
-﻿using InvestLens.Data.Entities;
+﻿namespace InvestLens.Abstraction.Repositories;
 
-namespace InvestLens.Abstraction.Repositories;
-
-public interface IGetResult<TEntity> where TEntity : BaseEntity
+public interface IGetResult<TEntity> where TEntity : class
 {
     int Page { get; set; }
     int PageSize { get; set; }

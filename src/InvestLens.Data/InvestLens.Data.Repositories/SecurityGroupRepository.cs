@@ -3,6 +3,7 @@ using InvestLens.Abstraction.Services;
 using InvestLens.Data.DataContext;
 using InvestLens.Data.Entities.Index;
 using InvestLens.Shared.Repositories;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace InvestLens.Data.Repositories;
@@ -18,6 +19,20 @@ public class SecurityGroupRepository : BaseReadOnlyRepository<SecurityGroup>, IS
     {
         var result = await Get(1, 10);
         return result.Data;
+    }
+
+    public async Task<IEnumerable<SecurityGroup>> GetAll()
+    {
+        try
+        {
+            var entities = await ResilientPolicy.ExecuteAsync(async () => await DbSet.AsNoTracking().ToListAsync());
+            return entities;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Ошибка при получении списка сущностей");
+            throw;
+        }
     }
 
     protected override Dictionary<string, Func<SecurityGroup, object>> GetSortSelectors()

@@ -1,12 +1,16 @@
 ﻿using InvestLens.Abstraction.Repositories;
 using InvestLens.Data.Entities;
 using InvestLens.Data.Entities.Index;
+using InvestLens.Data.Shared.Models;
 
 namespace InvestLens.Abstraction.Services;
 
 public interface IMoexDataService
 {
     Task<IGetResult<Security>> GetSecurities(int page, int pageSize, string? sort = "", string? filter = "");
+
+    Task<IGetResult<SecurityWithDetails>> GetSecuritiesWithDetails(int page, int pageSize, string? sort = "",
+        string? filter = "");
 
     Task<IGetResult<Engine>> GetEngines(int page, int pageSize, string? sort = "", string? filter = "");
     Task<IGetResult<Market>> GetMarkets(int page, int pageSize, string? sort = "", string? filter = "");
