@@ -14,7 +14,14 @@ using SecurityCollection = InvestLens.Data.Entities.Index.SecurityCollection;
 
 namespace InvestLens.Web.Services;
 
-public class GlobalDictionariesGrpcClientService : IGlobalDictionariesGrpcClientService
+public class GlobalDictionariesGrpcClientService : IEngineDictionariesGrpcClientService, 
+                                                   IMarketDictionariesGrpcClientService,
+                                                   IBoardDictionariesGrpcClientService,
+                                                   IBoardGroupDictionariesGrpcClientService,
+                                                   IDurationDictionariesGrpcClientService,
+                                                   ISecurityTypeDictionariesGrpcClientService,
+                                                   ISecurityGroupDictionariesGrpcClientService,
+                                                   ISecurityCollectionDictionariesGrpcClientService
 {
     private readonly string _grpcServiceAddress;
     private readonly IMapper _mapper;
@@ -30,7 +37,7 @@ public class GlobalDictionariesGrpcClientService : IGlobalDictionariesGrpcClient
         _logger = logger;
     }
 
-    public async Task<EngineDto?> GetEnginesAsync(int page, int pageSize, string? sort = "", string? filter = "")
+    async Task<BaseEntityDto<Engine>?> IBaseDictionariesGrpcClientService<Engine>.GetEntitiesAsync(int page, int pageSize, string? sort, string? filter)
     {
         try
         {
@@ -55,7 +62,7 @@ public class GlobalDictionariesGrpcClientService : IGlobalDictionariesGrpcClient
         }
     }
 
-    public async Task<MarketDto?> GetMarketsAsync(int page, int pageSize, string? sort = "", string? filter = "")
+    async Task<BaseEntityDto<Market>?> IBaseDictionariesGrpcClientService<Market>.GetEntitiesAsync(int page, int pageSize, string? sort, string? filter)
     {
         try
         {
@@ -70,7 +77,7 @@ public class GlobalDictionariesGrpcClientService : IGlobalDictionariesGrpcClient
             result.TotalPages = response.TotalPages;
             result.TotalItems = response.TotalItems;
             result.Data = response.Data.Select(market => _mapper.Map<Market>(market)).ToList();
-            
+
             return result;
         }
         catch (Exception ex)
@@ -80,7 +87,7 @@ public class GlobalDictionariesGrpcClientService : IGlobalDictionariesGrpcClient
         }
     }
 
-    public async Task<BoardDto?> GetBoardsAsync(int page, int pageSize, string? sort = "", string? filter = "")
+    async Task<BaseEntityDto<Board>?> IBaseDictionariesGrpcClientService<Board>.GetEntitiesAsync(int page, int pageSize, string? sort, string? filter)
     {
         try
         {
@@ -105,7 +112,7 @@ public class GlobalDictionariesGrpcClientService : IGlobalDictionariesGrpcClient
         }
     }
 
-    public async Task<BoardGroupDto?> GetBoardGroupsAsync(int page, int pageSize, string? sort = "", string? filter = "")
+    async Task<BaseEntityDto<BoardGroup>?> IBaseDictionariesGrpcClientService<BoardGroup>.GetEntitiesAsync(int page, int pageSize, string? sort, string? filter)
     {
         try
         {
@@ -130,7 +137,7 @@ public class GlobalDictionariesGrpcClientService : IGlobalDictionariesGrpcClient
         }
     }
 
-    public async Task<DurationDto?> GetDurationsAsync(int page, int pageSize, string? sort = "", string? filter = "")
+    async Task<BaseEntityDto<Duration>?> IBaseDictionariesGrpcClientService<Duration>.GetEntitiesAsync(int page, int pageSize, string? sort, string? filter)
     {
         try
         {
@@ -155,7 +162,7 @@ public class GlobalDictionariesGrpcClientService : IGlobalDictionariesGrpcClient
         }
     }
 
-    public async Task<SecurityTypeDto?> GetSecurityTypesAsync(int page, int pageSize, string? sort = "", string? filter = "")
+    async Task<BaseEntityDto<SecurityType>?> IBaseDictionariesGrpcClientService<SecurityType>.GetEntitiesAsync(int page, int pageSize, string? sort, string? filter)
     {
         try
         {
@@ -180,7 +187,7 @@ public class GlobalDictionariesGrpcClientService : IGlobalDictionariesGrpcClient
         }
     }
 
-    public async Task<SecurityGroupDto?> GetSecurityGroupsAsync(int page, int pageSize, string? sort = "", string? filter = "")
+    async Task<BaseEntityDto<SecurityGroup>?> IBaseDictionariesGrpcClientService<SecurityGroup>.GetEntitiesAsync(int page, int pageSize, string? sort, string? filter)
     {
         try
         {
@@ -205,7 +212,7 @@ public class GlobalDictionariesGrpcClientService : IGlobalDictionariesGrpcClient
         }
     }
 
-    public async Task<SecurityCollectionDto?> GetSecurityCollectionsAsync(int page, int pageSize, string? sort = "", string? filter = "")
+    async Task<BaseEntityDto<SecurityCollection>?> IBaseDictionariesGrpcClientService<SecurityCollection>.GetEntitiesAsync(int page, int pageSize, string? sort, string? filter)
     {
         try
         {

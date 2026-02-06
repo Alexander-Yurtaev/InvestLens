@@ -59,7 +59,14 @@ public static class Program
             builder.Services.AddAutoMapper(_ => { }, typeof(Program).Assembly);
 
             builder.Services.AddScoped<ISecurityGrpcClientService, SecurityGrpcClientService>();
-            builder.Services.AddScoped<IGlobalDictionariesGrpcClientService, GlobalDictionariesGrpcClientService>();
+            builder.Services.AddScoped<IEngineDictionariesGrpcClientService, GlobalDictionariesGrpcClientService>();
+            builder.Services.AddScoped<IMarketDictionariesGrpcClientService, GlobalDictionariesGrpcClientService>();
+            builder.Services.AddScoped<IBoardDictionariesGrpcClientService, GlobalDictionariesGrpcClientService>();
+            builder.Services.AddScoped<IBoardGroupDictionariesGrpcClientService, GlobalDictionariesGrpcClientService>();
+            builder.Services.AddScoped<IDurationDictionariesGrpcClientService, GlobalDictionariesGrpcClientService>();
+            builder.Services.AddScoped<ISecurityTypeDictionariesGrpcClientService, GlobalDictionariesGrpcClientService>();
+            builder.Services.AddScoped<ISecurityGroupDictionariesGrpcClientService, GlobalDictionariesGrpcClientService>();
+            builder.Services.AddScoped<ISecurityCollectionDictionariesGrpcClientService, GlobalDictionariesGrpcClientService>();
 
             builder.Services.AddHealthChecks()
                 .AddUrlGroup(new Uri("https://investlens.worker:8081/health"),
