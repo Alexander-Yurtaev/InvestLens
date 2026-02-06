@@ -26,6 +26,7 @@ public class SecurityGroupRepository : BaseReadOnlyRepository<SecurityGroup>, IS
         {
             {nameof(SecurityGroup.Name).ToLower(), sg => sg.Name},
             {nameof(SecurityGroup.Title).ToLower(), sg => sg.Title},
+            {nameof(SecurityGroup.IsHidden).ToLower(), sg => sg.IsHidden},
         };
     }
 
