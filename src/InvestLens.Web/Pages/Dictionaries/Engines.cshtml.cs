@@ -2,7 +2,7 @@
 using InvestLens.Data.Entities.Index;
 using InvestLens.Web.Pages.Shared;
 
-namespace InvestLens.Web.Pages;
+namespace InvestLens.Web.Pages.Dictionaries;
 
 public class EnginesModel : DictionaryBasePage<Engine>
 {

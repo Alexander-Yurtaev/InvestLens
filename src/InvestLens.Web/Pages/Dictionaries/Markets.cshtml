@@ -1,0 +1,61 @@
+﻿@page
+@model InvestLens.Web.Pages.Dictionaries.MarketsModel
+@{
+    Layout = "Shared/_DictionaryLayout";
+    ViewData["Title"] = "Справочник доступных рынков";
+    ViewData["PageTitle"] = "Рынки (Markets)";
+}
+
+@section TableHeaders {
+    <th>
+        <a href="@Model.GetSortUrl("MarketName")" class="text-white text-decoration-none">
+            Код
+            @if (Model.GetSortClass("MarketName") == "sort-asc")
+            {
+                <i class="fas fa-sort-up"></i>
+            }
+            else if (Model.GetSortClass("MarketName") == "sort-desc")
+            {
+                <i class="fas fa-sort-down"></i>
+            }
+            else
+            {
+                <i class="fas fa-sort"></i>
+            }
+        </a>
+    </th>
+    <th>
+        <a href="@Model.GetSortUrl("MarketTitle")" class="text-white text-decoration-none">
+            Краткое название
+            @if (Model.GetSortClass("MarketTitle") == "sort-asc")
+            {
+                <i class="fas fa-sort-up"></i>
+            }
+            else if (Model.GetSortClass("MarketTitle") == "sort-desc")
+            {
+                <i class="fas fa-sort-down"></i>
+            }
+            else
+            {
+                <i class="fas fa-sort"></i>
+            }
+        </a>
+    </th>
+    <th>Действия</th>
+}
+
+@section TableRows {
+    @foreach (var item in Model.Entities)
+    {
+        <tr>
+            <td><strong>@item.MarketName</strong></td>
+            <td>@item.MarketTitle</td>
+            <td>
+                <button class="btn btn-sm btn-outline-primary"
+                        onclick="showDetails('@item.Id')">
+                    Подробнее
+                </button>
+            </td>
+        </tr>
+    }
+}

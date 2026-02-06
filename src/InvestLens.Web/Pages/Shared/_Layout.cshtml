@@ -26,9 +26,29 @@
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-page="Securities">Securities</a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-page="Engines">Engines</a>
+                        
+                        <!-- Выпадающее меню для Словарей -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle text-dark" href="#" id="dictionariesDropdown"
+                               role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                Словари
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="dictionariesDropdown">
+                                <li><a class="dropdown-item" asp-page="/Dictionaries/Engines">Торговые системы (Engines)</a></li>
+                                <li><a class="dropdown-item" asp-page="/Dictionaries/Markets">Рынки (Markets)</a></li>
+                                <li><a class="dropdown-item" asp-page="/Dictionaries/Boards">Торговые площадки (Boards)</a></li>
+                                <li><a class="dropdown-item" asp-page="/Dictionaries/BoardGroups">Группы площадок (Board Groups)</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" asp-page="/Dictionaries/SecurityTypes">Типы ценных бумаг</a></li>
+                                <li><a class="dropdown-item" asp-page="/Dictionaries/SecurityGroups">Группы ценных бумаг</a></li>
+                                <li><a class="dropdown-item" asp-page="/Dictionaries/SecurityCollections">Коллекции ценных бумаг</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" asp-page="/Dictionaries/Durations">Периоды (Durations)</a></li>
+                                <li><a class="dropdown-item" asp-page="/Dictionaries/Currencies">Валюты</a></li>
+                                <li><a class="dropdown-item" asp-page="/Dictionaries/Countries">Страны</a></li>
+                            </ul>
                         </li>
+
                         <li class="nav-item">
                             <a class="nav-link text-dark" href="https://localhost:5021/jobs">Worker service</a>
                         </li>
