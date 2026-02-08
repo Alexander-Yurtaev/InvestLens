@@ -19,21 +19,10 @@
 	<PackageReference Include="AspNetCore.HealthChecks.UI" />
 	<PackageReference Include="AspNetCore.HealthChecks.UI.Client" />
 	<PackageReference Include="AspNetCore.HealthChecks.UI.InMemory.Storage" />
-	<PackageReference Include="Hangfire.AspNetCore" />
 	<PackageReference Include="Hangfire.PostgreSql" />
 	<PackageReference Include="KubernetesClient" />
 	<PackageReference Include="Microsoft.AspNetCore.OpenApi" />
-	<PackageReference Include="Microsoft.Extensions.Options" />
-	<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
-	<PackageReference Include="CorrelationId" />
-  </ItemGroup>
-
-  <ItemGroup Label="Serilog">
-	<PackageReference Include="Serilog" />
-	<PackageReference Include="Serilog.Enrichers.CorrelationId" />
-	<PackageReference Include="Serilog.Extensions.Logging" />
-	<PackageReference Include="Serilog.AspNetCore" />
-	<PackageReference Include="Serilog.Sinks.File" />
+	<PackageReference Include="Microsoft.EntityFrameworkCore.Relational" />
 	<PackageReference Include="System.Text.Encodings.Web" />
   </ItemGroup>
 

@@ -11,17 +11,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="AutoMapper" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" />
     <PackageReference Include="System.Text.Encodings.Web" />
     <PackageReference Include="Yarp.ReverseProxy" />
   </ItemGroup>
 
-  <ItemGroup Label="Grpc">
-	<PackageReference Include="Grpc.AspNetCore" />
-	<PackageReference Include="Grpc.Net.Client" />
-  </ItemGroup>
-
   <ItemGroup>
-    <ProjectReference Include="..\InvestLens.Data\InvestLens.Data.Api\InvestLens.Data.Api.csproj" />
     <ProjectReference Include="..\InvestLens.Shared\InvestLens.Shared.csproj" />
   </ItemGroup>
 

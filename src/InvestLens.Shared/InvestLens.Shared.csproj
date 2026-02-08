@@ -8,12 +8,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AutoMapper" />
     <PackageReference Include="CorrelationId" />
     <PackageReference Include="DotNetEnv" />
-    <PackageReference Include="IdentityModel.OidcClient" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" />
     <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" />
-    <PackageReference Include="Microsoft.Extensions.Options" />
     <PackageReference Include="Newtonsoft.Json" />
   </ItemGroup>
 
@@ -41,18 +39,13 @@
 
   <ItemGroup Label="Serilog">
 	<PackageReference Include="Serilog" />
-	<PackageReference Include="Serilog.Extensions.Logging" />
 	<PackageReference Include="Serilog.AspNetCore" />
 	<PackageReference Include="Serilog.Sinks.File" />
   </ItemGroup>
 
   <ItemGroup Label="Hangfire">
 	<PackageReference Include="Hangfire.AspNetCore" />
-	<PackageReference Include="Hangfire.PostgreSql" />
-	<PackageReference Include="Microsoft.AspNetCore.OpenApi" />
 	<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
-	<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
-	<PackageReference Include="StackExchange.Redis" />
 	<PackageReference Include="System.Text.Encodings.Web" />
   </ItemGroup>
 
@@ -62,10 +55,8 @@
 
   <ItemGroup>
 	<Protobuf Include="Proto\Api\common.proto" GrpcServices="Both" />
-	<Protobuf Include="Proto\Api\general_dictionaries.proto" GrpcServices="Both"
-	          AdditionalImportDirs="Proto\Api" />
-	<Protobuf Include="Proto\Api\securities.proto" GrpcServices="Both"
-	          AdditionalImportDirs="Proto\Api" />
+	<Protobuf Include="Proto\Api\general_dictionaries.proto" GrpcServices="Both" AdditionalImportDirs="Proto\Api" />
+	<Protobuf Include="Proto\Api\securities.proto" GrpcServices="Both" AdditionalImportDirs="Proto\Api" />
   </ItemGroup>
 
 </Project>

@@ -13,27 +13,15 @@
 
   <ItemGroup>
 	<PackageReference Include="AspNetCore.HealthChecks.Uris" />
-	<PackageReference Include="AutoMapper" />
 	<PackageReference Include="IdentityModel" />
-	<PackageReference Include="CorrelationId" />
   </ItemGroup>
 
   <ItemGroup Label="Serilog">
-	<PackageReference Include="AspNetCore.HealthChecks.NpgSql" />
-	<PackageReference Include="AspNetCore.HealthChecks.Rabbitmq" />
-	<PackageReference Include="AspNetCore.HealthChecks.Redis" />
 	<PackageReference Include="AspNetCore.HealthChecks.UI" />
 	<PackageReference Include="AspNetCore.HealthChecks.UI.Client" />
 	<PackageReference Include="AspNetCore.HealthChecks.UI.InMemory.Storage" />
-	<PackageReference Include="AspNetCore.HealthChecks.UI.PostgreSQL.Storage" />
 	<PackageReference Include="KubernetesClient" />
 	<PackageReference Include="Microsoft.EntityFrameworkCore.Relational" />
-	<PackageReference Include="Microsoft.Extensions.DependencyModel" />
-	<PackageReference Include="Serilog" />
-	<PackageReference Include="Serilog.Extensions.Logging" />
-	<PackageReference Include="Serilog.Enrichers.CorrelationId" />
-	<PackageReference Include="Serilog.AspNetCore" />
-	<PackageReference Include="Serilog.Sinks.File" />
 	<PackageReference Include="System.Text.Encodings.Web" />
   </ItemGroup>
 

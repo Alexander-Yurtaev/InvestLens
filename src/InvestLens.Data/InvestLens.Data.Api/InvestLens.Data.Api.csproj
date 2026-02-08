@@ -16,34 +16,15 @@
 	<PackageReference Include="AspNetCore.HealthChecks.Rabbitmq" />
 	<PackageReference Include="AspNetCore.HealthChecks.Redis" />
 	<PackageReference Include="AspNetCore.HealthChecks.UI.Client" />
-	<PackageReference Include="CorrelationId" />
+	<PackageReference Include="AutoMapper" />
 	<PackageReference Include="Dapper" />
-  </ItemGroup>
-
-  <ItemGroup Label="Npgsql">
-	<PackageReference Include="Npgsql" />
-	<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
-  </ItemGroup>
-
-  <ItemGroup Label="Polly">
-	<PackageReference Include="Microsoft.Extensions.Http.Polly" />
-	<PackageReference Include="Polly" />
+	<PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+	<PackageReference Include="Microsoft.EntityFrameworkCore.Relational" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" />
-    <PackageReference Include="Microsoft.Extensions.DependencyModel" />
     <PackageReference Include="Polly.Caching.Memory" />
-  </ItemGroup>
-
-  <ItemGroup Label="Serilog">
-	<PackageReference Include="Serilog" />
-	<PackageReference Include="Serilog.Enrichers.CorrelationId" />
-	<PackageReference Include="Serilog.Extensions.Logging" />
-	<PackageReference Include="Serilog.AspNetCore" />
-	<PackageReference Include="Serilog.Sinks.File" />
-	<PackageReference Include="System.Text.Encodings.Web" />
+    <PackageReference Include="System.Text.Encodings.Web" />
   </ItemGroup>
 
   <ItemGroup>

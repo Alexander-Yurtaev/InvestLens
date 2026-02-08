@@ -11,17 +11,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AspNetCore.HealthChecks.UI.Client" />
-    <PackageReference Include="Microsoft.Extensions.Hosting" />
-    <PackageReference Include="Polly" />
-    <PackageReference Include="Microsoft.Extensions.Http.Polly" />
-    <PackageReference Include="CorrelationId" />
-    <PackageReference Include="Serilog.Enrichers.CorrelationId" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" />
     <PackageReference Include="System.Text.Encodings.Web" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\InvestLens.Abstraction\InvestLens.Abstraction.csproj" />
     <ProjectReference Include="..\InvestLens.Shared\InvestLens.Shared.csproj" />
   </ItemGroup>
 </Project>
