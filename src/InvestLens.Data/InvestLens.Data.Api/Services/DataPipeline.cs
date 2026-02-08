@@ -1,12 +1,12 @@
 ﻿using InvestLens.Abstraction.Redis.Services;
 using InvestLens.Data.Api.Converter;
 using InvestLens.Data.Entities;
-using InvestLens.Shared.Exceptions;
-using System.Collections.Concurrent;
-using System.Text.Json;
 using InvestLens.Data.Entities.Dictionaries;
 using InvestLens.Shared.Contracts.Responses;
+using InvestLens.Shared.Exceptions;
 using InvestLens.Shared.Interfaces.Services;
+using System.Collections.Concurrent;
+using System.Text.Json;
 
 namespace InvestLens.Data.Api.Services;
 
@@ -174,31 +174,6 @@ public abstract class DataPipeline<TEntity, TResponse> : IDataPipeline
         }
 
         _logger.LogInformation("Завершилась задача для сохранения данных.");
-    }
-
-    private async Task<Dictionary<string, ColumnMetadata>> DownloadMetadataAsync()
-    {
-        string url = $"/iss/securities.json?iss.data=off";
-        try
-        {
-            var response = await _httpClient.GetAsync(url);
-            response.EnsureSuccessStatusCode();
-
-            var json = await response.Content.ReadAsStringAsync();
-            var securitiesResponse = JsonSerializer.Deserialize<SecuritiesResponse>(json);
-
-            if (securitiesResponse is null)
-            {
-                throw new MoexApiException("Метаданные не пришли с MOEX.");
-            }
-
-            return securitiesResponse.Section.Metadata;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, ex.Message);
-            throw;
-        }
     }
 
     protected abstract string GetUrl(params int[] args);

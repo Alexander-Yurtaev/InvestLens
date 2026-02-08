@@ -5,7 +5,7 @@ using InvestLens.Shared.Interfaces.Services;
 using InvestLens.Shared.Models;
 using InvestLens.Shared.Models.Dictionaries;
 
-namespace InvestLens.Web.Services;
+namespace InvestLens.Gateway.Services;
 
 public class GlobalDictionariesGrpcClient : IEngineDictionariesGrpcClient, 
                                             IMarketDictionariesGrpcClient,

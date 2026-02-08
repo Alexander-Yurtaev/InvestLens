@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-using Google.Protobuf;
 using Google.Protobuf.Collections;
 using Grpc.Core;
 using InvestLens.Grpc.Service;

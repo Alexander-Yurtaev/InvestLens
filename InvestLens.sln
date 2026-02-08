@@ -61,6 +61,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "readme", "readme", "{EC20DA
 		docs\readme\mindmap.md = docs\readme\mindmap.md
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InvestLens.Gateway", "src\InvestLens.Gateway\InvestLens.Gateway.csproj", "{77EC7DD8-D59D-4BBC-BCD2-FFBF06EC40E0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -107,6 +109,10 @@ Global
 		{A0153B2D-021B-4C5A-A88B-3EAD0112DB3D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A0153B2D-021B-4C5A-A88B-3EAD0112DB3D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A0153B2D-021B-4C5A-A88B-3EAD0112DB3D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{77EC7DD8-D59D-4BBC-BCD2-FFBF06EC40E0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{77EC7DD8-D59D-4BBC-BCD2-FFBF06EC40E0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{77EC7DD8-D59D-4BBC-BCD2-FFBF06EC40E0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{77EC7DD8-D59D-4BBC-BCD2-FFBF06EC40E0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -124,6 +130,7 @@ Global
 		{A0153B2D-021B-4C5A-A88B-3EAD0112DB3D} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{393E1EF4-DFD4-4705-B84F-DEF20F6E1C94} = {A6408FA0-0BD2-4160-A3F2-B767A4929F36}
 		{EC20DA1F-8D9F-4591-9D52-502DCBA37D4F} = {A6408FA0-0BD2-4160-A3F2-B767A4929F36}
+		{77EC7DD8-D59D-4BBC-BCD2-FFBF06EC40E0} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {F09F387B-F917-4C4C-993B-B2E123B73E68}

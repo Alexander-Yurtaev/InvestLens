@@ -1,0 +1,6 @@
+@InvestLens.Gateway_HostAddress = http://localhost:5174
+
+GET {{InvestLens.Gateway_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

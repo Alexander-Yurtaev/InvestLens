@@ -1,4 +1,13 @@
 services:
+  investlens.gateway:
+    image: ${DOCKER_REGISTRY-}investlensgateway
+    container_name: investlens.gateway
+    environment:
+     - DATA_BASE_ADDRESS=https://investlens.data.api:8081
+    build:
+      context: .
+      dockerfile: src/InvestLens.Gateway/Dockerfile
+
   investlens.web:
     image: ${DOCKER_REGISTRY-}investlensweb
     container_name: investlens.web
@@ -120,3 +129,4 @@ services:
       - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD:-rabbitmq}
       - RABBITMQ_DEFAULT_VHOST=${RABBITMQ_VHOST:-/}
     restart: unless-stopped
+

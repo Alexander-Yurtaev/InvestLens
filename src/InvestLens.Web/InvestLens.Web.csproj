@@ -14,12 +14,6 @@
   <ItemGroup>
 	<PackageReference Include="AspNetCore.HealthChecks.Uris" />
 	<PackageReference Include="AutoMapper" />
-	<PackageReference Include="Google.Protobuf" />
-	<PackageReference Include="Grpc.Net.Client" />
-	<PackageReference Include="Grpc.Tools">
-	  <PrivateAssets>all</PrivateAssets>
-	  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-	</PackageReference>
 	<PackageReference Include="IdentityModel" />
 	<PackageReference Include="CorrelationId" />
   </ItemGroup>
@@ -43,13 +37,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\InvestLens.Gateway\InvestLens.Gateway.csproj" />
     <ProjectReference Include="..\InvestLens.Shared\InvestLens.Shared.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-	<Protobuf Include="..\InvestLens.Shared\Proto\Api\common.proto" GrpcServices="None" Link="Protos\common.proto" />
-	<Protobuf Include="..\InvestLens.Shared\Proto\Api\securities.proto" GrpcServices="Client" Link="Protos\securities.proto" />
-	<Protobuf Include="..\InvestLens.Shared\Proto\Api\general_dictionaries.proto" GrpcServices="Client" Link="Protos\general_dictionaries.proto" />
   </ItemGroup>
 
 </Project>

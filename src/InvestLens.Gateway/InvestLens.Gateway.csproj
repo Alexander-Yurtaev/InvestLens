@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>4b8a034c-8b71-4ee2-aced-269c3d492ca4</UserSecretsId>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    <DockerfileContext>..\..</DockerfileContext>
+    <DockerComposeProjectPath>..\..\docker-compose.dcproj</DockerComposeProjectPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Grpc.AspNetCore" />
+    <PackageReference Include="Grpc.Net.Client" />
+    <PackageReference Include="Yarp.ReverseProxy" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\InvestLens.Shared\InvestLens.Shared.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+	<Protobuf Include="..\InvestLens.Shared\Proto\Api\common.proto" GrpcServices="None" Link="Protos\common.proto" />
+	<Protobuf Include="..\InvestLens.Shared\Proto\Api\securities.proto" GrpcServices="Client" Link="Protos\securities.proto" />
+	<Protobuf Include="..\InvestLens.Shared\Proto\Api\general_dictionaries.proto" GrpcServices="Client" Link="Protos\general_dictionaries.proto" />
+  </ItemGroup>
+
+</Project>

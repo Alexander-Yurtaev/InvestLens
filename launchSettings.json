@@ -8,7 +8,8 @@
         "investlens.data.api": "StartDebugging",
         "investlens.worker": "StartDebugging",
         "investlens.hangfiredashboard": "StartDebugging",
-        "investlens.telegrambot": "StartDebugging"
+        "investlens.telegrambot": "StartDebugging",
+        "investlens.gateway": "StartDebugging"
       }
     }
   }

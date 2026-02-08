@@ -1,7 +1,9 @@
 ﻿using CorrelationId;
 using CorrelationId.Abstractions;
 using CorrelationId.DependencyInjection;
+using CorrelationId.HttpClient;
 using HealthChecks.UI.Client;
+using InvestLens.Gateway.Services;
 using InvestLens.Shared.Constants;
 using InvestLens.Shared.Extensions;
 using InvestLens.Shared.Helpers;
@@ -9,10 +11,10 @@ using InvestLens.Shared.Interfaces.Services;
 using InvestLens.Shared.Services;
 using InvestLens.Shared.Services.RabbitMq;
 using InvestLens.Shared.Validators;
-using InvestLens.Web.Services;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Serilog;
 using Serilog.Context;
+using System.Net;
 
 namespace InvestLens.Web;
 
@@ -94,6 +96,25 @@ public static class Program
                     setup.DisableDatabaseMigrations();
                 })
                 .AddInMemoryStorage();
+
+            builder.Services.AddHttpClient("DataApiClient", client =>
+                {
+                    var baseAddress = builder.Configuration["GatewayAddress"];
+                    if (string.IsNullOrEmpty(baseAddress)) throw new InvalidOperationException("Сервис не настроен.");
+                    client.BaseAddress = new Uri(baseAddress);
+                })
+                .AddCorrelationIdForwarding()
+                .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+                {
+                    // Используем HTTP/2 при поддержке сервером
+                    AllowAutoRedirect = true,
+                    AutomaticDecompression = DecompressionMethods.All,
+
+                    // Для HTTP/2 с TLS (HTTPS)
+                    SslProtocols = System.Security.Authentication.SslProtocols.Tls12 | System.Security.Authentication.SslProtocols.Tls13
+                })
+                .AddPolicyHandler((provider, _) => provider.GetService<IPollyService>()!.GetHttpRetryPolicy())
+                .AddPolicyHandler((provider, _) => provider.GetService<IPollyService>()!.GetHttpCircuitBreakerPolicy());
 
             var app = builder.Build();
 

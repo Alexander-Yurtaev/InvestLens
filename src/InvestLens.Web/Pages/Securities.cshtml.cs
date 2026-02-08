@@ -5,12 +5,13 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.ComponentModel;
 using System.Reflection;
+using System.Text.Json;
 
 namespace InvestLens.Web.Pages;
 
 public class SecuritiesModel : PageModel
 {
-    private readonly ISecurityGrpcClient _service;
+    private readonly IHttpClientFactory _httpFactory;
     private readonly ILogger<SecuritiesModel> _logger;
 
     public IEnumerable<string> Columns { get; set; } = [];
@@ -26,9 +27,9 @@ public class SecuritiesModel : PageModel
     public string CurrentFilter { get; set; } = "";
     public Dictionary<string, string> SortColumns { get; set; } = new();
 
-    public SecuritiesModel(ISecurityGrpcClient service, ILogger<SecuritiesModel> logger)
+    public SecuritiesModel(IHttpClientFactory httpFactory, ILogger<SecuritiesModel> logger)
     {
-        _service = service;
+        _httpFactory = httpFactory;
         _logger = logger;
         InitializeSortColumns();
     }
@@ -45,24 +46,40 @@ public class SecuritiesModel : PageModel
         CurrentFilter = filter ?? "";
 
         Columns = GetColumns();
+        // ToDo разобраться в путях для HttpClient
+        var client = _httpFactory.CreateClient("DataApiClient");
         try
         {
-            var securitiesWithDetailsDto =
-                await _service.GetSecuritiesWithDetailsAsync(CurrentPage, PageSize, sort, filter);
+            var response =
+                await client.GetAsync($"api/data/securities?page={CurrentPage}&pageSize={PageSize}&sort={sort}&filter={filter}");
 
-            if (securitiesWithDetailsDto is null)
+            if (response.IsSuccessStatusCode)
             {
-                _logger.LogWarning("Метод {Method} не вернул данные.", nameof(ISecurityGrpcClient.GetSecuritiesWithDetailsAsync));
-                TempData["Warning"] = "Список ценных бумаг пуст.";
+                var json = await response.Content.ReadAsStringAsync();
+
+                var options = new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                };
+                var model = JsonSerializer.Deserialize<SecurityWithDetailsModelWithPagination>(json, options);
+
+                if (model is null)
+                {
+                    _logger.LogWarning("Метод {Method} не вернул данные.", nameof(ISecurityGrpcClient.GetSecuritiesWithDetailsAsync));
+                    TempData["Warning"] = "Список ценных бумаг пуст.";
+                }
+                else
+                {
+                    _logger.LogInformation("От gRPC-сервера получено {SecuritiesCount} записей.", model.Models.Count);
+
+                    Securities = model.Models;
+                    TotalPages = model.TotalPages;
+                    TotalItems = model.TotalItems;
+                }
             }
             else
             {
-                _logger.LogInformation("От gRPC-сервера получено {SecuritiesCount} записей.",
-                    securitiesWithDetailsDto.Models.Count);
-
-                Securities = securitiesWithDetailsDto.Models;
-                TotalPages = securitiesWithDetailsDto.TotalPages;
-                TotalItems = securitiesWithDetailsDto.TotalItems;
+                _logger.LogError("Failed to get securities. Status: {StatusCode}", response.StatusCode);
             }
         }
         catch (RpcException ex)
