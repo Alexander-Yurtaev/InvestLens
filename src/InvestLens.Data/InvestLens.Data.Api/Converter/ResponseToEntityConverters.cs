@@ -1,8 +1,9 @@
 ﻿using InvestLens.Data.Entities;
-using InvestLens.Data.Entities.Index;
-using InvestLens.Data.Shared.Responses;
-using InvestLens.Shared.Helpers;
 using System.Text.Json;
+using InvestLens.Data.Entities.Dictionaries;
+using InvestLens.Grpc.Service;
+using InvestLens.Shared.Contracts.Responses;
+using InvestLens.Shared.Helpers;
 
 namespace InvestLens.Data.Api.Converter;
 
@@ -13,14 +14,14 @@ public static class ResponseToEntityConverters
         return response switch
         {
             SecuritiesResponse securitiesResponse => SecurityResponseToEntityConverter(securitiesResponse, page, pageSize),
-            EngineIndexDataResponse engineIndexDataResponse => SectionIndexDataResponseToEntityConverter<Engine>(engineIndexDataResponse.Section),
-            MarketIndexDataResponse marketIndexDataResponse => SectionIndexDataResponseToEntityConverter<Market>(marketIndexDataResponse.Section),
-            BoardIndexDataResponse boardIndexDataResponse => SectionIndexDataResponseToEntityConverter<Board>(boardIndexDataResponse.Section),
-            BoardGroupIndexDataResponse boardGroupIndexDataResponse => SectionIndexDataResponseToEntityConverter<BoardGroup>(boardGroupIndexDataResponse.Section),
-            DurationIndexDataResponse durationIndexDataResponse => SectionIndexDataResponseToEntityConverter<Duration>(durationIndexDataResponse.Section),
-            SecurityTypeIndexDataResponse securityTypeIndexDataResponse => SectionIndexDataResponseToEntityConverter<SecurityType>(securityTypeIndexDataResponse.Section),
-            SecurityGroupIndexDataResponse securityGroupIndexDataResponse => SectionIndexDataResponseToEntityConverter<SecurityGroup>(securityGroupIndexDataResponse.Section),
-            SecurityCollectionIndexDataResponse securityCollectionIndexDataResponse => SectionIndexDataResponseToEntityConverter<SecurityCollection>(securityCollectionIndexDataResponse.Section),
+            EngineDictionaryDataResponse engineIndexDataResponse => SectionIndexDataResponseToEntityConverter<EngineEntity>(engineIndexDataResponse.Section),
+            MarketDictionaryDataResponse marketIndexDataResponse => SectionIndexDataResponseToEntityConverter<MarketEntity>(marketIndexDataResponse.Section),
+            BoardDictionaryDataResponse boardIndexDataResponse => SectionIndexDataResponseToEntityConverter<BoardEntity>(boardIndexDataResponse.Section),
+            BoardGroupDictionaryDataResponse boardGroupIndexDataResponse => SectionIndexDataResponseToEntityConverter<BoardGroupEntity>(boardGroupIndexDataResponse.Section),
+            DurationDictionaryDataResponse durationIndexDataResponse => SectionIndexDataResponseToEntityConverter<DurationEntity>(durationIndexDataResponse.Section),
+            SecurityTypeDictionaryDataResponse securityTypeIndexDataResponse => SectionIndexDataResponseToEntityConverter<SecurityTypeEntity>(securityTypeIndexDataResponse.Section),
+            SecurityGroupDictionaryDataResponse securityGroupIndexDataResponse => SectionIndexDataResponseToEntityConverter<SecurityGroupEntity>(securityGroupIndexDataResponse.Section),
+            SecurityCollectionDictionaryDataResponse securityCollectionIndexDataResponse => SectionIndexDataResponseToEntityConverter<SecurityCollectionEntity>(securityCollectionIndexDataResponse.Section),
             _ => throw new ArgumentException($"Unknown response type: {response.GetType()}")
         };
     }
@@ -29,11 +30,11 @@ public static class ResponseToEntityConverters
 
     private static List<BaseEntity> SecurityResponseToEntityConverter(SecuritiesResponse securitiesResponse, int page, int pageSize)
     {
-        var result = new List<Security>();
+        var result = new List<SecurityEntity>();
 
         foreach (object[] row in securitiesResponse.Section.Data)
         {
-            var security = new SecurityEx
+            var security = new SecurityEntityWithPageInfo
             {
                 Page = page,
                 PageSize = pageSize
@@ -59,7 +60,7 @@ public static class ResponseToEntityConverters
         return result.Cast<BaseEntity>().ToList();
     }
 
-    private static List<BaseEntity> SectionIndexDataResponseToEntityConverter<TEntity>(Section section) where TEntity : IndexBaseEntity
+    private static List<BaseEntity> SectionIndexDataResponseToEntityConverter<TEntity>(Section section) where TEntity : DictionaryBaseEntity
     {
         var result = new List<TEntity>();
 

@@ -1,19 +1,25 @@
-﻿using Grpc.Core;
-using InvestLens.Abstraction.Services;
+﻿using AutoMapper;
+using Google.Protobuf;
+using Google.Protobuf.Collections;
+using Grpc.Core;
 using InvestLens.Grpc.Service;
+using InvestLens.Shared.Interfaces.Services;
 
 namespace InvestLens.Data.Api.Services;
 
 public class SecurityGrpcService : SecurityServices.SecurityServicesBase
 {
-    private readonly IMoexDataService _moexService;
+    private readonly IMoexDataReaderService _moexReaderService;
+    private readonly IMapper _mapper;
     private readonly ILogger<SecurityGrpcService> _logger;
 
     public SecurityGrpcService(
-        IMoexDataService moexService,
+        IMoexDataReaderService moexReaderService,
+        IMapper mapper,
         ILogger<SecurityGrpcService> logger)
     {
-        _moexService = moexService;
+        _moexReaderService = moexReaderService;
+        _mapper = mapper;
         _logger = logger;
     }
 
@@ -21,33 +27,16 @@ public class SecurityGrpcService : SecurityServices.SecurityServicesBase
     {
         try
         {
-            var securities = await _moexService.GetSecurities(request.Page, request.PageSize, request.Sort, request.Filter);
+            var securities = await _moexReaderService.GetSecurities(request.Page, request.PageSize, request.Sort, request.Filter);
             var response = new GetSecuritiesResponse
             {
                 Page = securities.Page,
                 PageSize = securities.PageSize,
                 TotalPages = securities.TotalPages,
-                TotalItems = securities.TotalItems
+                TotalItems = securities.TotalItems,
             };
 
-            response.Data.AddRange(securities.Data.Select(s => new Security
-            {
-                Id = s.Id,
-                SecId = s.SecId,
-                ShortName = s.ShortName,
-                RegNumber = s.RegNumber, 
-                Name = s.Name,
-                Isin = s.Isin,
-                IsTraded = s.IsTraded,
-                EmitentId = s.EmitentId ?? 0,
-                EmitentTitle = s.EmitentTitle,
-                EmitentInn = s.EmitentInn,
-                EmitentOkpo = s.EmitentOkpo,
-                Type = s.Type,
-                Group = s.Group,
-                PrimaryBoardId = s.PrimaryBoardId,
-                MarketpriceBoardId = s.MarketpriceBoardId
-            }));
+            response.Data.AddRange(_mapper.Map<RepeatedField<Security>>(securities.Models));
 
             return response;
         }
@@ -62,7 +51,10 @@ public class SecurityGrpcService : SecurityServices.SecurityServicesBase
     {
         try
         {
-            var securities = await _moexService.GetSecuritiesWithDetails(request.Page, request.PageSize, request.Sort, request.Filter);
+            var securities =
+                await _moexReaderService.GetSecuritiesWithDetails(request.Page, request.PageSize, request.Sort,
+                    request.Filter);
+
             var response = new GetSecuritiesWithDetailsResponse()
             {
                 Page = securities.Page,
@@ -71,7 +63,7 @@ public class SecurityGrpcService : SecurityServices.SecurityServicesBase
                 TotalItems = securities.TotalItems
             };
 
-            response.Data.AddRange(securities.Data.Select(s => new SecurityWithDetails
+            response.Data.AddRange(securities.Models.Select(s => new SecurityWithDetails
             {
                 Id = s.Id,
                 SecId = s.SecId,

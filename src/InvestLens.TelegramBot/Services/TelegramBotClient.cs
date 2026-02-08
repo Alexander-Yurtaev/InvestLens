@@ -1,10 +1,11 @@
-﻿using InvestLens.Abstraction.Services;
-using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Options;
 using System.Net.Http.Json;
+using InvestLens.Abstraction.Telegram.Models;
+using InvestLens.Shared.Interfaces.Services;
 
 namespace InvestLens.TelegramBot.Services;
 
-using InvestLens.Abstraction.Models.Telegram;
+using InvestLens.Abstraction.Telegram.Services;
 using Models;
 using System.Threading;
 

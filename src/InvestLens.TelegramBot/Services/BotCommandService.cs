@@ -1,7 +1,8 @@
 ﻿using InvestLens.Abstraction.Redis.Enums;
 using InvestLens.Abstraction.Redis.Services;
-using InvestLens.Abstraction.Services;
+using InvestLens.Abstraction.Telegram.Services;
 using InvestLens.Shared.Extensions;
+using InvestLens.Shared.Interfaces.Services;
 using Serilog.Context;
 
 namespace InvestLens.TelegramBot.Services;

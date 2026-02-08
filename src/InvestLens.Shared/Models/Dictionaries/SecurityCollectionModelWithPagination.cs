@@ -1,0 +1,3 @@
+﻿namespace InvestLens.Shared.Models.Dictionaries;
+
+public class SecurityCollectionModelWithPagination : BaseModelWithPagination<SecurityCollectionModel>;

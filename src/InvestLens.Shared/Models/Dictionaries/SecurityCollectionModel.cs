@@ -1,0 +1,7 @@
+﻿namespace InvestLens.Shared.Models.Dictionaries;
+
+public class SecurityCollectionModel : BaseModel
+{
+    public string Name { get; set; } = string.Empty;
+    public string Title { get; set; } = string.Empty;
+}

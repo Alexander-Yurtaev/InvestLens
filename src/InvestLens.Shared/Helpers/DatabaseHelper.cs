@@ -1,5 +1,4 @@
-﻿using InvestLens.Abstraction.Services;
-using InvestLens.Shared.Validators;
+﻿using InvestLens.Shared.Validators;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -10,6 +9,7 @@ using Serilog;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Net.Sockets;
 using System.Reflection;
+using InvestLens.Shared.Interfaces.Services;
 
 namespace InvestLens.Shared.Helpers;
 

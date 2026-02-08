@@ -1,5 +1,5 @@
 ﻿using InvestLens.Data.Entities;
-using InvestLens.Data.Entities.Index;
+using InvestLens.Data.Entities.Dictionaries;
 using Microsoft.EntityFrameworkCore;
 
 namespace InvestLens.Data.DataContext;
@@ -10,11 +10,11 @@ public class InvestLensDataContext : DbContext
     {
     }
 
-    public DbSet<Security> Securities { get; set; }
-    public DbSet<Engine> Engines { get; set; }
-    public DbSet<Market> Markets { get; set; }
+    public DbSet<SecurityEntity> Securities { get; set; }
+    public DbSet<EngineEntity> Engines { get; set; }
+    public DbSet<MarketEntity> Markets { get; set; }
 
-    public DbSet<RefreshStatus> RefreshStatus { get; set; }
+    public DbSet<RefreshStatusEntity> RefreshStatus { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -32,7 +32,7 @@ public class InvestLensDataContext : DbContext
 
     private void OnSecurityCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<Security>(security =>
+        modelBuilder.Entity<SecurityEntity>(security =>
         {
             security.ToTable("security");
 
@@ -117,7 +117,7 @@ public class InvestLensDataContext : DbContext
 
     private void OnRefreshStatusCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<RefreshStatus>(rs =>
+        modelBuilder.Entity<RefreshStatusEntity>(rs =>
         {
             rs.ToTable("refresh_status");
 
@@ -146,7 +146,7 @@ public class InvestLensDataContext : DbContext
 
     private void OnEngineCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<Engine>(engine =>
+        modelBuilder.Entity<EngineEntity>(engine =>
         {
             engine.ToTable("engine");
 
@@ -170,7 +170,7 @@ public class InvestLensDataContext : DbContext
 
     private void OnMarketCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<Market>(market =>
+        modelBuilder.Entity<MarketEntity>(market =>
         {
             market.ToTable("market");
 
@@ -247,7 +247,7 @@ public class InvestLensDataContext : DbContext
 
     private void OnBoardCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<Board>(b =>
+        modelBuilder.Entity<BoardEntity>(b =>
         {
             b.ToTable("board");
 
@@ -287,7 +287,7 @@ public class InvestLensDataContext : DbContext
 
     private void OnBoardGroupCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<BoardGroup>(b =>
+        modelBuilder.Entity<BoardGroupEntity>(b =>
         {
             b.ToTable("boardgroup");
 
@@ -343,7 +343,7 @@ public class InvestLensDataContext : DbContext
 
     private void OnDurationCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<Duration>(b =>
+        modelBuilder.Entity<DurationEntity>(b =>
         {
             b.ToTable("duration");
 
@@ -374,7 +374,7 @@ public class InvestLensDataContext : DbContext
 
     private void OnSecurityTypeCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<SecurityType>(b =>
+        modelBuilder.Entity<SecurityTypeEntity>(b =>
         {
             b.ToTable("securitytype");
 
@@ -415,7 +415,7 @@ public class InvestLensDataContext : DbContext
 
     private void OnSecurityGroupCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<SecurityGroup>(b =>
+        modelBuilder.Entity<SecurityGroupEntity>(b =>
         {
             b.ToTable("securitygroup");
 
@@ -443,7 +443,7 @@ public class InvestLensDataContext : DbContext
 
     private void OnSecurityCollectionCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<SecurityCollection>(b =>
+        modelBuilder.Entity<SecurityCollectionEntity>(b =>
         {
             b.ToTable("securitycollection");
 

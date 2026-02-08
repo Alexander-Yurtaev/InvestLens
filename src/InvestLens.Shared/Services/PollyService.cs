@@ -1,10 +1,10 @@
-﻿using InvestLens.Abstraction.Services;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using Polly;
 using Polly.Extensions.Http;
 using RabbitMQ.Client.Exceptions;
 using StackExchange.Redis;
 using System.Net.Sockets;
+using InvestLens.Shared.Interfaces.Services;
 
 namespace InvestLens.Shared.Services;
 

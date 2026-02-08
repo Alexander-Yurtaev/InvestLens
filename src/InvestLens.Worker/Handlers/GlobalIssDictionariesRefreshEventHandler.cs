@@ -1,11 +1,11 @@
 ﻿using InvestLens.Abstraction.MessageBus.Services;
 using InvestLens.Abstraction.Redis.Enums;
 using InvestLens.Abstraction.Redis.Services;
-using InvestLens.Abstraction.Services;
 using InvestLens.Shared.Constants;
 using InvestLens.Shared.Helpers;
-using InvestLens.Shared.MessageBus.Models;
-using InvestLens.Shared.Redis.Models;
+using InvestLens.Shared.Interfaces.Services;
+using InvestLens.Shared.Messages;
+using InvestLens.Shared.Models.Redis;
 using InvestLens.Worker.Models.Settings;
 using Serilog.Context;
 

@@ -1,21 +1,21 @@
-﻿using InvestLens.Abstraction.Services;
-using InvestLens.Data.Entities;
+﻿using Grpc.Core;
+using InvestLens.Shared.Interfaces.Services;
+using InvestLens.Shared.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.ComponentModel;
 using System.Reflection;
-using InvestLens.Data.Shared.Models;
 
 namespace InvestLens.Web.Pages;
 
 public class SecuritiesModel : PageModel
 {
-    private readonly ISecurityGrpcClientService _service;
+    private readonly ISecurityGrpcClient _service;
     private readonly ILogger<SecuritiesModel> _logger;
 
     public IEnumerable<string> Columns { get; set; } = [];
 
-    public List<SecurityWithDetails> Securities { get; set; } = [];
+    public List<SecurityWithDetailsModel> Securities { get; set; } = [];
 
     // Свойства для пагинации и сортировки
     public int CurrentPage { get; set; } = 1;
@@ -26,7 +26,7 @@ public class SecuritiesModel : PageModel
     public string CurrentFilter { get; set; } = "";
     public Dictionary<string, string> SortColumns { get; set; } = new();
 
-    public SecuritiesModel(ISecurityGrpcClientService service, ILogger<SecuritiesModel> logger)
+    public SecuritiesModel(ISecurityGrpcClient service, ILogger<SecuritiesModel> logger)
     {
         _service = service;
         _logger = logger;
@@ -45,21 +45,37 @@ public class SecuritiesModel : PageModel
         CurrentFilter = filter ?? "";
 
         Columns = GetColumns();
-        var securitiesWithDetailsDto = await _service.GetSecuritiesWithDetailsAsync(CurrentPage, PageSize, sort, filter);
-
-        if (securitiesWithDetailsDto is null)
+        try
         {
-            _logger.LogWarning($"Метод {nameof(ISecurityGrpcClientService.GetSecuritiesAsync)} не вернул данные.");
-        }
-        else
-        {
-            _logger.LogInformation("От gRPC-сервера получено {SecuritiesCount} записей.", securitiesWithDetailsDto.Data.Count);
+            var securitiesWithDetailsDto =
+                await _service.GetSecuritiesWithDetailsAsync(CurrentPage, PageSize, sort, filter);
 
-            Securities = securitiesWithDetailsDto.Data;
-            TotalPages = securitiesWithDetailsDto.TotalPages;
-            TotalItems = securitiesWithDetailsDto.TotalItems;
+            if (securitiesWithDetailsDto is null)
+            {
+                _logger.LogWarning("Метод {Method} не вернул данные.", nameof(ISecurityGrpcClient.GetSecuritiesWithDetailsAsync));
+                TempData["Warning"] = "Список ценных бумаг пуст.";
+            }
+            else
+            {
+                _logger.LogInformation("От gRPC-сервера получено {SecuritiesCount} записей.",
+                    securitiesWithDetailsDto.Models.Count);
+
+                Securities = securitiesWithDetailsDto.Models;
+                TotalPages = securitiesWithDetailsDto.TotalPages;
+                TotalItems = securitiesWithDetailsDto.TotalItems;
+            }
         }
-            
+        catch (RpcException ex)
+        {
+            _logger.LogError(ex, ex.Message);
+            TempData["Error"] = ex.Message;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, ex.Message);
+            TempData["Error"] = ex.Message;
+        }
+
         return Page();
     }
 
@@ -105,7 +121,7 @@ public class SecuritiesModel : PageModel
 
     private IEnumerable<string> GetColumns()
     {
-        var props = typeof(Security).GetProperties();
+        var props = typeof(SecurityModel).GetProperties();
         foreach (var prop in props)
         {
             var attrs = prop.GetCustomAttributes<DisplayNameAttribute>();

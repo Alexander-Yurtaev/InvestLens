@@ -1,12 +1,12 @@
 ﻿using InvestLens.Abstraction.Redis.Services;
-using InvestLens.Abstraction.Services;
 using InvestLens.Data.Api.Converter;
 using InvestLens.Data.Entities;
-using InvestLens.Data.Entities.Index;
-using InvestLens.Data.Shared.Responses;
 using InvestLens.Shared.Exceptions;
 using System.Collections.Concurrent;
 using System.Text.Json;
+using InvestLens.Data.Entities.Dictionaries;
+using InvestLens.Shared.Contracts.Responses;
+using InvestLens.Shared.Interfaces.Services;
 
 namespace InvestLens.Data.Api.Services;
 
@@ -15,7 +15,7 @@ public abstract class DataPipeline<TEntity, TResponse> : IDataPipeline
     where TResponse : IBaseResponse
 {
     private readonly HttpClient _httpClient;
-    private readonly IDataService _dataService;
+    private readonly IDataWriterService _dataWriterService;
     private readonly IRefreshStatusService _statusService;
     private readonly ICorrelationIdService _correlationIdService;
     private readonly ILogger<DataPipeline<TEntity, TResponse>> _logger;
@@ -23,7 +23,7 @@ public abstract class DataPipeline<TEntity, TResponse> : IDataPipeline
     private readonly int _batchSize = 100;
     private readonly int _saveBatchSize;
 
-    protected DataPipeline(HttpClient httpClient, IDataService dataService,
+    protected DataPipeline(HttpClient httpClient, IDataWriterService dataWriterService,
         IRefreshStatusService statusService,
         ICorrelationIdService correlationIdService,
         ILogger<DataPipeline<TEntity, TResponse>> logger,
@@ -31,7 +31,7 @@ public abstract class DataPipeline<TEntity, TResponse> : IDataPipeline
         int saveBatchSize=10_000)
     {
         _httpClient = httpClient;
-        _dataService = dataService;
+        _dataWriterService = dataWriterService;
         _statusService = statusService;
         _correlationIdService = correlationIdService;
         _maxConcurrentDownloads = maxConcurrentDownloads;
@@ -155,7 +155,7 @@ public abstract class DataPipeline<TEntity, TResponse> : IDataPipeline
 
         foreach (var batch in queue.GetConsumingEnumerable())
         {
-            var savedCount = await _dataService.SaveDataAsync(GetKeyName, batch, batchId, failBack);
+            var savedCount = await _dataWriterService.SaveDataAsync(GetKeyName, batch, batchId, failBack);
             _logger.LogInformation($"Сохранено {batch.Count} записей.");
             totalSaved += savedCount;
             batchId++;
@@ -165,7 +165,7 @@ public abstract class DataPipeline<TEntity, TResponse> : IDataPipeline
         // Сохраняем остатки
         if (_accumulator.Any())
         {
-            var savedCount = await _dataService.SaveDataAsync(GetKeyName, _accumulator, batchId, failBack);
+            var savedCount = await _dataWriterService.SaveDataAsync(GetKeyName, _accumulator, batchId, failBack);
             _logger.LogInformation($"Сохранены оставшиеся {savedCount} записей.");
             totalSaved += savedCount;
             await _statusService.SetSaving(
@@ -237,12 +237,12 @@ public abstract class DataPipeline<TEntity, TResponse> : IDataPipeline
 }
 
 public abstract class IndexDataPipeline<TEntity, TResponse> : DataPipeline<TEntity, TResponse>
-    where TEntity : IndexBaseEntity
-    where TResponse : IBaseIndexResponse
+    where TEntity : DictionaryBaseEntity
+    where TResponse : IBaseDictionaryResponse
 {
-    protected IndexDataPipeline(HttpClient httpClient, IDataService dataService, IRefreshStatusService statusService,
+    protected IndexDataPipeline(HttpClient httpClient, IDataWriterService dataWriterService, IRefreshStatusService statusService,
         ICorrelationIdService correlationIdService, ILogger<DataPipeline<TEntity, TResponse>> logger,
-        int maxConcurrentDownloads = 3, int saveBatchSize = 10000) : base(httpClient, dataService, statusService,
+        int maxConcurrentDownloads = 3, int saveBatchSize = 10000) : base(httpClient, dataWriterService, statusService,
         correlationIdService, logger, maxConcurrentDownloads, saveBatchSize)
 
     {
@@ -254,11 +254,11 @@ public abstract class IndexDataPipeline<TEntity, TResponse> : DataPipeline<TEnti
     }
 }
 
-public class SecurityDataPipeline : DataPipeline<Security, SecuritiesResponse>, ISecurityDataPipeline
+public class SecurityDataPipeline : DataPipeline<SecurityEntity, SecuritiesResponse>, ISecurityDataPipeline
 {
-    public SecurityDataPipeline(HttpClient httpClient, IDataService dataService, IRefreshStatusService statusService,
-        ICorrelationIdService correlationIdService, ILogger<DataPipeline<Security, SecuritiesResponse>> logger) : base(
-        httpClient, dataService, statusService, correlationIdService, logger)
+    public SecurityDataPipeline(HttpClient httpClient, IDataWriterService dataWriterService, IRefreshStatusService statusService,
+        ICorrelationIdService correlationIdService, ILogger<DataPipeline<SecurityEntity, SecuritiesResponse>> logger) : base(
+        httpClient, dataWriterService, statusService, correlationIdService, logger)
 
     {
     }
@@ -275,11 +275,11 @@ public class SecurityDataPipeline : DataPipeline<Security, SecuritiesResponse>, 
     }
 }
 
-public class EngineDataPipeline : IndexDataPipeline<Engine, EngineIndexDataResponse>, IEngineDataPipeline
+public class EngineDataPipeline : IndexDataPipeline<EngineEntity, EngineDictionaryDataResponse>, IEngineDataPipeline
 {
-    public EngineDataPipeline(HttpClient httpClient, IDataService dataService, IRefreshStatusService statusService,
+    public EngineDataPipeline(HttpClient httpClient, IDataWriterService dataWriterService, IRefreshStatusService statusService,
         ICorrelationIdService correlationIdService, ILogger<EngineDataPipeline> logger) : base(
-        httpClient, dataService, statusService, correlationIdService, logger, 1, 100)
+        httpClient, dataWriterService, statusService, correlationIdService, logger, 1, 100)
 
     {
     }
@@ -287,11 +287,11 @@ public class EngineDataPipeline : IndexDataPipeline<Engine, EngineIndexDataRespo
     public override string Info => "Список доступных торговых систем";
 }
 
-public class MarketDataPipeline : IndexDataPipeline<Market, MarketIndexDataResponse>, IMarketDataPipeline
+public class MarketDataPipeline : IndexDataPipeline<MarketEntity, MarketDictionaryDataResponse>, IMarketDataPipeline
 {
-    public MarketDataPipeline(HttpClient httpClient, IDataService dataService, IRefreshStatusService statusService,
+    public MarketDataPipeline(HttpClient httpClient, IDataWriterService dataWriterService, IRefreshStatusService statusService,
         ICorrelationIdService correlationIdService, ILogger<MarketDataPipeline> logger) : base(
-        httpClient, dataService, statusService, correlationIdService, logger, 1, 100)
+        httpClient, dataWriterService, statusService, correlationIdService, logger, 1, 100)
 
     {
     }
@@ -299,11 +299,11 @@ public class MarketDataPipeline : IndexDataPipeline<Market, MarketIndexDataRespo
     public override string Info => "Справочник доступных рынков";
 }
 
-public class BoardDataPipeline : IndexDataPipeline<Board, BoardIndexDataResponse>, IBoardDataPipeline
+public class BoardDataPipeline : IndexDataPipeline<BoardEntity, BoardDictionaryDataResponse>, IBoardDataPipeline
 {
-    public BoardDataPipeline(HttpClient httpClient, IDataService dataService, IRefreshStatusService statusService,
+    public BoardDataPipeline(HttpClient httpClient, IDataWriterService dataWriterService, IRefreshStatusService statusService,
         ICorrelationIdService correlationIdService, ILogger<BoardDataPipeline> logger) : base(
-        httpClient, dataService, statusService, correlationIdService, logger, 1, 100)
+        httpClient, dataWriterService, statusService, correlationIdService, logger, 1, 100)
 
     {
     }
@@ -311,11 +311,11 @@ public class BoardDataPipeline : IndexDataPipeline<Board, BoardIndexDataResponse
     public override string Info => "Справочник режимов торгов";
 }
 
-public class BoardGroupDataPipeline : IndexDataPipeline<BoardGroup, BoardGroupIndexDataResponse>, IBoardGroupDataPipeline
+public class BoardGroupDataPipeline : IndexDataPipeline<BoardGroupEntity, BoardGroupDictionaryDataResponse>, IBoardGroupDataPipeline
 {
-    public BoardGroupDataPipeline(HttpClient httpClient, IDataService dataService, IRefreshStatusService statusService,
+    public BoardGroupDataPipeline(HttpClient httpClient, IDataWriterService dataWriterService, IRefreshStatusService statusService,
         ICorrelationIdService correlationIdService, ILogger<BoardGroupDataPipeline> logger) : base(
-        httpClient, dataService, statusService, correlationIdService, logger, 1, 100)
+        httpClient, dataWriterService, statusService, correlationIdService, logger, 1, 100)
 
     {
     }
@@ -323,11 +323,11 @@ public class BoardGroupDataPipeline : IndexDataPipeline<BoardGroup, BoardGroupIn
     public override string Info => "Справочник групп режимов торгов";
 }
 
-public class DurationDataPipeline : IndexDataPipeline<Duration, DurationIndexDataResponse>, IDurationDataPipeline
+public class DurationDataPipeline : IndexDataPipeline<DurationEntity, DurationDictionaryDataResponse>, IDurationDataPipeline
 {
-    public DurationDataPipeline(HttpClient httpClient, IDataService dataService, IRefreshStatusService statusService,
+    public DurationDataPipeline(HttpClient httpClient, IDataWriterService dataWriterService, IRefreshStatusService statusService,
         ICorrelationIdService correlationIdService, ILogger<DurationDataPipeline> logger) : base(
-        httpClient, dataService, statusService, correlationIdService, logger, 1, 100)
+        httpClient, dataWriterService, statusService, correlationIdService, logger, 1, 100)
 
     {
     }
@@ -337,11 +337,11 @@ public class DurationDataPipeline : IndexDataPipeline<Duration, DurationIndexDat
     protected override string GetKeyName => "interval";
 }
 
-public class SecurityTypeDataPipeline : IndexDataPipeline<SecurityType, SecurityTypeIndexDataResponse>, ISecurityTypeDataPipeline
+public class SecurityTypeDataPipeline : IndexDataPipeline<SecurityTypeEntity, SecurityTypeDictionaryDataResponse>, ISecurityTypeDataPipeline
 {
-    public SecurityTypeDataPipeline(HttpClient httpClient, IDataService dataService, IRefreshStatusService statusService,
+    public SecurityTypeDataPipeline(HttpClient httpClient, IDataWriterService dataWriterService, IRefreshStatusService statusService,
         ICorrelationIdService correlationIdService, ILogger<SecurityTypeDataPipeline> logger) : base(
-        httpClient, dataService, statusService, correlationIdService, logger, 1, 100)
+        httpClient, dataWriterService, statusService, correlationIdService, logger, 1, 100)
 
     {
     }
@@ -349,11 +349,11 @@ public class SecurityTypeDataPipeline : IndexDataPipeline<SecurityType, Security
     public override string Info => "Типы инструментов для торговой системы";
 }
 
-public class SecurityGroupDataPipeline : IndexDataPipeline<SecurityGroup, SecurityGroupIndexDataResponse>, ISecurityGroupDataPipeline
+public class SecurityGroupDataPipeline : IndexDataPipeline<SecurityGroupEntity, SecurityGroupDictionaryDataResponse>, ISecurityGroupDataPipeline
 {
-    public SecurityGroupDataPipeline(HttpClient httpClient, IDataService dataService, IRefreshStatusService statusService,
+    public SecurityGroupDataPipeline(HttpClient httpClient, IDataWriterService dataWriterService, IRefreshStatusService statusService,
         ICorrelationIdService correlationIdService, ILogger<SecurityGroupDataPipeline> logger) : base(
-        httpClient, dataService, statusService, correlationIdService, logger, 1, 100)
+        httpClient, dataWriterService, statusService, correlationIdService, logger, 1, 100)
 
     {
     }
@@ -361,11 +361,11 @@ public class SecurityGroupDataPipeline : IndexDataPipeline<SecurityGroup, Securi
     public override string Info => "Группы инструментов для торговой системы";
 }
 
-public class SecurityCollectionDataPipeline : IndexDataPipeline<SecurityCollection, SecurityCollectionIndexDataResponse>, ISecurityCollectionDataPipeline
+public class SecurityCollectionDataPipeline : IndexDataPipeline<SecurityCollectionEntity, SecurityCollectionDictionaryDataResponse>, ISecurityCollectionDataPipeline
 {
-    public SecurityCollectionDataPipeline(HttpClient httpClient, IDataService dataService, IRefreshStatusService statusService,
+    public SecurityCollectionDataPipeline(HttpClient httpClient, IDataWriterService dataWriterService, IRefreshStatusService statusService,
         ICorrelationIdService correlationIdService, ILogger<SecurityCollectionDataPipeline> logger) : base(
-        httpClient, dataService, statusService, correlationIdService, logger, 1, 100)
+        httpClient, dataWriterService, statusService, correlationIdService, logger, 1, 100)
 
     {
     }

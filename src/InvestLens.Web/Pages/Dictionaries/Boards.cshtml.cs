@@ -1,12 +1,12 @@
-﻿using InvestLens.Abstraction.Services;
-using InvestLens.Data.Entities.Index;
+﻿using InvestLens.Shared.Interfaces.Services;
+using InvestLens.Shared.Models.Dictionaries;
 using InvestLens.Web.Pages.Shared;
 
 namespace InvestLens.Web.Pages.Dictionaries;
 
-public class BoardsModel : DictionaryBasePage<Board>
+public class BoardsModel : DictionaryBasePage<BoardModel>
 {
-    public BoardsModel(IBoardDictionariesGrpcClientService service, ILogger<BoardsModel> logger) : base(service, logger)
+    public BoardsModel(IBoardDictionariesGrpcClient service, ILogger<BoardsModel> logger) : base(service, logger)
     {
     }
 

@@ -6,21 +6,22 @@ using InvestLens.Abstraction.MessageBus.Data;
 using InvestLens.Abstraction.MessageBus.Services;
 using InvestLens.Abstraction.Redis.Data;
 using InvestLens.Abstraction.Redis.Services;
-using InvestLens.Abstraction.Repositories;
-using InvestLens.Abstraction.Services;
 using InvestLens.Data.Api.Extensions;
 using InvestLens.Data.Api.Handlers;
 using InvestLens.Data.Api.Models.Settings;
 using InvestLens.Data.Api.Services;
+using InvestLens.Data.Core.Abstraction.Repositories;
+using InvestLens.Data.Core.Abstraction.Repositories.Dictionaries;
 using InvestLens.Data.DataContext;
 using InvestLens.Data.Repositories;
+using InvestLens.Data.Repositories.Dictionaries;
 using InvestLens.Shared.Constants;
+using InvestLens.Shared.Extensions;
 using InvestLens.Shared.Helpers;
-using InvestLens.Shared.MessageBus.Extensions;
-using InvestLens.Shared.MessageBus.Models;
-using InvestLens.Shared.Redis.Extensions;
-using InvestLens.Shared.Redis.Services;
+using InvestLens.Shared.Interfaces.Services;
+using InvestLens.Shared.Messages;
 using InvestLens.Shared.Services;
+using InvestLens.Shared.Services.RabbitMq;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Polly.Caching.Memory;
 using Serilog;
@@ -67,6 +68,8 @@ public static class Program
             // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
             builder.Services.AddOpenApi();
 
+            builder.Services.AddAutoMapper(_ => { }, typeof(Program).Assembly);
+
             builder.Services.AddGrpc();
 
             builder.Services.AddSingleton<IPollyService, PollyService>();
@@ -85,8 +88,8 @@ public static class Program
 
             builder.Services.AddScoped<IRefreshStatusRepository, RefreshStatusRepository>();
             
-            builder.Services.AddScoped<IDataService, DataService>();
-            builder.Services.AddScoped<IMoexDataService, MoexDataService>();
+            builder.Services.AddScoped<IDataWriterService, DataWriterWriterService>();
+            builder.Services.AddScoped<IMoexDataReaderService, MoexDataReaderService>();
 
             // Регистрация с кэшированием
             builder.Services.AddMemoryCache();

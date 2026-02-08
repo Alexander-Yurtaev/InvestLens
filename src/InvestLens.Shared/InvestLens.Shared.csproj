@@ -8,12 +8,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Data\**" />
-    <EmbeddedResource Remove="Data\**" />
-    <None Remove="Data\**" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="AutoMapper" />
     <PackageReference Include="CorrelationId" />
     <PackageReference Include="DotNetEnv" />
@@ -54,7 +48,7 @@
 </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\InvestLens.Abstraction\InvestLens.Abstraction.csproj" />
+    <ProjectReference Include="..\InvestLens.Data\InvestLens.Data.Entities\InvestLens.Data.Entities.csproj" />
   </ItemGroup>
 
 </Project>

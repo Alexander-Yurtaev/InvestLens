@@ -15,7 +15,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\InvestLens.Data.Shared\InvestLens.Data.Shared.csproj" />
     <ProjectReference Include="..\InvestLens.Data\InvestLens.Data.Entities\InvestLens.Data.Entities.csproj" />
   </ItemGroup>
 

@@ -7,4 +7,8 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\InvestLens.Data.Entities\InvestLens.Data.Entities.csproj" />
+  </ItemGroup>
+
 </Project>

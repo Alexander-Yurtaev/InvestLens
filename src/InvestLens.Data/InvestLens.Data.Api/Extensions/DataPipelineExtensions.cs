@@ -1,6 +1,6 @@
 ﻿using CorrelationId.HttpClient;
-using InvestLens.Abstraction.Services;
 using InvestLens.Data.Api.Services;
+using InvestLens.Shared.Interfaces.Services;
 
 namespace InvestLens.Data.Api.Extensions;
 

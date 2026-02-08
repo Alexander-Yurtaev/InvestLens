@@ -1,21 +1,20 @@
-﻿using InvestLens.Abstraction.Repositories;
-using InvestLens.Abstraction.Services;
+﻿using InvestLens.Data.Core.Abstraction.Repositories;
 using InvestLens.Data.DataContext;
 using InvestLens.Data.Entities;
-using InvestLens.Shared.Repositories;
+using InvestLens.Shared.Interfaces.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace InvestLens.Data.Repositories;
 
-public class SecurityRepository : BaseRepository<Security>, ISecurityRepository
+public class SecurityRepository : BaseRepository<SecurityEntity>, ISecurityRepository
 {
     public SecurityRepository(InvestLensDataContext context, IPollyService pollyService,
         ILogger<SecurityRepository> logger) : base(context, pollyService, logger)
     {
     }
 
-    public override async Task<Security> Add(Security entity, bool orUpdate = false)
+    public override async Task<SecurityEntity> Add(SecurityEntity entity, bool orUpdate = false)
     {
         try
         {
@@ -62,7 +61,7 @@ public class SecurityRepository : BaseRepository<Security>, ISecurityRepository
         }
     }
 
-    public override async Task<int> Add(List<Security> entities, bool orUpdate = false)
+    public override async Task<int> Add(List<SecurityEntity> entities, bool orUpdate = false)
     {
         try
         {
@@ -112,26 +111,26 @@ public class SecurityRepository : BaseRepository<Security>, ISecurityRepository
         }
     }
 
-    public override async Task<List<Security>> Get()
+    public override async Task<List<SecurityEntity>> Get()
     {
         var result = await Get(1, 10);
-        return result.Data;
+        return result.Entities;
     }
 
-    protected override Dictionary<string, Func<Security, object>> GetSortSelectors()
+    protected override Dictionary<string, Func<SecurityEntity, object>> GetSortSelectors()
     {
-        return new Dictionary<string, Func<Security, object>>
+        return new Dictionary<string, Func<SecurityEntity, object>>
         {
-            {nameof(Security.SecId).ToLower(), s => s.SecId},
-            {nameof(Security.Name).ToLower(), s => s.Name},
-            {nameof(Security.ShortName).ToLower(), s => s.ShortName},
-            {nameof(Security.Type).ToLower(), s => s.Type},
-            {nameof(Security.Group).ToLower(), s => s.Group},
-            {nameof(Security.IsTraded).ToLower(), s => s.IsTraded},
+            {nameof(SecurityEntity.SecId).ToLowerInvariant(), s => s.SecId},
+            {nameof(SecurityEntity.Name).ToLowerInvariant(), s => s.Name},
+            {nameof(SecurityEntity.ShortName).ToLowerInvariant(), s => s.ShortName},
+            {nameof(SecurityEntity.Type).ToLowerInvariant(), s => s.Type},
+            {nameof(SecurityEntity.Group).ToLowerInvariant(), s => s.Group},
+            {nameof(SecurityEntity.IsTraded).ToLowerInvariant(), s => s.IsTraded},
         };
     }
 
-    protected override IQueryable<Security> GetWhereCause(IQueryable<Security> query, string filter)
+    protected override IQueryable<SecurityEntity> GetWhereCause(IQueryable<SecurityEntity> query, string filter)
     {
         if (!string.IsNullOrEmpty(filter))
         {

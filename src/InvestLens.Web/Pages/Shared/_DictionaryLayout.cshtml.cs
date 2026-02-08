@@ -1,19 +1,19 @@
-﻿using InvestLens.Abstraction.Services;
-using InvestLens.Data.Entities;
+﻿using InvestLens.Shared.Interfaces.Services;
+using InvestLens.Shared.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace InvestLens.Web.Pages.Shared;
 
-public abstract class DictionaryBasePage<TEntity> : PageModel
-    where TEntity : BaseEntity
+public abstract class DictionaryBasePage<TModel> : PageModel
+    where TModel : BaseModel
 {
-    private readonly IBaseDictionariesGrpcClientService<TEntity> _service;
-    private readonly ILogger<DictionaryBasePage<TEntity>> _logger;
+    private readonly IBaseDictionariesGrpcClient<TModel> _service;
+    private readonly ILogger<DictionaryBasePage<TModel>> _logger;
 
     public IEnumerable<string> Columns { get; set; } = [];
 
-    public List<TEntity> Entities { get; set; } = [];
+    public List<TModel> Models { get; set; } = [];
 
     // Свойства для пагинации и сортировки
     public int CurrentPage { get; set; } = 1;
@@ -23,7 +23,7 @@ public abstract class DictionaryBasePage<TEntity> : PageModel
     public string CurrentSort { get; set; } = "";
     public string CurrentFilter { get; set; } = "";
 
-    protected DictionaryBasePage(IBaseDictionariesGrpcClientService<TEntity> service, ILogger<DictionaryBasePage<TEntity>> logger)
+    protected DictionaryBasePage(IBaseDictionariesGrpcClient<TModel> service, ILogger<DictionaryBasePage<TModel>> logger)
     {
         _service = service;
         _logger = logger;
@@ -44,13 +44,13 @@ public abstract class DictionaryBasePage<TEntity> : PageModel
 
         if (entitiesDto is null)
         {
-            _logger.LogWarning($"Метод {nameof(IBaseDictionariesGrpcClientService<TEntity>.GetEntitiesAsync)} не вернул данные.");
+            _logger.LogWarning($"Метод {nameof(IBaseDictionariesGrpcClient<TModel>.GetEntitiesAsync)} не вернул данные.");
         }
         else
         {
-            _logger.LogInformation("От gRPC-сервера получено {EntitiesCount} записей.", entitiesDto.Data.Count);
+            _logger.LogInformation("От gRPC-сервера получено {EntitiesCount} записей.", entitiesDto.Models.Count);
 
-            Entities = entitiesDto.Data;
+            Models = entitiesDto.Models;
             TotalPages = entitiesDto.TotalPages;
             TotalItems = entitiesDto.TotalItems;
         }

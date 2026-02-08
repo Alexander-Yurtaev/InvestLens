@@ -1,0 +1,39 @@
+﻿@* Pages/Shared/_AlertPartial.cshtml *@
+@{
+    var error = TempData["Error"] as string;
+    var success = TempData["Success"] as string;
+    var warning = TempData["Warning"] as string;
+    var info = TempData["Info"] as string;
+}
+
+@if (!string.IsNullOrEmpty(error))
+{
+    <div class="alert alert-danger alert-dismissible fade show mb-3" role="alert">
+        @error
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@if (!string.IsNullOrEmpty(success))
+{
+    <div class="alert alert-success alert-dismissible fade show mb-3" role="alert">
+        @success
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@if (!string.IsNullOrEmpty(warning))
+{
+    <div class="alert alert-warning alert-dismissible fade show mb-3" role="alert">
+        @warning
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@if (!string.IsNullOrEmpty(info))
+{
+    <div class="alert alert-info alert-dismissible fade show mb-3" role="alert">
+        @info
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}

@@ -1,12 +1,12 @@
-﻿using InvestLens.Abstraction.Services;
-using InvestLens.Data.Entities.Index;
+﻿using InvestLens.Shared.Interfaces.Services;
+using InvestLens.Shared.Models.Dictionaries;
 using InvestLens.Web.Pages.Shared;
 
 namespace InvestLens.Web.Pages.Dictionaries;
 
-public class SecurityGroupsModel : DictionaryBasePage<SecurityGroup>
+public class SecurityGroupsModel : DictionaryBasePage<SecurityGroupModel>
 {
-    public SecurityGroupsModel(ISecurityGroupDictionariesGrpcClientService service, ILogger<SecurityGroupsModel> logger) : base(service, logger)
+    public SecurityGroupsModel(ISecurityGroupDictionariesGrpcClient service, ILogger<SecurityGroupsModel> logger) : base(service, logger)
     {
     }
 

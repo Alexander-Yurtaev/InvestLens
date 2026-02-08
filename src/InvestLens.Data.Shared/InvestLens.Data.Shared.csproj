@@ -8,19 +8,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Proto\Api\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="Google.Protobuf" />
     <PackageReference Include="Grpc.Tools">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\InvestLens.Data\InvestLens.Data.Entities\InvestLens.Data.Entities.csproj" />
   </ItemGroup>
 
 </Project>

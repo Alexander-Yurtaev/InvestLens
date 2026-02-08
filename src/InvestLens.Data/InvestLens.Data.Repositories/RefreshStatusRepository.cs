@@ -1,14 +1,13 @@
-﻿using InvestLens.Abstraction.Repositories;
-using InvestLens.Abstraction.Services;
+﻿using InvestLens.Data.Core.Abstraction.Repositories;
 using InvestLens.Data.DataContext;
 using InvestLens.Data.Entities;
-using InvestLens.Shared.Repositories;
+using InvestLens.Shared.Interfaces.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace InvestLens.Data.Repositories;
 
-public class RefreshStatusRepository : BaseRepository<RefreshStatus>, IRefreshStatusRepository
+public class RefreshStatusRepository : BaseRepository<RefreshStatusEntity>, IRefreshStatusRepository
 {
     public RefreshStatusRepository(
         InvestLensDataContext context,
@@ -17,11 +16,10 @@ public class RefreshStatusRepository : BaseRepository<RefreshStatus>, IRefreshSt
     {
     }
 
-    public async Task<RefreshStatus?> GetRefreshStatus(string entityName)
+    public async Task<RefreshStatusEntity?> GetRefreshStatus(string entityName)
     {
         try
         {
-            // ToDo изменить System.Net.Sockets.SocketException на более конкретный тип.
             var resilientPolicy = PollyService.GetResilientPolicy<System.Net.Sockets.SocketException>();
             var refreshStatus = await resilientPolicy.ExecuteAsync(async () =>
                 await DbSet.AsNoTracking().FirstOrDefaultAsync(s => s.EntityName == entityName));
@@ -41,7 +39,7 @@ public class RefreshStatusRepository : BaseRepository<RefreshStatus>, IRefreshSt
             var refreshStatus = await GetRefreshStatus(entityName);
             if (refreshStatus is null)
             {
-                refreshStatus = new RefreshStatus(entityName);
+                refreshStatus = new RefreshStatusEntity(entityName);
                 DbSet.Add(refreshStatus);
             }
             else
@@ -49,7 +47,6 @@ public class RefreshStatusRepository : BaseRepository<RefreshStatus>, IRefreshSt
                 refreshStatus.RefreshDate = DateTime.UtcNow;
             }
 
-            // ToDo изменить System.Net.Sockets.SocketException на более конкретный тип.
             var resilientPolicy = PollyService.GetResilientPolicy<System.Net.Sockets.SocketException>();
             await resilientPolicy.ExecuteAsync(async () => await Context.SaveChangesAsync());
         }

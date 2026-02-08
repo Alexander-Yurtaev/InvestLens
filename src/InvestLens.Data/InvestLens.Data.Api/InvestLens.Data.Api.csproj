@@ -53,9 +53,9 @@
   </ItemGroup>
 
   <ItemGroup>
-	<Protobuf Include="..\..\InvestLens.Data.Shared\Proto\Api\common.proto" GrpcServices="None" Link="Protos\common.proto" />
-	<Protobuf Include="..\..\InvestLens.Data.Shared\Proto\Api\securities.proto" GrpcServices="Server" Link="Protos\securities.proto" />
-	<Protobuf Include="..\..\InvestLens.Data.Shared\Proto\Api\general_dictionaries.proto" GrpcServices="Server" Link="Protos\general_dictionaries.proto" />
+	<Protobuf Include="..\..\InvestLens.Shared\Proto\Api\common.proto" GrpcServices="None" Link="Protos\common.proto" />
+	<Protobuf Include="..\..\InvestLens.Shared\Proto\Api\securities.proto" GrpcServices="Server" Link="Protos\securities.proto" />
+	<Protobuf Include="..\..\InvestLens.Shared\Proto\Api\general_dictionaries.proto" GrpcServices="Server" Link="Protos\general_dictionaries.proto" />
   </ItemGroup>
 
 </Project>

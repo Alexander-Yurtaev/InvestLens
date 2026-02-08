@@ -1,12 +1,12 @@
-﻿using InvestLens.Abstraction.Services;
-using InvestLens.Data.Entities.Index;
+﻿using InvestLens.Shared.Interfaces.Services;
+using InvestLens.Shared.Models.Dictionaries;
 using InvestLens.Web.Pages.Shared;
 
 namespace InvestLens.Web.Pages.Dictionaries;
 
-public class DurationsModel : DictionaryBasePage<Duration>
+public class DurationsModel : DictionaryBasePage<DurationModel>
 {
-    public DurationsModel(IDurationDictionariesGrpcClientService service, ILogger<DurationsModel> logger) : base(service, logger)
+    public DurationsModel(IDurationDictionariesGrpcClient service, ILogger<DurationsModel> logger) : base(service, logger)
     {
     }
 

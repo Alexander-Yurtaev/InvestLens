@@ -1,6 +1,6 @@
 ﻿using CorrelationId.Abstractions;
-using InvestLens.Abstraction.Services;
 using InvestLens.Shared.Constants;
+using InvestLens.Shared.Interfaces.Services;
 
 namespace InvestLens.Shared.Services;
 

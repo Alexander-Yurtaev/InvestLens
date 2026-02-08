@@ -12,7 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\InvestLens.Abstraction\InvestLens.Abstraction.csproj" />
+    <ProjectReference Include="..\InvestLens.Data.Core\InvestLens.Data.Core.csproj" />
     <ProjectReference Include="..\InvestLens.Data.DataContext\InvestLens.Data.DataContext.csproj" />
   </ItemGroup>
 

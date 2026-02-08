@@ -2,12 +2,12 @@
 using CorrelationId.Abstractions;
 using CorrelationId.DependencyInjection;
 using HealthChecks.UI.Client;
-using InvestLens.Abstraction.Services;
 using InvestLens.Shared.Constants;
+using InvestLens.Shared.Extensions;
 using InvestLens.Shared.Helpers;
-using InvestLens.Shared.MessageBus.Extensions;
-using InvestLens.Shared.Redis.Extensions;
+using InvestLens.Shared.Interfaces.Services;
 using InvestLens.Shared.Services;
+using InvestLens.Shared.Services.RabbitMq;
 using InvestLens.Shared.Validators;
 using InvestLens.Web.Services;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
@@ -58,15 +58,15 @@ public static class Program
 
             builder.Services.AddAutoMapper(_ => { }, typeof(Program).Assembly);
 
-            builder.Services.AddScoped<ISecurityGrpcClientService, SecurityGrpcClientService>();
-            builder.Services.AddScoped<IEngineDictionariesGrpcClientService, GlobalDictionariesGrpcClientService>();
-            builder.Services.AddScoped<IMarketDictionariesGrpcClientService, GlobalDictionariesGrpcClientService>();
-            builder.Services.AddScoped<IBoardDictionariesGrpcClientService, GlobalDictionariesGrpcClientService>();
-            builder.Services.AddScoped<IBoardGroupDictionariesGrpcClientService, GlobalDictionariesGrpcClientService>();
-            builder.Services.AddScoped<IDurationDictionariesGrpcClientService, GlobalDictionariesGrpcClientService>();
-            builder.Services.AddScoped<ISecurityTypeDictionariesGrpcClientService, GlobalDictionariesGrpcClientService>();
-            builder.Services.AddScoped<ISecurityGroupDictionariesGrpcClientService, GlobalDictionariesGrpcClientService>();
-            builder.Services.AddScoped<ISecurityCollectionDictionariesGrpcClientService, GlobalDictionariesGrpcClientService>();
+            builder.Services.AddScoped<ISecurityGrpcClient, SecurityGrpcClient>();
+            builder.Services.AddScoped<IEngineDictionariesGrpcClient, GlobalDictionariesGrpcClient>();
+            builder.Services.AddScoped<IMarketDictionariesGrpcClient, GlobalDictionariesGrpcClient>();
+            builder.Services.AddScoped<IBoardDictionariesGrpcClient, GlobalDictionariesGrpcClient>();
+            builder.Services.AddScoped<IBoardGroupDictionariesGrpcClient, GlobalDictionariesGrpcClient>();
+            builder.Services.AddScoped<IDurationDictionariesGrpcClient, GlobalDictionariesGrpcClient>();
+            builder.Services.AddScoped<ISecurityTypeDictionariesGrpcClient, GlobalDictionariesGrpcClient>();
+            builder.Services.AddScoped<ISecurityGroupDictionariesGrpcClient, GlobalDictionariesGrpcClient>();
+            builder.Services.AddScoped<ISecurityCollectionDictionariesGrpcClient, GlobalDictionariesGrpcClient>();
 
             builder.Services.AddHealthChecks()
                 .AddUrlGroup(new Uri("https://investlens.worker:8081/health"),

@@ -1,6 +1,6 @@
 ﻿using Grpc.Core;
-using InvestLens.Abstraction.Services;
 using InvestLens.Grpc.Service;
+using InvestLens.Shared.Interfaces.Services;
 using Board = InvestLens.Grpc.Service.Board;
 using BoardGroup = InvestLens.Grpc.Service.BoardGroup;
 using Duration = InvestLens.Grpc.Service.Duration;
@@ -14,14 +14,14 @@ namespace InvestLens.Data.Api.Services;
 
 public class GlobalDictionariesGrpcService : GeneralDictionariesServices.GeneralDictionariesServicesBase
 {
-    private readonly IMoexDataService _moexService;
+    private readonly IMoexDataReaderService _moexReaderService;
     private readonly ILogger<GlobalDictionariesGrpcService> _logger;
 
     public GlobalDictionariesGrpcService(
-        IMoexDataService moexService,
+        IMoexDataReaderService moexReaderService,
         ILogger<GlobalDictionariesGrpcService> logger)
     {
-        _moexService = moexService;
+        _moexReaderService = moexReaderService;
         _logger = logger;
     }
 
@@ -29,7 +29,7 @@ public class GlobalDictionariesGrpcService : GeneralDictionariesServices.General
     {
         try
         {
-            var engines = await _moexService.GetEngines(request.Page, request.PageSize, request.Sort, request.Filter);
+            var engines = await _moexReaderService.GetEngines(request.Page, request.PageSize, request.Sort, request.Filter);
             var response = new GetEnginesResponse
             {
                 Page = engines.Page,
@@ -38,7 +38,7 @@ public class GlobalDictionariesGrpcService : GeneralDictionariesServices.General
                 TotalItems = engines.TotalItems
             };
 
-            response.Data.AddRange(engines.Data.Select(e => new Engine
+            response.Data.AddRange(engines.Entities.Select(e => new Engine
             {
                 Id = e.Id,
                 Name = e.Name,
@@ -58,7 +58,7 @@ public class GlobalDictionariesGrpcService : GeneralDictionariesServices.General
     {
         try
         {
-            var markets = await _moexService.GetMarkets(request.Page, request.PageSize, request.Sort, request.Filter);
+            var markets = await _moexReaderService.GetMarkets(request.Page, request.PageSize, request.Sort, request.Filter);
             var response = new GetMarketsResponse
             {
                 Page = markets.Page,
@@ -67,7 +67,7 @@ public class GlobalDictionariesGrpcService : GeneralDictionariesServices.General
                 TotalItems = markets.TotalItems
             };
 
-            response.Data.AddRange(markets.Data.Select(m => new Market
+            response.Data.AddRange(markets.Entities.Select(m => new Market
             {
                 Id = m.Id,
                 TradeEngineId = m.TradeEngineId,
@@ -102,7 +102,7 @@ public class GlobalDictionariesGrpcService : GeneralDictionariesServices.General
     {
         try
         {
-            var boards = await _moexService.GetBoards(request.Page, request.PageSize, request.Sort, request.Filter);
+            var boards = await _moexReaderService.GetBoards(request.Page, request.PageSize, request.Sort, request.Filter);
             var response = new GetBoardsResponse
             {
                 Page = boards.Page,
@@ -111,7 +111,7 @@ public class GlobalDictionariesGrpcService : GeneralDictionariesServices.General
                 TotalItems = boards.TotalItems
             };
 
-            response.Data.AddRange(boards.Data.Select(b => new Board
+            response.Data.AddRange(boards.Entities.Select(b => new Board
             {
                 Id = b.Id,
                 BoardGroupId = b.BoardGroupId,
@@ -137,7 +137,7 @@ public class GlobalDictionariesGrpcService : GeneralDictionariesServices.General
     {
         try
         {
-            var boardGroups = await _moexService.GetBoardGroups(request.Page, request.PageSize, request.Sort, request.Filter);
+            var boardGroups = await _moexReaderService.GetBoardGroups(request.Page, request.PageSize, request.Sort, request.Filter);
             var response = new GetBoardGroupsResponse
             {
                 Page = boardGroups.Page,
@@ -146,7 +146,7 @@ public class GlobalDictionariesGrpcService : GeneralDictionariesServices.General
                 TotalItems = boardGroups.TotalItems
             };
 
-            response.Data.AddRange(boardGroups.Data.Select(bg => new BoardGroup
+            response.Data.AddRange(boardGroups.Entities.Select(bg => new BoardGroup
             {
                 Id = bg.Id,
                 TradeEngineId = bg.TradeEngineId,
@@ -176,7 +176,7 @@ public class GlobalDictionariesGrpcService : GeneralDictionariesServices.General
     {
         try
         {
-            var durations = await _moexService.GetDurations(request.Page, request.PageSize, request.Sort, request.Filter);
+            var durations = await _moexReaderService.GetDurations(request.Page, request.PageSize, request.Sort, request.Filter);
             var response = new GetDurationsResponse
             {
                 Page = durations.Page,
@@ -185,7 +185,7 @@ public class GlobalDictionariesGrpcService : GeneralDictionariesServices.General
                 TotalItems = durations.TotalItems
             };
 
-            response.Data.AddRange(durations.Data.Select(d => new Duration
+            response.Data.AddRange(durations.Entities.Select(d => new Duration
             {
                 Interval = d.Interval,
                 DurationValue = d.DurationValue,
@@ -207,7 +207,7 @@ public class GlobalDictionariesGrpcService : GeneralDictionariesServices.General
     {
         try
         {
-            var securityTypes = await _moexService.GetSecurityTypes(request.Page, request.PageSize, request.Sort, request.Filter);
+            var securityTypes = await _moexReaderService.GetSecurityTypes(request.Page, request.PageSize, request.Sort, request.Filter);
             var response = new GetSecurityTypesResponse
             {
                 Page = securityTypes.Page,
@@ -216,7 +216,7 @@ public class GlobalDictionariesGrpcService : GeneralDictionariesServices.General
                 TotalItems = securityTypes.TotalItems
             };
 
-            response.Data.AddRange(securityTypes.Data.Select(st => new SecurityType
+            response.Data.AddRange(securityTypes.Entities.Select(st => new SecurityType
             {
                 Id = st.Id,
                 TradeEngineId = st.TradeEngineId,
@@ -241,7 +241,7 @@ public class GlobalDictionariesGrpcService : GeneralDictionariesServices.General
     {
         try
         {
-            var securityGroups = await _moexService.GetSecurityGroups(request.Page, request.PageSize, request.Sort, request.Filter);
+            var securityGroups = await _moexReaderService.GetSecurityGroups(request.Page, request.PageSize, request.Sort, request.Filter);
             var response = new GetSecurityGroupsResponse
             {
                 Page = securityGroups.Page,
@@ -250,7 +250,7 @@ public class GlobalDictionariesGrpcService : GeneralDictionariesServices.General
                 TotalItems = securityGroups.TotalItems
             };
 
-            response.Data.AddRange(securityGroups.Data.Select(sg => new SecurityGroup
+            response.Data.AddRange(securityGroups.Entities.Select(sg => new SecurityGroup
             {
                 Id = sg.Id,
                 Name = sg.Name,
@@ -271,7 +271,7 @@ public class GlobalDictionariesGrpcService : GeneralDictionariesServices.General
     {
         try
         {
-            var securityCollections = await _moexService.GetSecurityCollections(request.Page, request.PageSize, request.Sort, request.Filter);
+            var securityCollections = await _moexReaderService.GetSecurityCollections(request.Page, request.PageSize, request.Sort, request.Filter);
             var response = new GetSecurityCollectionsResponse
             {
                 Page = securityCollections.Page,
@@ -280,7 +280,7 @@ public class GlobalDictionariesGrpcService : GeneralDictionariesServices.General
                 TotalItems = securityCollections.TotalItems
             };
 
-            response.Data.AddRange(securityCollections.Data.Select(sg => new SecurityCollection
+            response.Data.AddRange(securityCollections.Entities.Select(sg => new SecurityCollection
             {
                 Id = sg.Id,
                 Name = sg.Name,

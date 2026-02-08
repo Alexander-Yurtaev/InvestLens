@@ -1,12 +1,12 @@
-﻿using InvestLens.Abstraction.Services;
-using InvestLens.Data.Entities.Index;
+﻿using InvestLens.Shared.Interfaces.Services;
+using InvestLens.Shared.Models.Dictionaries;
 using InvestLens.Web.Pages.Shared;
 
 namespace InvestLens.Web.Pages.Dictionaries;
 
-public class MarketsModel : DictionaryBasePage<Market>
+public class MarketsModel : DictionaryBasePage<MarketModel>
 {
-    public MarketsModel(IMarketDictionariesGrpcClientService service, ILogger<MarketsModel> logger) : base(service, logger)
+    public MarketsModel(IMarketDictionariesGrpcClient service, ILogger<MarketsModel> logger) : base(service, logger)
     {
     }
 
