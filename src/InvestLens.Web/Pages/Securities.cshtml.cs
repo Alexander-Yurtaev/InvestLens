@@ -1,6 +1,4 @@
-﻿using Grpc.Core;
-using InvestLens.Shared.Interfaces.Services;
-using InvestLens.Shared.Models;
+﻿using InvestLens.Shared.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.ComponentModel;
@@ -64,12 +62,12 @@ public class SecuritiesModel : PageModel
 
                 if (model is null)
                 {
-                    _logger.LogWarning("Метод {Method} не вернул данные.", nameof(ISecurityGrpcClient.GetSecuritiesWithDetailsAsync));
+                    _logger.LogWarning("Data-сервис не вернул данные.");
                     TempData["Warning"] = "Список ценных бумаг пуст.";
                 }
                 else
                 {
-                    _logger.LogInformation("От gRPC-сервера получено {SecuritiesCount} записей.", model.Models.Count);
+                    _logger.LogInformation("От Data-сервера получено {SecuritiesCount} записей.", model.Models.Count);
 
                     Securities.AddRange(model.Models);
                     TotalPages = model.TotalPages;
@@ -80,11 +78,6 @@ public class SecuritiesModel : PageModel
             {
                 _logger.LogError("Failed to get securities. Status: {StatusCode}", response.StatusCode);
             }
-        }
-        catch (RpcException ex)
-        {
-            _logger.LogError(ex, ex.Message);
-            TempData["Error"] = ex.Message;
         }
         catch (Exception ex)
         {

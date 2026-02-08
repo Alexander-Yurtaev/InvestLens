@@ -3,7 +3,6 @@ using CorrelationId.Abstractions;
 using CorrelationId.DependencyInjection;
 using CorrelationId.HttpClient;
 using HealthChecks.UI.Client;
-using InvestLens.Gateway.Services;
 using InvestLens.Shared.Constants;
 using InvestLens.Shared.Extensions;
 using InvestLens.Shared.Helpers;
@@ -59,16 +58,6 @@ public static class Program
             builder.Services.AddSingleton<IRabbitMqService, RabbitMqService>();
 
             builder.Services.AddAutoMapper(_ => { }, typeof(Program).Assembly);
-
-            builder.Services.AddScoped<ISecurityGrpcClient, SecurityGrpcClient>();
-            builder.Services.AddScoped<IEngineDictionariesGrpcClient, GlobalDictionariesGrpcClient>();
-            builder.Services.AddScoped<IMarketDictionariesGrpcClient, GlobalDictionariesGrpcClient>();
-            builder.Services.AddScoped<IBoardDictionariesGrpcClient, GlobalDictionariesGrpcClient>();
-            builder.Services.AddScoped<IBoardGroupDictionariesGrpcClient, GlobalDictionariesGrpcClient>();
-            builder.Services.AddScoped<IDurationDictionariesGrpcClient, GlobalDictionariesGrpcClient>();
-            builder.Services.AddScoped<ISecurityTypeDictionariesGrpcClient, GlobalDictionariesGrpcClient>();
-            builder.Services.AddScoped<ISecurityGroupDictionariesGrpcClient, GlobalDictionariesGrpcClient>();
-            builder.Services.AddScoped<ISecurityCollectionDictionariesGrpcClient, GlobalDictionariesGrpcClient>();
 
             builder.Services.AddHealthChecks()
                 .AddUrlGroup(new Uri("https://investlens.worker:8081/health"),

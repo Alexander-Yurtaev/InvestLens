@@ -1,5 +1,4 @@
-﻿using InvestLens.Shared.Interfaces.Services;
-using InvestLens.Shared.Models;
+﻿using InvestLens.Shared.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.Text.Json;
@@ -62,12 +61,12 @@ public abstract class DictionaryBasePage<TModel> : PageModel
 
                 if (JsonSerializer.Deserialize(json, ConcreteType, options) is not BaseModelWithPagination<TModel> model)
                 {
-                    _logger.LogWarning($"Метод {nameof(IBaseDictionariesGrpcClient<TModel>.GetEntitiesAsync)} не вернул данные.");
+                    _logger.LogWarning($"Data-сервис не вернул данные.");
                     TempData["Warning"] = "Список ценных бумаг пуст.";
                 }
                 else
                 {
-                    _logger.LogInformation("От gRPC-сервера получено {EntitiesCount} записей.", model.Models.Count);
+                    _logger.LogInformation("От Data-сервера получено {EntitiesCount} записей.", model.Models.Count);
 
                     Models.AddRange(model.Models);
                     TotalPages = model.TotalPages;
