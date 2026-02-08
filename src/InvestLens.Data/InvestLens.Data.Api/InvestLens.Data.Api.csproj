@@ -31,7 +31,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Grpc.AspNetCore" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" />
     <PackageReference Include="Microsoft.Extensions.DependencyModel" />
@@ -44,18 +43,13 @@
 	<PackageReference Include="Serilog.Extensions.Logging" />
 	<PackageReference Include="Serilog.AspNetCore" />
 	<PackageReference Include="Serilog.Sinks.File" />
+	<PackageReference Include="System.Text.Encodings.Web" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\InvestLens.Shared\InvestLens.Shared.csproj" />
     <ProjectReference Include="..\InvestLens.Data.DataContext\InvestLens.Data.DataContext.csproj" />
     <ProjectReference Include="..\InvestLens.Data.Repositories\InvestLens.Data.Repositories.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-	<Protobuf Include="..\..\InvestLens.Shared\Proto\Api\common.proto" GrpcServices="None" Link="Protos\common.proto" />
-	<Protobuf Include="..\..\InvestLens.Shared\Proto\Api\securities.proto" GrpcServices="Server" Link="Protos\securities.proto" />
-	<Protobuf Include="..\..\InvestLens.Shared\Proto\Api\general_dictionaries.proto" GrpcServices="Server" Link="Protos\general_dictionaries.proto" />
   </ItemGroup>
 
 </Project>

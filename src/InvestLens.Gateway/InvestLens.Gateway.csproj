@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
@@ -11,19 +11,18 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Grpc.AspNetCore" />
-    <PackageReference Include="Grpc.Net.Client" />
+    <PackageReference Include="System.Text.Encodings.Web" />
     <PackageReference Include="Yarp.ReverseProxy" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\InvestLens.Shared\InvestLens.Shared.csproj" />
+  <ItemGroup Label="Grpc">
+	<PackageReference Include="Grpc.AspNetCore" />
+	<PackageReference Include="Grpc.Net.Client" />
   </ItemGroup>
 
   <ItemGroup>
-	<Protobuf Include="..\InvestLens.Shared\Proto\Api\common.proto" GrpcServices="None" Link="Protos\common.proto" />
-	<Protobuf Include="..\InvestLens.Shared\Proto\Api\securities.proto" GrpcServices="Client" Link="Protos\securities.proto" />
-	<Protobuf Include="..\InvestLens.Shared\Proto\Api\general_dictionaries.proto" GrpcServices="Client" Link="Protos\general_dictionaries.proto" />
+    <ProjectReference Include="..\InvestLens.Data\InvestLens.Data.Api\InvestLens.Data.Api.csproj" />
+    <ProjectReference Include="..\InvestLens.Shared\InvestLens.Shared.csproj" />
   </ItemGroup>
 
 </Project>

@@ -2,13 +2,17 @@
 using InvestLens.Shared.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using InvestLens.Shared.Models.Dictionaries;
 
 namespace InvestLens.Web.Pages.Shared;
 
+[JsonDerivedType(typeof(EngineModel))]
 public abstract class DictionaryBasePage<TModel> : PageModel
     where TModel : BaseModel
 {
-    private readonly IBaseDictionariesGrpcClient<TModel> _service;
+    private readonly IHttpClientFactory _httpFactory;
     private readonly ILogger<DictionaryBasePage<TModel>> _logger;
 
     public IEnumerable<string> Columns { get; set; } = [];
@@ -23,9 +27,9 @@ public abstract class DictionaryBasePage<TModel> : PageModel
     public string CurrentSort { get; set; } = "";
     public string CurrentFilter { get; set; } = "";
 
-    protected DictionaryBasePage(IBaseDictionariesGrpcClient<TModel> service, ILogger<DictionaryBasePage<TModel>> logger)
+    protected DictionaryBasePage(IHttpClientFactory httpFactory, ILogger<DictionaryBasePage<TModel>> logger)
     {
-        _service = service;
+        _httpFactory = httpFactory;
         _logger = logger;
     }
 
@@ -40,19 +44,46 @@ public abstract class DictionaryBasePage<TModel> : PageModel
         CurrentSort = sort ?? "";
         CurrentFilter = filter ?? "";
 
-        var entitiesDto = await _service.GetEntitiesAsync(CurrentPage, PageSize, sort, filter);
+        var client = _httpFactory.CreateClient("DataApiClient");
 
-        if (entitiesDto is null)
+        try
         {
-            _logger.LogWarning($"Метод {nameof(IBaseDictionariesGrpcClient<TModel>.GetEntitiesAsync)} не вернул данные.");
+            var response =
+                await client.GetAsync($"api/data/{Route.ToLowerInvariant()}?page={CurrentPage}&pageSize={PageSize}&sort={sort}&filter={filter}");
+
+            if (response.IsSuccessStatusCode)
+            {
+                var json = await response.Content.ReadAsStringAsync();
+
+                var options = new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                };
+
+                if (JsonSerializer.Deserialize(json, ConcreteType, options) is not BaseModelWithPagination<TModel> model)
+                {
+                    _logger.LogWarning($"Метод {nameof(IBaseDictionariesGrpcClient<TModel>.GetEntitiesAsync)} не вернул данные.");
+                    TempData["Warning"] = "Список ценных бумаг пуст.";
+                }
+                else
+                {
+                    _logger.LogInformation("От gRPC-сервера получено {EntitiesCount} записей.", model.Models.Count);
+
+                    Models.AddRange(model.Models);
+                    TotalPages = model.TotalPages;
+                    TotalItems = model.TotalItems;
+                }
+            }
+            else
+            {
+                _logger.LogError("Failed to get {Entities}. Status: {StatusCode}", Route, response.StatusCode);
+                TempData["Error"] = $"Failed to get {Route}. Status: {response.StatusCode}";
+            }
         }
-        else
+        catch (Exception ex)
         {
-            _logger.LogInformation("От gRPC-сервера получено {EntitiesCount} записей.", entitiesDto.Models.Count);
-
-            Models = entitiesDto.Models;
-            TotalPages = entitiesDto.TotalPages;
-            TotalItems = entitiesDto.TotalItems;
+            _logger.LogError(ex, ex.Message);
+            TempData["Error"] = ex.Message;
         }
 
         return Page();
@@ -96,9 +127,10 @@ public abstract class DictionaryBasePage<TModel> : PageModel
         return $"/Dictionaries/{Route}?{string.Join("&", queryParams.Select(kv => $"{kv.Key}={kv.Value}"))}";
     }
 
-    #region Protected Methods
+    #region Abstract Methods
 
     public abstract string Route { get; }
+    protected abstract Type ConcreteType { get; }
 
-    #endregion Protected Methods
+    #endregion Abstract Methods
 }

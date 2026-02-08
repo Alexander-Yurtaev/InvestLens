@@ -16,7 +16,7 @@
     <PackageVersion Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.22.1" />
     <PackageVersion Include="Polly.Caching.Memory" Version="3.0.2" />
     <PackageVersion Include="Serilog.Enrichers.CorrelationId" Version="3.0.1" />
-    <PackageVersion Include="System.Text.Encodings.Web" Version="9.0.0" />
+    <PackageVersion Include="System.Text.Encodings.Web" Version="4.5.1" />
     <PackageVersion Include="Telegram.Bot" Version="22.8.1" />
     <PackageVersion Include="YamlDotNet" Version="16.3.0" />
     <PackageVersion Include="Yarp.ReverseProxy" Version="2.3.0" />

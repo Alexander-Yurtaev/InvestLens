@@ -17,9 +17,17 @@
     <PackageReference Include="Newtonsoft.Json" />
   </ItemGroup>
 
-  <ItemGroup>
+  <ItemGroup Label="Polly">
 	<PackageReference Include="Polly" />
 	<PackageReference Include="Microsoft.Extensions.Http.Polly" />
+  </ItemGroup>
+
+  <ItemGroup Label="Grpc">
+	<PackageReference Include="Grpc.AspNetCore" />
+	<PackageReference Include="Grpc.Tools">
+		<PrivateAssets>all</PrivateAssets>
+		<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+	</PackageReference>
   </ItemGroup>
 
   <ItemGroup Label="EFCore">
@@ -45,10 +53,19 @@
 	<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
 	<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
 	<PackageReference Include="StackExchange.Redis" />
-</ItemGroup>
+	<PackageReference Include="System.Text.Encodings.Web" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\InvestLens.Data\InvestLens.Data.Entities\InvestLens.Data.Entities.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+	<Protobuf Include="Proto\Api\common.proto" GrpcServices="Both" />
+	<Protobuf Include="Proto\Api\general_dictionaries.proto" GrpcServices="Both"
+	          AdditionalImportDirs="Proto\Api" />
+	<Protobuf Include="Proto\Api\securities.proto" GrpcServices="Both"
+	          AdditionalImportDirs="Proto\Api" />
   </ItemGroup>
 
 </Project>

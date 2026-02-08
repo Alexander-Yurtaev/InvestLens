@@ -46,7 +46,6 @@ public class SecuritiesModel : PageModel
         CurrentFilter = filter ?? "";
 
         Columns = GetColumns();
-        // ToDo разобраться в путях для HttpClient
         var client = _httpFactory.CreateClient("DataApiClient");
         try
         {
@@ -72,7 +71,7 @@ public class SecuritiesModel : PageModel
                 {
                     _logger.LogInformation("От gRPC-сервера получено {SecuritiesCount} записей.", model.Models.Count);
 
-                    Securities = model.Models;
+                    Securities.AddRange(model.Models);
                     TotalPages = model.TotalPages;
                     TotalItems = model.TotalItems;
                 }

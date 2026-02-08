@@ -1,18 +1,18 @@
-﻿using InvestLens.Shared.Interfaces.Services;
-using InvestLens.Shared.Models.Dictionaries;
+﻿using InvestLens.Shared.Models.Dictionaries;
 using InvestLens.Web.Pages.Shared;
 
 namespace InvestLens.Web.Pages.Dictionaries;
 
 public class SecurityGroupsModel : DictionaryBasePage<SecurityGroupModel>
 {
-    public SecurityGroupsModel(ISecurityGroupDictionariesGrpcClient service, ILogger<SecurityGroupsModel> logger) : base(service, logger)
+    public SecurityGroupsModel(IHttpClientFactory httpFactory, ILogger<SecurityGroupsModel> logger) : base(httpFactory, logger)
     {
     }
 
     #region Protected Methods
 
     public override string Route => "SecurityGroups";
+    protected override Type ConcreteType => typeof(SecurityGroupModelWithPagination);
 
     #endregion Protected Methods
 }
