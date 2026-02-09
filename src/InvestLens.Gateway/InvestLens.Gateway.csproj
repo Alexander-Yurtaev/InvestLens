@@ -16,6 +16,10 @@
     <PackageReference Include="System.Text.Encodings.Web" />
     <PackageReference Include="Yarp.ReverseProxy" />
   </ItemGroup>
+  <ItemGroup Label="Swagger">
+	  <PackageReference Include="Swashbuckle.AspNetCore" />
+	  <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\InvestLens.Shared\InvestLens.Shared.csproj" />

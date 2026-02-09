@@ -8,6 +8,7 @@ using InvestLens.Shared.Interfaces.Services;
 using InvestLens.Shared.Services;
 using Serilog;
 using Serilog.Context;
+using Microsoft.OpenApi.Models;
 
 namespace InvestLens.Gateway;
 
@@ -42,6 +43,31 @@ public static class Program
                 .WriteTo.File("logs/log-.txt", rollingInterval: RollingInterval.Day);
         });
 
+        builder.Services.AddEndpointsApiExplorer();
+        builder.Services.AddSwaggerGen(options =>
+        {
+            options.SwaggerDoc("v1", new OpenApiInfo
+            {
+                Title = "InvestLens Gateway API",
+                Version = "v1",
+                Description = "Gateway API for InvestLens application with YARP reverse proxy"
+            });
+
+            options.TagActionsBy(api =>
+            {
+                var tag = api.RelativePath?.Split('/').FirstOrDefault(s => !string.IsNullOrEmpty(s));
+                return tag is not null ? [tag] : ["Default"];
+            });
+
+            // Опционально: добавить комментарии XML
+            //var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
+            //var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+            //if (File.Exists(xmlPath))
+            //{
+            //    options.IncludeXmlComments(xmlPath);
+            //}
+        });
+
         builder.Services.AddAutoMapper(_ => { }, typeof(Program).Assembly);
 
         // Добавляем YARP
@@ -49,6 +75,18 @@ public static class Program
             .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"));
 
         var app = builder.Build();
+
+        if (app.Environment.IsDevelopment())
+        {
+            app.UseSwagger();
+            app.UseSwaggerUI(options =>
+            {
+                options.SwaggerEndpoint("/swagger/v1/swagger.json", "InvestLens Gateway API v1");
+                options.RoutePrefix = "swagger"; // Доступ по /swagger
+                options.DocumentTitle = "InvestLens Gateway API Documentation";
+                options.DisplayRequestDuration();
+            });
+        }
 
         app.UseCorrelationId();
 

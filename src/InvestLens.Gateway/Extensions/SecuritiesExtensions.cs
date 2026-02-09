@@ -38,6 +38,15 @@ public static class SecuritiesExtensions
             {
                 return Results.Problem($"Error calling data service: {ex.Message}");
             }
-        });
+        })
+        .WithOpenApi(operation =>
+        {
+            operation.Summary = "Получить список ценных бумаг с деталями";
+            operation.Description = "Возвращает пагинированный список ценных бумаг с детальной информацией";
+            return operation;
+        })
+        .WithTags("Securities")
+        .Produces<SecurityWithDetailsModelWithPagination>()
+        .ProducesProblem(StatusCodes.Status500InternalServerError);
     }
 }

@@ -50,7 +50,16 @@ public static class DictionariesExtensions
             {
                 return Results.Problem($"Error calling data service: {ex.Message}");
             }
-        });
+        })
+        .WithOpenApi(operation =>
+        {
+            operation.Summary = "Получить список торговых систем";
+            operation.Description = "Возвращает пагинированный список торговых систем";
+            return operation;
+        })
+        .WithTags("Dictionaries")
+        .Produces<EngineModelWithPagination>()
+        .ProducesProblem(StatusCodes.Status500InternalServerError); ;
     }
 
     private static RouteHandlerBuilder AddBoards(this IEndpointRouteBuilder endpoints, string? dataBaseAddress)
@@ -84,7 +93,16 @@ public static class DictionariesExtensions
             {
                 return Results.Problem($"Error calling data service: {ex.Message}");
             }
-        });
+        })
+        .WithOpenApi(operation =>
+        {
+            operation.Summary = "Получить список торговых площадок";
+            operation.Description = "Возвращает пагинированный список торговых площадок";
+            return operation;
+        })
+        .WithTags("Dictionaries")
+        .Produces<EngineModelWithPagination>()
+        .ProducesProblem(StatusCodes.Status500InternalServerError); ; ;
     }
 
     private static RouteHandlerBuilder AddBoardGroups(this IEndpointRouteBuilder endpoints, string? dataBaseAddress)
@@ -118,7 +136,16 @@ public static class DictionariesExtensions
             {
                 return Results.Problem($"Error calling data service: {ex.Message}");
             }
-        });
+        })
+        .WithOpenApi(operation =>
+        {
+            operation.Summary = "Получить список групп торговых площадок";
+            operation.Description = "Возвращает пагинированный список групп торговых площадок";
+            return operation;
+        })
+        .WithTags("Dictionaries")
+        .Produces<EngineModelWithPagination>()
+        .ProducesProblem(StatusCodes.Status500InternalServerError); ; ;
     }
 
     private static RouteHandlerBuilder AddMarkets(this IEndpointRouteBuilder endpoints, string? dataBaseAddress)
@@ -152,7 +179,16 @@ public static class DictionariesExtensions
             {
                 return Results.Problem($"Error calling data service: {ex.Message}");
             }
-        });
+        })
+        .WithOpenApi(operation =>
+        {
+            operation.Summary = "Получить список рынков";
+            operation.Description = "Возвращает пагинированный список рынков";
+            return operation;
+        })
+        .WithTags("Dictionaries")
+        .Produces<EngineModelWithPagination>()
+        .ProducesProblem(StatusCodes.Status500InternalServerError); ; ;
     }
 
     private static RouteHandlerBuilder AddDurations(this IEndpointRouteBuilder endpoints, string? dataBaseAddress)
@@ -186,7 +222,16 @@ public static class DictionariesExtensions
             {
                 return Results.Problem($"Error calling data service: {ex.Message}");
             }
-        });
+        })
+        .WithOpenApi(operation =>
+        {
+            operation.Summary = "Получить список периодов";
+            operation.Description = "Возвращает пагинированный список периодов";
+            return operation;
+        })
+        .WithTags("Dictionaries")
+        .Produces<EngineModelWithPagination>()
+        .ProducesProblem(StatusCodes.Status500InternalServerError);
     }
 
     private static RouteHandlerBuilder AddSecurityTypes(this IEndpointRouteBuilder endpoints, string? dataBaseAddress)
@@ -220,7 +265,16 @@ public static class DictionariesExtensions
             {
                 return Results.Problem($"Error calling data service: {ex.Message}");
             }
-        });
+        })
+        .WithOpenApi(operation =>
+        {
+            operation.Summary = "Получить список типов ценных бумаг";
+            operation.Description = "Возвращает пагинированный список типов ценных бумаг";
+            return operation;
+        })
+        .WithTags("Dictionaries")
+        .Produces<EngineModelWithPagination>()
+        .ProducesProblem(StatusCodes.Status500InternalServerError);
     }
 
     private static RouteHandlerBuilder AddSecurityGroups(this IEndpointRouteBuilder endpoints, string? dataBaseAddress)
@@ -254,7 +308,16 @@ public static class DictionariesExtensions
             {
                 return Results.Problem($"Error calling data service: {ex.Message}");
             }
-        });
+        })
+        .WithOpenApi(operation =>
+        {
+            operation.Summary = "Получить список групп ценных бумаг";
+            operation.Description = "Возвращает пагинированный список групп ценных бумаг";
+            return operation;
+        })
+        .WithTags("Dictionaries")
+        .Produces<EngineModelWithPagination>()
+        .ProducesProblem(StatusCodes.Status500InternalServerError);
     }
 
     private static RouteHandlerBuilder AddSecurityCollections(this IEndpointRouteBuilder endpoints, string? dataBaseAddress)
@@ -288,6 +351,15 @@ public static class DictionariesExtensions
             {
                 return Results.Problem($"Error calling data service: {ex.Message}");
             }
-        });
+        })
+        .WithOpenApi(operation =>
+        {
+            operation.Summary = "Получить список коллекций ценных бумаг";
+            operation.Description = "Возвращает пагинированный список коллекций ценных бумаг";
+            return operation;
+        })
+        .WithTags("Dictionaries")
+        .Produces<EngineModelWithPagination>()
+        .ProducesProblem(StatusCodes.Status500InternalServerError);
     }
 }
