@@ -5,6 +5,7 @@ using InvestLens.Data.Entities;
 using InvestLens.Data.Entities.Dictionaries;
 using InvestLens.Shared.Interfaces.Services;
 using InvestLens.Shared.Models;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace InvestLens.Data.Api.Services;
 
@@ -20,6 +21,8 @@ public class MoexDataReaderService : IMoexDataReaderService
     private readonly ISecurityGroupRepository _securityGroupRepository;
     private readonly ISecurityCollectionRepository _securityCollectionRepository;
     private readonly IMapper _mapper;
+    private readonly IMemoryCache _cache;
+    private readonly MemoryCacheEntryOptions _cacheOptions;
 
     public MoexDataReaderService(
         ISecurityRepository securityRepository,
@@ -31,7 +34,7 @@ public class MoexDataReaderService : IMoexDataReaderService
         ISecurityTypeRepository securityTypeRepository,
         ISecurityGroupRepository securityGroupRepository,
         ISecurityCollectionRepository securityCollectionRepository,
-        IMapper mapper)
+        IMapper mapper, IMemoryCache cache)
     {
         _securityRepository = securityRepository;
         _engineRepository = engineRepository;
@@ -43,6 +46,10 @@ public class MoexDataReaderService : IMoexDataReaderService
         _securityGroupRepository = securityGroupRepository;
         _securityCollectionRepository = securityCollectionRepository;
         _mapper = mapper;
+        _cache = cache;
+        _cacheOptions = new MemoryCacheEntryOptions()
+            .SetAbsoluteExpiration(TimeSpan.FromDays(1))
+            .SetPriority(CacheItemPriority.High);
     }
 
     public async Task<SecurityModelWithPagination> GetSecurities(int page, int pageSize, string? sort = "", string? filter = "")
@@ -62,8 +69,8 @@ public class MoexDataReaderService : IMoexDataReaderService
 
     public async Task<SecurityWithDetailsModelWithPagination> GetSecuritiesWithDetails(int page, int pageSize, string? sort = "", string? filter = "")
     {
-        var typesTask = _securityTypeRepository.GetAll();
-        var groupsTask = _securityGroupRepository.GetAll();
+        var typesTask = GetAllSecurityTypes();
+        var groupsTask = GetAllSecurityGroups();
         var securitiesTask = _securityRepository.Get(page, pageSize, sort, filter);
 
         await Task.WhenAll(typesTask, groupsTask, securitiesTask);
@@ -98,41 +105,155 @@ public class MoexDataReaderService : IMoexDataReaderService
 
     public async Task<EntitiesWithPagination<EngineEntity>> GetEngines(int page, int pageSize, string? sort = "", string? filter = "")
     {
-        return await _engineRepository.Get(page, pageSize, sort, filter);
+        if (!string.IsNullOrEmpty(filter) && page != 1)
+            return await _engineRepository.Get(page, pageSize, sort, filter);
+        
+        var cacheKey = $"engine_{pageSize}_{sort}";
+        if (_cache.TryGetValue(cacheKey, out EntitiesWithPagination<EngineEntity>? cachedData) && cachedData is not null)
+        {
+            return cachedData;
+        }
+
+        var data = await _engineRepository.Get(page, pageSize, sort, filter);
+        _cache.Set(cacheKey, data, _cacheOptions);
+        return data;
     }
 
     public async Task<EntitiesWithPagination<MarketEntity>> GetMarkets(int page, int pageSize, string? sort = "", string? filter = "")
     {
-        return await _marketRepository.Get(page, pageSize, sort, filter);
+        if (!string.IsNullOrEmpty(filter) && page != 1)
+            return await _marketRepository.Get(page, pageSize, sort, filter);
+
+        var cacheKey = $"market_{pageSize}_{sort}";
+        if (_cache.TryGetValue(cacheKey, out EntitiesWithPagination<MarketEntity>? cachedData) && cachedData is not null)
+        {
+            return cachedData;
+        }
+
+        var data = await _marketRepository.Get(page, pageSize, sort, filter);
+        _cache.Set(cacheKey, data, _cacheOptions);
+        return data;
     }
 
     public async Task<EntitiesWithPagination<BoardEntity>> GetBoards(int page, int pageSize, string? sort = "", string? filter = "")
     {
-        return await _boardRepository.Get(page, pageSize, sort, filter);
+        if (!string.IsNullOrEmpty(filter) && page != 1)
+            return await _boardRepository.Get(page, pageSize, sort, filter);
+
+        var cacheKey = $"board_{pageSize}_{sort}";
+        if (_cache.TryGetValue(cacheKey, out EntitiesWithPagination<BoardEntity>? cachedData) && cachedData is not null)
+        {
+            return cachedData;
+        }
+
+        var data = await _boardRepository.Get(page, pageSize, sort, filter);
+        _cache.Set(cacheKey, data, _cacheOptions);
+        return data;
     }
 
     public async Task<EntitiesWithPagination<BoardGroupEntity>> GetBoardGroups(int page, int pageSize, string? sort = "", string? filter = "")
     {
-        return await _boardGroupRepository.Get(page, pageSize, sort, filter);
+        if (!string.IsNullOrEmpty(filter) && page != 1)
+            return await _boardGroupRepository.Get(page, pageSize, sort, filter);
+
+        var cacheKey = $"board_group_{pageSize}_{sort}";
+        if (_cache.TryGetValue(cacheKey, out EntitiesWithPagination<BoardGroupEntity>? cachedData) && cachedData is not null)
+        {
+            return cachedData;
+        }
+
+        var data = await _boardGroupRepository.Get(page, pageSize, sort, filter);
+        _cache.Set(cacheKey, data, _cacheOptions);
+        return data;
     }
 
     public async Task<EntitiesWithPagination<DurationEntity>> GetDurations(int page, int pageSize, string? sort = "", string? filter = "")
     {
-        return await _durationRepository.Get(page, pageSize, sort, filter);
+        if (!string.IsNullOrEmpty(filter) && page != 1)
+            return await _durationRepository.Get(page, pageSize, sort, filter);
+
+        var cacheKey = $"duration_{pageSize}_{sort}";
+        if (_cache.TryGetValue(cacheKey, out EntitiesWithPagination<DurationEntity>? cachedData) && cachedData is not null)
+        {
+            return cachedData;
+        }
+
+        var data = await _durationRepository.Get(page, pageSize, sort, filter);
+        _cache.Set(cacheKey, data, _cacheOptions);
+        return data;
     }
 
     public async Task<EntitiesWithPagination<SecurityTypeEntity>> GetSecurityTypes(int page, int pageSize, string? sort = "", string? filter = "")
     {
-        return await _securityTypeRepository.Get(page, pageSize, sort, filter);
+        if (!string.IsNullOrEmpty(filter) && page != 1)
+            return await _securityTypeRepository.Get(page, pageSize, sort, filter);
+
+        var cacheKey = $"security_type_{pageSize}_{sort}";
+        if (_cache.TryGetValue(cacheKey, out EntitiesWithPagination<SecurityTypeEntity>? cachedData) && cachedData is not null)
+        {
+            return cachedData;
+        }
+
+        var data = await _securityTypeRepository.Get(page, pageSize, sort, filter);
+        _cache.Set(cacheKey, data, _cacheOptions);
+        return data;
     }
 
     public async Task<EntitiesWithPagination<SecurityGroupEntity>> GetSecurityGroups(int page, int pageSize, string? sort = "", string? filter = "")
     {
-        return await _securityGroupRepository.Get(page, pageSize, sort, filter);
+        if (!string.IsNullOrEmpty(filter) && page != 1)
+            return await _securityGroupRepository.Get(page, pageSize, sort, filter);
+
+        var cacheKey = $"security_group_{pageSize}_{sort}";
+        if (_cache.TryGetValue(cacheKey, out EntitiesWithPagination<SecurityGroupEntity>? cachedData) && cachedData is not null)
+        {
+            return cachedData;
+        }
+
+        var data = await _securityGroupRepository.Get(page, pageSize, sort, filter);
+        _cache.Set(cacheKey, data, _cacheOptions);
+        return data;
     }
 
     public async Task<EntitiesWithPagination<SecurityCollectionEntity>> GetSecurityCollections(int page, int pageSize, string? sort = "", string? filter = "")
     {
-        return await _securityCollectionRepository.Get(page, pageSize, sort, filter);
+        if (!string.IsNullOrEmpty(filter) && page != 1)
+            return await _securityCollectionRepository.Get(page, pageSize, sort, filter);
+
+        var cacheKey = $"security_collection_{pageSize}_{sort}";
+        if (_cache.TryGetValue(cacheKey, out EntitiesWithPagination<SecurityCollectionEntity>? cachedData) && cachedData is not null)
+        {
+            return cachedData;
+        }
+
+        var data = await _securityCollectionRepository.Get(page, pageSize, sort, filter);
+        _cache.Set(cacheKey, data, _cacheOptions);
+        return data;
+    }
+
+    public async Task<IEnumerable<SecurityTypeEntity>> GetAllSecurityTypes()
+    {
+        var cacheKey = "security_type";
+        if (_cache.TryGetValue(cacheKey, out IEnumerable<SecurityTypeEntity>? cachedData) && cachedData is not null)
+        {
+            return cachedData;
+        }
+
+        var data = (await _securityTypeRepository.GetAll()).ToList();
+        _cache.Set(cacheKey, data, _cacheOptions);
+        return data;
+    }
+
+    public async Task<IEnumerable<SecurityGroupEntity>> GetAllSecurityGroups()
+    {
+        var cacheKey = "security_group";
+        if (_cache.TryGetValue(cacheKey, out IEnumerable<SecurityGroupEntity>? cachedData) && cachedData is not null)
+        {
+            return cachedData;
+        }
+
+        var data = (await _securityGroupRepository.GetAll()).ToList();
+        _cache.Set(cacheKey, data, _cacheOptions);
+        return data;
     }
 }
