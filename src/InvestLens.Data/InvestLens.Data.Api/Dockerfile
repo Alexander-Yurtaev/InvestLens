@@ -19,11 +19,10 @@ WORKDIR /src
 COPY ["Directory.Packages.props", "."]
 COPY ["src/InvestLens.Data/InvestLens.Data.Api/InvestLens.Data.Api.csproj", "src/InvestLens.Data/InvestLens.Data.Api/"]
 COPY ["src/InvestLens.Shared/InvestLens.Shared.csproj", "src/InvestLens.Shared/"]
-COPY ["src/InvestLens.Abstraction/InvestLens.Abstraction.csproj", "src/InvestLens.Abstraction/"]
-COPY ["src/InvestLens.Data.Shared/InvestLens.Data.Shared.csproj", "src/InvestLens.Data.Shared/"]
 COPY ["src/InvestLens.Data/InvestLens.Data.Entities/InvestLens.Data.Entities.csproj", "src/InvestLens.Data/InvestLens.Data.Entities/"]
 COPY ["src/InvestLens.Data/InvestLens.Data.DataContext/InvestLens.Data.DataContext.csproj", "src/InvestLens.Data/InvestLens.Data.DataContext/"]
 COPY ["src/InvestLens.Data/InvestLens.Data.Repositories/InvestLens.Data.Repositories.csproj", "src/InvestLens.Data/InvestLens.Data.Repositories/"]
+COPY ["src/InvestLens.Data/InvestLens.Data.Core/InvestLens.Data.Core.csproj", "src/InvestLens.Data/InvestLens.Data.Core/"]
 RUN dotnet restore "./src/InvestLens.Data/InvestLens.Data.Api/InvestLens.Data.Api.csproj"
 COPY . .
 WORKDIR "/src/src/InvestLens.Data/InvestLens.Data.Api"

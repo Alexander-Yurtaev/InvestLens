@@ -14,6 +14,7 @@
   <ItemGroup>
 	<PackageReference Include="AspNetCore.HealthChecks.Uris" />
 	<PackageReference Include="IdentityModel" />
+	<PackageReference Include="AutoMapper" />
   </ItemGroup>
 
   <ItemGroup Label="Serilog">
@@ -26,7 +27,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\InvestLens.Gateway\InvestLens.Gateway.csproj" />
     <ProjectReference Include="..\InvestLens.Shared\InvestLens.Shared.csproj" />
   </ItemGroup>
 

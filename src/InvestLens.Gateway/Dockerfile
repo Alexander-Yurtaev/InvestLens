@@ -14,6 +14,8 @@ ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 COPY ["Directory.Packages.props", "."]
 COPY ["src/InvestLens.Gateway/InvestLens.Gateway.csproj", "src/InvestLens.Gateway/"]
+COPY ["src/InvestLens.Shared/InvestLens.Shared.csproj", "src/InvestLens.Shared/"]
+COPY ["src/InvestLens.Data/InvestLens.Data.Entities/InvestLens.Data.Entities.csproj", "src/InvestLens.Data/InvestLens.Data.Entities/"]
 RUN dotnet restore "./src/InvestLens.Gateway/InvestLens.Gateway.csproj"
 COPY . .
 WORKDIR "/src/src/InvestLens.Gateway"
