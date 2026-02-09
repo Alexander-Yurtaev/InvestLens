@@ -11,8 +11,8 @@ public static class SecuritiesExtensions
     {
         return endpoints.MapGet("/api/data/securities", async (
             IMapper mapper,
-            int page,
-            int pageSize,
+            int page=1,
+            int pageSize=10,
             string? sort = "",
             string? filter = ""
         ) =>

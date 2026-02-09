@@ -1,15 +1,10 @@
-using AutoMapper;
 using CorrelationId;
 using CorrelationId.Abstractions;
 using CorrelationId.DependencyInjection;
-using CorrelationId.HttpClient;
-using Grpc.Net.Client;
 using InvestLens.Gateway.Extensions;
-using InvestLens.Grpc.Service;
 using InvestLens.Shared.Constants;
 using InvestLens.Shared.Helpers;
 using InvestLens.Shared.Interfaces.Services;
-using InvestLens.Shared.Models;
 using InvestLens.Shared.Services;
 using Serilog;
 using Serilog.Context;
