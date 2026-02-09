@@ -1,0 +1,27 @@
+﻿global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  # Prometheus сам мониторит себя
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+  
+  # ASP.NET Core Web-клиент
+  - job_name: 'web-client'
+    static_configs:
+      - targets: ['investlens.web:8080']
+    metrics_path: '/metrics'
+  
+  # Gateway (YARP)
+  - job_name: 'gateway'
+    static_configs:
+      - targets: ['investlens.gateway:8080']
+    metrics_path: '/metrics'
+  
+  # Data Service
+  - job_name: 'data-service'
+    static_configs:
+      - targets: ['investlens.data.api:8080']
+    metrics_path: '/metrics'
