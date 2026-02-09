@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-using Google.Protobuf.Collections;
 using Grpc.Core;
 using InvestLens.Grpc.Service;
 using InvestLens.Shared.Interfaces.Services;
@@ -26,17 +25,10 @@ public class SecurityGrpcService : SecurityServices.SecurityServicesBase
     {
         try
         {
-            var securities = await _moexReaderService.GetSecurities(request.Page, request.PageSize, request.Sort, request.Filter);
-            var response = new GetSecuritiesResponse
-            {
-                Page = securities.Page,
-                PageSize = securities.PageSize,
-                TotalPages = securities.TotalPages,
-                TotalItems = securities.TotalItems,
-            };
-
-            response.Data.AddRange(_mapper.Map<RepeatedField<Security>>(securities.Models));
-
+            var securities = await _moexReaderService
+                .GetSecurities(request.Page, request.PageSize, request.Sort, request.Filter);
+            
+            var response = _mapper.Map<GetSecuritiesResponse>(securities);
             return response;
         }
         catch (Exception ex)
@@ -54,38 +46,7 @@ public class SecurityGrpcService : SecurityServices.SecurityServicesBase
                 await _moexReaderService.GetSecuritiesWithDetails(request.Page, request.PageSize, request.Sort,
                     request.Filter);
 
-            var response = new GetSecuritiesWithDetailsResponse()
-            {
-                Page = securities.Page,
-                PageSize = securities.PageSize,
-                TotalPages = securities.TotalPages,
-                TotalItems = securities.TotalItems
-            };
-
-            response.Data.AddRange(securities.Models.Select(s => new SecurityWithDetails
-            {
-                Id = s.Id,
-                SecId = s.SecId,
-                ShortName = s.ShortName,
-                RegNumber = s.RegNumber,
-                Name = s.Name,
-                Isin = s.Isin,
-                IsTraded = s.IsTraded,
-                EmitentId = s.EmitentId ?? 0,
-                EmitentTitle = s.EmitentTitle,
-                EmitentInn = s.EmitentInn,
-                EmitentOkpo = s.EmitentOkpo,
-
-                Type = s.Type,
-                TypeTitle = s.TypeTitle,
-                
-                Group = s.Group,
-                GroupTitle = s.GroupTitle,
-
-                PrimaryBoardId = s.PrimaryBoardId,
-                MarketpriceBoardId = s.MarketpriceBoardId
-            }));
-
+            var response = _mapper.Map<GetSecuritiesWithDetailsResponse>(securities);
             return response;
         }
         catch (Exception ex)
