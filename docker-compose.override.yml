@@ -28,7 +28,6 @@ services:
     ports:
       - "8080:8080"
       - "8081:8081"
-      - "8082:8082"
     volumes:
       - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
       - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
@@ -83,7 +82,7 @@ services:
       - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
       - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
   
-  postgres:
+  investlens.postgres:
     environment:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
@@ -91,7 +90,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
-  redis:
+  investlens.redis:
     environment:
       - REDIS_PASSWORD=${REDIS_PASSWORD:-}
     ports:
@@ -99,7 +98,7 @@ services:
     volumes:
       - ./redis_data:/data
 
-  rabbitmq:
+  investlens.rabbitmq:
     environment:
       - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER:-guest}
       - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD:-guest}
@@ -109,10 +108,13 @@ services:
     volumes:
       - ./rabbitmq_data:/var/lib/rabbitmq
 
-  prometheus:
+  investlens.prometheus:
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus_data:/prometheus
+      - type: bind
+        source: C:\docker-certs\invest-lens
+        target: /etc/ssl/certs
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
@@ -121,24 +123,18 @@ services:
       - '--storage.tsdb.retention.time=30d'
     ports:
       - "9090:9090"
-    networks:
-      - monitoring
 
-  grafana:
+  investlens.grafana:
     volumes:
       - grafana_data:/var/lib/grafana
       - ./grafana/provisioning:/etc/grafana/provisioning
+      - type: bind
+        source: C:\docker-certs\invest-lens
+        target: /etc/ssl/certs
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin
-      - GF_INSTALL_PLUGINS=grafana-piechart-panel
     ports:
       - "3000:3000"
-    networks:
-      - monitoring
-
-networks:
-  monitoring:
-    driver: bridge
 
 volumes:
   postgres_data:

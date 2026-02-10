@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.ComponentModel;
 using System.Reflection;
 using System.Text.Json;
+using InvestLens.Web.Metrics;
 
 namespace InvestLens.Web.Pages;
 
@@ -38,6 +39,11 @@ public class SecuritiesModel : PageModel
         [FromQuery(Name = "sort")] string? sort = null,
         [FromQuery(Name = "filter")] string? filter = null)
     {
+        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+        var method = "GET";
+        var endpoint = "/securities";
+        string statusCode = "200";
+
         CurrentPage = page < 1 ? 1 : page;
         PageSize = pageSize < 1 ? 10 : pageSize;
         CurrentSort = sort ?? "";
@@ -49,6 +55,8 @@ public class SecuritiesModel : PageModel
         {
             var response =
                 await client.GetAsync($"api/data/securities?page={CurrentPage}&pageSize={PageSize}&sort={sort}&filter={filter}");
+            
+            statusCode = ((int)response.StatusCode).ToString();
 
             if (response.IsSuccessStatusCode)
             {
@@ -78,11 +86,29 @@ public class SecuritiesModel : PageModel
             {
                 _logger.LogError("Failed to get securities. Status: {StatusCode}", response.StatusCode);
             }
+
+            WebClientMetrics.GatewayRequestDuration
+                .WithLabels(method, endpoint, statusCode)
+                .Observe(stopwatch.Elapsed.TotalSeconds);
+
+            WebClientMetrics.GatewayRequestCount
+                .WithLabels(method, endpoint, statusCode)
+                .Inc();
         }
         catch (Exception ex)
         {
+            statusCode = "500";
+
             _logger.LogError(ex, ex.Message);
             TempData["Error"] = ex.Message;
+
+            WebClientMetrics.GatewayRequestDuration
+                .WithLabels(method, endpoint, statusCode)
+                .Observe(stopwatch.Elapsed.TotalSeconds);
+
+            WebClientMetrics.GatewayRequestCount
+                .WithLabels(method, endpoint, statusCode)
+                .Inc();
         }
 
         return Page();

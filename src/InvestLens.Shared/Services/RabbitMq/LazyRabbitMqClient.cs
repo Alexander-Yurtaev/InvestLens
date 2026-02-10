@@ -1,5 +1,6 @@
 ﻿using InvestLens.Abstraction.MessageBus.Models;
 using InvestLens.Abstraction.MessageBus.Services;
+using InvestLens.Shared.Interfaces.MessageBus.Services;
 using RabbitMQ.Client;
 
 namespace InvestLens.Shared.Services.RabbitMq;
@@ -17,6 +18,9 @@ public class LazyRabbitMqClient : IMessageBusClient
     {
         var client = await _lazyClient.Value;
         await client.DisposeAsync();
+
+        // Предотвращаем вызов финализатора для этого объекта
+        GC.SuppressFinalize(this);
     }
 
     public async Task<IChannel> GetChannelAsync()

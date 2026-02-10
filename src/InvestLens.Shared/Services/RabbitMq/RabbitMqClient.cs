@@ -26,7 +26,7 @@ public class RabbitMqClient : IMessageBusClient
     private readonly IServiceProvider _serviceProvider;
     private readonly ConcurrentDictionary<string, AsyncEventingBasicConsumer> _consumers;
     private readonly JsonSerializerOptions _jsonOptions;
-    private readonly SemaphoreSlim _connectionLock = new(1, 1);
+    private readonly object _publishLock = new();
 
     public static async Task<RabbitMqClient> CreateAsync(
         IRabbitMqSettings settings,
@@ -89,12 +89,14 @@ public class RabbitMqClient : IMessageBusClient
         string routingKey = "",
         CancellationToken cancellationToken = default) where T : IBaseMessage
     {
-        await _connectionLock.WaitAsync(cancellationToken);
         try
         {
-            if (_channel.IsClosed)
+            lock (_publishLock)
             {
-                throw new InvalidOperationException("Канал закрыт");
+                if (_channel.IsClosed)
+                {
+                    throw new InvalidOperationException("Канал закрыт");
+                }
             }
 
             // Объявляем exchange если его нет
@@ -143,10 +145,6 @@ public class RabbitMqClient : IMessageBusClient
             _logger.LogError(ex, "Ошибка при публикации сообщения {MessageId}", message.MessageId);
             throw new MessageBusException($"Failed to publish message {message.MessageId}", ex);
         }
-        finally
-        {
-            _connectionLock.Release();
-        }
     }
 
     public virtual async Task SubscribeAsync<T, TH>(
@@ -157,7 +155,6 @@ public class RabbitMqClient : IMessageBusClient
         where T : IBaseMessage
         where TH : IMessageHandler<T>
     {
-        await _connectionLock.WaitAsync(cancellationToken);
         try
         {
             if (_consumers.ContainsKey(queueName))
@@ -244,10 +241,6 @@ public class RabbitMqClient : IMessageBusClient
             _logger.LogError(ex, "Ошибка при создании подписки на очередь {QueueName}", queueName);
             throw new MessageBusException($"Failed to subscribe to queue {queueName}", ex);
         }
-        finally
-        {
-            _connectionLock.Release();
-        }
     }
 
     private async Task OnMessageReceived<T, TH>(
@@ -283,17 +276,20 @@ public class RabbitMqClient : IMessageBusClient
             {
                 var success = await handler.HandleAsync(message, cancellationToken);
 
-                if (success)
+                _ = Task.Run(async () =>
                 {
-                    await _channel.BasicAckAsync(deliveryTag, false, cancellationToken);
-                    _logger.LogDebug("Сообщение {MessageId} успешно обработано", messageId);
-                }
-                else
-                {
-                    // Отправляем в DLQ после неудачной обработки
-                    await _channel.BasicNackAsync(deliveryTag, false, false, cancellationToken);
-                    _logger.LogWarning("Обработчик вернул false для сообщения {MessageId}", messageId);
-                }
+                    if (success)
+                    {
+                        await _channel.BasicAckAsync(deliveryTag, false, cancellationToken);
+                        _logger.LogDebug("Сообщение {MessageId} успешно обработано", messageId);
+                    }
+                    else
+                    {
+                        // Отправляем в DLQ после неудачной обработки
+                        await _channel.BasicNackAsync(deliveryTag, false, false, cancellationToken);
+                        _logger.LogWarning("Обработчик вернул false для сообщения {MessageId}", messageId);
+                    }
+                }, cancellationToken);
             }
             else
             {
@@ -326,7 +322,7 @@ public class RabbitMqClient : IMessageBusClient
         }
     }
 
-    private int GetRedeliveryCount(IReadOnlyBasicProperties properties)
+    private static int GetRedeliveryCount(IReadOnlyBasicProperties properties)
     {
         if (properties.Headers != null &&
             properties.Headers.TryGetValue("x-redelivery-count", out var value) &&
@@ -362,68 +358,53 @@ public class RabbitMqClient : IMessageBusClient
         where T : IBaseMessage
         where TH : IMessageHandler<T>
     {
-        await _connectionLock.WaitAsync(cancellationToken);
-        try
-        {
-            var queueName = _consumers.Keys.FirstOrDefault(k => k.Contains(typeof(T).Name));
+        var queueName = _consumers.Keys.FirstOrDefault(k => k.Contains(typeof(T).Name));
 
-            if (queueName != null && _consumers.TryRemove(queueName, out var consumer))
+        if (queueName != null && _consumers.TryRemove(queueName, out var consumer))
+        {
+            var consumerTag = consumer.ConsumerTags.FirstOrDefault();
+
+            if (consumerTag != null)
             {
-                var consumerTag = consumer.ConsumerTags.FirstOrDefault();
-
-                if (consumerTag != null)
-                {
-                    await _channel.BasicCancelAsync(consumerTag, cancellationToken: cancellationToken);
-                    _logger.LogInformation("Отписаны от очереди: {QueueName}", queueName);
-                }
+                await _channel.BasicCancelAsync(consumerTag, cancellationToken: cancellationToken);
+                _logger.LogInformation("Отписаны от очереди: {QueueName}", queueName);
             }
-        }
-        finally
-        {
-            _connectionLock.Release();
         }
     }
 
     public async ValueTask DisposeAsync()
     {
-        await _connectionLock.WaitAsync();
-        try
+        foreach (var consumer in _consumers.Values)
         {
-            foreach (var consumer in _consumers.Values)
+            foreach (var tag in consumer.ConsumerTags)
             {
-                foreach (var tag in consumer.ConsumerTags)
-                {
-                    await _channel.BasicCancelAsync(tag);
-                }
+                await _channel.BasicCancelAsync(tag);
             }
-
-            _consumers.Clear();
-
-            if (_channel.IsOpen)
-            {
-                await _channel.CloseAsync();
-                _channel.Dispose();
-            }
-
-            if (_connection.IsOpen)
-            {
-                await _connection.CloseAsync();
-                _connection.Dispose();
-            }
-
-            _logger.LogInformation("RabbitMQ Client отключен");
         }
-        finally
+
+        _consumers.Clear();
+
+        if (_channel.IsOpen)
         {
-            _connectionLock.Release();
-            _connectionLock.Dispose();
+            await _channel.CloseAsync();
+            _channel.Dispose();
         }
+
+        if (_connection.IsOpen)
+        {
+            await _connection.CloseAsync();
+            _connection.Dispose();
+        }
+
+        _logger.LogInformation("RabbitMQ Client отключен");
+
+        // Предотвращаем вызов финализатора для этого объекта
+        GC.SuppressFinalize(this);
     }
 
-    private void ValidateSettings(IRabbitMqSettings settings)
+    private static void ValidateSettings(IRabbitMqSettings settings)
     {
-        if (settings == null)
-            throw new ArgumentNullException(nameof(settings));
+        ArgumentNullException.ThrowIfNull(settings, nameof(settings));
 
         if (string.IsNullOrWhiteSpace(settings.HostName))
             throw new ArgumentException("HostName не может быть пустым", nameof(settings));

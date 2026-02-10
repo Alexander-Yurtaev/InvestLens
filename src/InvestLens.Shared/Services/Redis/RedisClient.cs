@@ -150,7 +150,7 @@ public class RedisClient : IRedisClient, IDisposable
             return await Task.FromResult(keys.Select(k =>
             {
                 var v = k.ToString();
-                return !v.StartsWith(_instanceName) ? v : v.Substring(_instanceName.Length);
+                return !v.StartsWith(_instanceName, StringComparison.OrdinalIgnoreCase) ? v : v.Substring(_instanceName.Length);
             }));
         }
         catch (Exception ex)

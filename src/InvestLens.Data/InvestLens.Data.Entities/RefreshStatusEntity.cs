@@ -1,5 +1,8 @@
-﻿namespace InvestLens.Data.Entities;
+﻿using System.ComponentModel.DataAnnotations.Schema;
 
+namespace InvestLens.Data.Entities;
+
+[Table("RefreshStatus")]
 public class RefreshStatusEntity : BaseEntity
 {
     public RefreshStatusEntity(string entityName)

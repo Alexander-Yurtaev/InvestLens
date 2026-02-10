@@ -4,12 +4,11 @@
       "commandName": "DockerCompose",
       "commandVersion": "1.0",
       "serviceActions": {
-        "investlens.web": "StartDebugging",
-        "investlens.data.api": "StartDebugging",
-        "investlens.worker": "StartDebugging",
-        "investlens.hangfiredashboard": "StartDebugging",
-        "investlens.telegrambot": "StartDebugging",
-        "investlens.gateway": "StartDebugging"
+        "investlens_web": "StartDebugging",
+        "investlens_data_api": "StartDebugging",
+        "investlens_worker": "StartDebugging",
+        "investlens_telegrambot": "StartDebugging",
+        "investlens_gateway": "StartDebugging"
       }
     }
   }

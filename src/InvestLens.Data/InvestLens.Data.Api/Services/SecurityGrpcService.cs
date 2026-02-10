@@ -1,7 +1,9 @@
 ﻿using AutoMapper;
 using Grpc.Core;
+using InvestLens.Data.Api.Metrics;
 using InvestLens.Grpc.Service;
 using InvestLens.Shared.Interfaces.Services;
+using Prometheus;
 
 namespace InvestLens.Data.Api.Services;
 
@@ -42,6 +44,10 @@ public class SecurityGrpcService : SecurityServices.SecurityServicesBase
     {
         try
         {
+            using var timer = DataServiceMetrics.DbQueryDuration
+                .WithLabels("SELECT", "Data")
+                .NewTimer();
+
             var securities =
                 await _moexReaderService.GetSecuritiesWithDetails(request.Page, request.PageSize, request.Sort,
                     request.Filter);

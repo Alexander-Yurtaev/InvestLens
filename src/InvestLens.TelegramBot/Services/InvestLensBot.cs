@@ -1,4 +1,4 @@
-using InvestLens.Abstraction.Redis.Data;
+п»їusing InvestLens.Abstraction.Redis.Data;
 using InvestLens.Abstraction.Redis.Services;
 using InvestLens.Abstraction.Telegram.Models;
 using InvestLens.Abstraction.Telegram.Services;
@@ -62,7 +62,7 @@ public class InvestLensBot : BackgroundService, IHealthCheck
                             updateData.NextUpdateId = result.UpdateId + 1;
                             _lastProcessedTime = DateTime.UtcNow;
 
-                            // 4. Обновить nextUpdateId в Redis
+                            // 4. РћР±РЅРѕРІРёС‚СЊ nextUpdateId РІ Redis
                             await _redisClientForInstance.SetAsync(NextUpdateIdKey, updateData);
                         }
                         _isHealthy = true;
@@ -72,8 +72,8 @@ public class InvestLensBot : BackgroundService, IHealthCheck
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Ошибка при проверке сообщений в чат-боте.");
-                    await _botClient.NotifyErrorAsync("Ошибка при проверке сообщений в чат-боте: {ex.Message}", stoppingToken);
+                    _logger.LogError(ex, "РћС€РёР±РєР° РїСЂРё РїСЂРѕРІРµСЂРєРµ СЃРѕРѕР±С‰РµРЅРёР№ РІ С‡Р°С‚-Р±РѕС‚Рµ.");
+                    await _botClient.NotifyErrorAsync($"РћС€РёР±РєР° РїСЂРё РїСЂРѕРІРµСЂРєРµ СЃРѕРѕР±С‰РµРЅРёР№ РІ С‡Р°С‚-Р±РѕС‚Рµ: {ex.Message}", stoppingToken);
                 }
             }
 
@@ -103,19 +103,19 @@ public class InvestLensBot : BackgroundService, IHealthCheck
 
     private async Task<GetUpdatesResponse?> GetUpdatesOperation(int nextUpdateId, CancellationToken cancellationToken)
     {
-        // 1. Получить из Telegram данные
+        // 1. РџРѕР»СѓС‡РёС‚СЊ РёР· Telegram РґР°РЅРЅС‹Рµ
         var response = await _botClient.GetUpdatesAsync(nextUpdateId, cancellationToken);
 
-        // 2. Обработать полученные данные
+        // 2. РћР±СЂР°Р±РѕС‚Р°С‚СЊ РїРѕР»СѓС‡РµРЅРЅС‹Рµ РґР°РЅРЅС‹Рµ
         if (response is null)
         {
-            _logger.LogWarning("От Telegram не пришли данные.");
+            _logger.LogWarning("РћС‚ Telegram РЅРµ РїСЂРёС€Р»Рё РґР°РЅРЅС‹Рµ.");
             return null;
         }
 
         if (!response.Ok)
         {
-            _logger.LogWarning("От Telegram получена ошибка: {ErrorCode} - {Description}", response.ErrorCode, response.Description);
+            _logger.LogWarning("РћС‚ Telegram РїРѕР»СѓС‡РµРЅР° РѕС€РёР±РєР°: {ErrorCode} - {Description}", response.ErrorCode, response.Description);
             return null;
         }
 
@@ -127,7 +127,7 @@ public class InvestLensBot : BackgroundService, IHealthCheck
         if (!_isHealthy)
             return Task.FromResult(HealthCheckResult.Unhealthy("Bot is in error state"));
 
-        // Проверяем, когда последний раз обрабатывали сообщение
+        // РџСЂРѕРІРµСЂСЏРµРј, РєРѕРіРґР° РїРѕСЃР»РµРґРЅРёР№ СЂР°Р· РѕР±СЂР°Р±Р°С‚С‹РІР°Р»Рё СЃРѕРѕР±С‰РµРЅРёРµ
         if (DateTime.UtcNow - _lastProcessedTime > TimeSpan.FromMinutes(5))
             return Task.FromResult(
                 HealthCheckResult.Degraded("No messages processed in last 5 minutes"));

@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace InvestLens.Data.Entities;
 
+[Table("Security")]
 public class SecurityEntity : BaseEntity
 {
     [DisplayName("ID")]

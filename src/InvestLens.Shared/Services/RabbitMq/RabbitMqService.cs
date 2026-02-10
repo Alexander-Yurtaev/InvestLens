@@ -15,8 +15,8 @@ public class RabbitMqService : IRabbitMqService
     private static readonly SemaphoreSlim EnsureCheckLock = new(1, 1);
 
     // Кэшированные политики для производительности
-    private readonly AsyncPolicy _tcpHealthCheckPolicy; // Политика для TCP проверки
     private readonly AsyncPolicy _rabbitMqResilientPolicy;
+    private IConnection? _connection = null;
 
     public RabbitMqService(IPollyService pollyService, ILogger<RabbitMqService> logger)
     {
@@ -24,20 +24,6 @@ public class RabbitMqService : IRabbitMqService
 
         // Инициализируем политики один раз
         _rabbitMqResilientPolicy = pollyService.GetRabbitMqResilientPolicy();
-
-        // Создаем политику для TCP health check (больше попыток, больше времени)
-        _tcpHealthCheckPolicy = Policy
-            .Handle<SocketException>()
-            .Or<TimeoutException>()
-            .WaitAndRetryAsync(
-                retryCount: 30, // Увеличиваем до 30 попыток (~2 минуты)
-                sleepDurationProvider: _ => TimeSpan.FromSeconds(2), // Фиксированная задержка 2 секунды
-                onRetry: (exception, timespan, retryAttempt, _) =>
-                {
-                    _logger.LogWarning(
-                        "RabbitMQ TCP check retry {RetryAttempt}/30 after {Seconds}s: {Message}",
-                        retryAttempt, timespan.TotalSeconds, exception.Message);
-                });
     }
 
     public async Task EnsureRabbitMqIsRunningAsync(IConfiguration configuration, CancellationToken cancellation)
@@ -56,7 +42,7 @@ public class RabbitMqService : IRabbitMqService
                 rabbitMqHost, rabbitMqPort);
 
             // Используем TCP-ориентированную политику для проверки health check
-            await _tcpHealthCheckPolicy.ExecuteAsync(async (ct) =>
+            await _rabbitMqResilientPolicy.ExecuteAsync(async (ct) =>
             {
                 using var tcpClient = new TcpClient();
                 await tcpClient.ConnectAsync(rabbitMqHost, rabbitMqPort, ct);
@@ -79,6 +65,18 @@ public class RabbitMqService : IRabbitMqService
 
     public async Task<IConnection> GetConnection(IRabbitMqSettings settings, CancellationToken cancellationToken)
     {
+        if (_connection is null || !_connection.IsOpen)
+        {
+            _connection = await CreateConnection(settings, cancellationToken);
+        }
+
+        return _connection;
+    }
+
+    #region Private Methods
+
+    private async Task<IConnection> CreateConnection(IRabbitMqSettings settings, CancellationToken cancellationToken)
+    {
         _logger.LogDebug(
             "Creating RabbitMQ connection to {Host}:{Port}",
             settings.HostName, settings.Port);
@@ -91,10 +89,13 @@ public class RabbitMqService : IRabbitMqService
             Password = settings.Password,
             VirtualHost = settings.VirtualHost,
             AutomaticRecoveryEnabled = true,
+
+            RequestedConnectionTimeout = TimeSpan.FromSeconds(5),
+            ContinuationTimeout = TimeSpan.FromSeconds(5),
+            HandshakeContinuationTimeout = TimeSpan.FromSeconds(5),
+
             NetworkRecoveryInterval = TimeSpan.FromSeconds(10),
-            RequestedHeartbeat = TimeSpan.FromSeconds(60),
-            ContinuationTimeout = TimeSpan.FromSeconds(20),
-            HandshakeContinuationTimeout = TimeSpan.FromSeconds(20)
+            RequestedHeartbeat = TimeSpan.FromSeconds(60)
         };
 
         if (!string.IsNullOrEmpty(settings.ClientName))
@@ -147,4 +148,6 @@ public class RabbitMqService : IRabbitMqService
             }
         }, cancellationToken);
     }
+
+    #endregion Private Methods
 }

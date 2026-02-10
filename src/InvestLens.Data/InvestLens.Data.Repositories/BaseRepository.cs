@@ -121,7 +121,7 @@ public abstract class BaseReadOnlyRepository<TEntity> : IBaseReadOnlyRepository<
 
         var isDesc = false;
         sort = sort.ToLowerInvariant();
-        if (sort.EndsWith("_desc"))
+        if (sort.EndsWith("_desc", StringComparison.OrdinalIgnoreCase))
         {
             isDesc = true;
             sort = sort.Substring(0, sort.Length - "desc".Length - 1);

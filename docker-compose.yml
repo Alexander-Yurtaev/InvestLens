@@ -1,20 +1,20 @@
 services:
   investlens.gateway:
     image: ${DOCKER_REGISTRY-}investlensgateway
-    container_name: investlens.gateway
+    container_name: investlens_gateway
     environment:
-     - DATA_BASE_ADDRESS=https://investlens.data.api:8081
+     - DATA_BASE_ADDRESS=https://investlens_data_api:8081
     build:
       context: .
       dockerfile: src/InvestLens.Gateway/Dockerfile
 
   investlens.web:
     image: ${DOCKER_REGISTRY-}investlensweb
-    container_name: investlens.web
+    container_name: investlens_web
     env_file: 
       - src/InvestLens.Web/.env
     environment:
-      - DB_HOST=postgres_multi_db
+      - DB_HOST=investlens_postgres
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - REDIS_HOST=investlens_redis
       - REDIS_USER=${REDIS_USER}
@@ -28,15 +28,14 @@ services:
       dockerfile: src/InvestLens.Web/Dockerfile
     depends_on:
       - investlens.data.api
-      - postgres
 
   investlens.data.api:
     image: ${DOCKER_REGISTRY-}investlensdataapi
-    container_name: investlens.data.api
+    container_name: investlens_data_api
     env_file: 
       - src/InvestLens.Data/InvestLens.Data.Api/.env
     environment:
-      - DB_HOST=postgres_multi_db
+      - DB_HOST=investlens_postgres
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - REDIS_HOST=investlens_redis
       - REDIS_USER=${REDIS_USER}
@@ -49,18 +48,17 @@ services:
       context: .
       dockerfile: src/InvestLens.Data/InvestLens.Data.Api/Dockerfile
     depends_on:
-      - investlens.worker
-      - postgres
-      - redis
-      - rabbitmq
+      - investlens.postgres
+      - investlens.redis
+      - investlens.rabbitmq
 
   investlens.worker:
     image: ${DOCKER_REGISTRY-}investlensworker
-    container_name: investlens.worker
+    container_name: investlens_worker
     env_file: 
       - src/InvestLens.Worker/.env
     environment:
-      - DB_HOST=postgres_multi_db
+      - DB_HOST=investlens_postgres
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - REDIS_HOST=investlens_redis
       - REDIS_USER=${REDIS_USER}
@@ -73,13 +71,13 @@ services:
       context: .
       dockerfile: src/InvestLens.Worker/Dockerfile
     depends_on:
-      - postgres
-      - redis
-      - rabbitmq
+      - investlens.postgres
+      - investlens.redis
+      - investlens.rabbitmq
 
   investlens.telegrambot:
     image: ${DOCKER_REGISTRY-}investlenstelegrambot
-    container_name: investlens.telegrambot
+    container_name: investlens_telegrambot
     env_file: 
       - src/InvestLens.TelegramBot/.env
     environment:
@@ -94,17 +92,16 @@ services:
       context: .
       dockerfile: src/InvestLens.TelegramBot/Dockerfile
     depends_on:
-      - postgres
-      - redis
-      - rabbitmq
+      - investlens.redis
+      - investlens.rabbitmq
 
-  postgres:
+  investlens.postgres:
     image: postgres:15-alpine
-    container_name: postgres_multi_db
+    container_name: investlens_postgres
     env_file:
       - .env
 
-  redis:
+  investlens.redis:
     image: redis:7-alpine
     container_name: investlens_redis
     env_file:
@@ -119,7 +116,7 @@ services:
       --save 60 10000
     restart: unless-stopped
 
-  rabbitmq:
+  investlens.rabbitmq:
     image: rabbitmq:3-management-alpine
     container_name: investlens_rabbitmq
     env_file:
@@ -128,16 +125,22 @@ services:
       - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER:-rabbitmq}
       - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD:-rabbitmq}
       - RABBITMQ_DEFAULT_VHOST=${RABBITMQ_VHOST:-/}
+    healthcheck:
+        test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+        interval: 10s
+        timeout: 5s
+        retries: 10
+        start_period: 30s
     restart: unless-stopped
 
-  prometheus:
+  investlens.prometheus:
     image: prom/prometheus:latest
-    container_name: prometheus
+    container_name: investlens_prometheus
     restart: unless-stopped
 
-  grafana:
+  investlens.grafana:
     image: grafana/grafana:latest
-    container_name: grafana
+    container_name: investlens_grafana
     depends_on:
-      - prometheus
+      - investlens.prometheus
     restart: unless-stopped

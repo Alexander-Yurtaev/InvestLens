@@ -6,9 +6,10 @@ using InvestLens.Shared.Constants;
 using InvestLens.Shared.Helpers;
 using InvestLens.Shared.Interfaces.Services;
 using InvestLens.Shared.Services;
+using Microsoft.OpenApi.Models;
+using Prometheus;
 using Serilog;
 using Serilog.Context;
-using Microsoft.OpenApi.Models;
 
 namespace InvestLens.Gateway;
 
@@ -119,6 +120,9 @@ public static class Program
 
         app.AddSecurities(builder.Configuration["DATA_BASE_ADDRESS"]);
         app.AddDictionaries(builder.Configuration["DATA_BASE_ADDRESS"]);
+
+        app.UseHttpMetrics();
+        app.MapMetrics();
 
         // ѕроксируем остальные запросы через YARP
         app.MapReverseProxy();

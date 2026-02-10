@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Grpc.Net.Client;
+using InvestLens.Gateway.Metrics;
 using InvestLens.Grpc.Service;
 using InvestLens.Shared.Models;
 
@@ -17,6 +18,8 @@ public static class SecuritiesExtensions
             string? filter = ""
         ) =>
         {
+            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+
             try
             {
                 // Создаем gRPC клиент
@@ -32,10 +35,18 @@ public static class SecuritiesExtensions
                 // Преобразуем gRPC ответ в REST формат
                 var securities = mapper.Map<SecurityWithDetailsModelWithPagination>(response);
 
+                GatewayMetrics.GrpcRequestDuration
+                    .WithLabels("DataService", "GetSecurities", "OK")
+                    .Observe(stopwatch.Elapsed.TotalSeconds);
+
                 return Results.Ok(securities);
             }
             catch (Exception ex)
             {
+                GatewayMetrics.GrpcRequestDuration
+                    .WithLabels("DataService", "GetSecurities", "ERROR")
+                    .Observe(stopwatch.Elapsed.TotalSeconds);
+
                 return Results.Problem($"Error calling data service: {ex.Message}");
             }
         })

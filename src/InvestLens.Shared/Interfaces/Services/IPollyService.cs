@@ -17,7 +17,6 @@ public interface IPollyService
         where TException : Exception;
 
     AsyncPolicy GetRabbitMqExponentialBackoffPolicy();
-
     AsyncPolicy GetRedisResilientPolicy();
 
     IAsyncPolicy<T> GetGenericResilientPolicy<T>();

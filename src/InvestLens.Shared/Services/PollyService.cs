@@ -39,21 +39,23 @@ public class PollyService : IPollyService
     // RabbitMQ политики
     public AsyncPolicy GetRabbitMqRetryPolicy()
     {
+        var retryIntervals = new[]{ 1, 2, 4, 60, 10 };
+
         return Policy
             .Handle<BrokerUnreachableException>()
             .Or<SocketException>()
             .Or<TimeoutException>()
             .Or<OperationInterruptedException>()
             .WaitAndRetryAsync(
-                retryCount: 5,
+                retryCount: 10,
                 sleepDurationProvider: retryAttempt =>
-                    TimeSpan.FromSeconds(5 * retryAttempt), // 5, 10, 15, 20, 25 сек
+                    TimeSpan.FromSeconds(retryAttempt < retryIntervals.Length ? retryIntervals[retryAttempt] : 10),
                 onRetry: (exception, timespan, retryAttempt, _) =>
                 {
                     _logger.LogWarning(
                         exception,
-                        "RabbitMQ Retry {RetryAttempt} after {Seconds}s",
-                        retryAttempt, timespan.TotalSeconds);
+                        "RabbitMQ Retry {RetryAttempt} after {Seconds}s: {Message}",
+                        retryAttempt, timespan.TotalSeconds, exception.Message);
                 });
     }
 

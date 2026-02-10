@@ -24,6 +24,7 @@ using InvestLens.Shared.Services;
 using InvestLens.Shared.Services.RabbitMq;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Polly.Caching.Memory;
+using Prometheus;
 using Serilog;
 using Serilog.Context;
 
@@ -181,6 +182,9 @@ public static class Program
 
             app.MapGrpcService<SecurityGrpcService>();
             app.MapGrpcService<GlobalDictionariesGrpcService>();
+
+            app.UseHttpMetrics();
+            app.MapMetrics();
 
             await app.RunAsync();
         }

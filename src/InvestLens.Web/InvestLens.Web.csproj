@@ -23,6 +23,10 @@
 	<PackageReference Include="AspNetCore.HealthChecks.UI.InMemory.Storage" />
 	<PackageReference Include="KubernetesClient" />
 	<PackageReference Include="Microsoft.EntityFrameworkCore.Relational" />
+	<PackageReference Include="prometheus-net" />
+	<PackageReference Include="prometheus-net.AspNetCore" />
+	<PackageReference Include="prometheus-net.AspNetCore.Grpc" />
+	<PackageReference Include="prometheus-net.AspNetCore.HealthChecks" />
 	<PackageReference Include="System.Text.Encodings.Web" />
   </ItemGroup>
 

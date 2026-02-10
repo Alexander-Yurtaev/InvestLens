@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Serilog;
 using Serilog.Context;
 using System.Net;
+using Prometheus;
 
 namespace InvestLens.Web;
 
@@ -60,10 +61,10 @@ public static class Program
             builder.Services.AddAutoMapper(_ => { }, typeof(Program).Assembly);
 
             builder.Services.AddHealthChecks()
-                .AddUrlGroup(new Uri("https://investlens.worker:8081/health"),
+                .AddUrlGroup(new Uri("https://investlens_worker:8081/health"),
                     httpMethod: HttpMethod.Get,
                     name: "Worker Service", tags: ["worker", "job"])
-                .AddUrlGroup(new Uri("https://investlens.data.api:8081/health"),
+                .AddUrlGroup(new Uri("https://investlens_data_api:8081/health"),
                     httpMethod: HttpMethod.Get,
                     name: "Data API", tags: ["data", "api"]);
 
@@ -75,8 +76,8 @@ public static class Program
                 {
                     setup.SetHeaderText("InvestLens - System Health Dashboard");
                     setup.AddHealthCheckEndpoint("InvestLens System", "http://localhost:8080/health");
-                    setup.AddHealthCheckEndpoint("Data API", "https://investlens.data.api:8081/health");
-                    setup.AddHealthCheckEndpoint("Worker Service", "https://investlens.worker:8081/health");
+                    setup.AddHealthCheckEndpoint("Data API", "https://investlens_data_api:8081/health");
+                    setup.AddHealthCheckEndpoint("Worker Service", "https://investlens_worker:8081/health");
 
                     // Настройка интервала опроса
                     setup.SetEvaluationTimeInSeconds(30);
@@ -177,6 +178,12 @@ public static class Program
             app.MapStaticAssets();
             app.MapRazorPages()
                 .WithStaticAssets();
+
+            app.UseHttpMetrics(options =>
+            {
+                options.AddCustomLabel("host", context => context.Request.Host.Host);
+            });
+            app.MapMetrics();
 
             await app.RunAsync();
         }

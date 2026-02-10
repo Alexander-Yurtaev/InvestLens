@@ -1,6 +1,7 @@
 ﻿using InvestLens.Abstraction.MessageBus.Data;
 using InvestLens.Abstraction.MessageBus.Services;
 using InvestLens.Shared.Data;
+using InvestLens.Shared.Interfaces.MessageBus.Services;
 using InvestLens.Shared.Services.RabbitMq;
 using InvestLens.Shared.Validators;
 using Microsoft.Extensions.Configuration;
@@ -38,7 +39,7 @@ public static class RabbitMqServiceExtensions
         return owners.Item1;
     }
 
-    private static void ValidateSettings(IRabbitMqSettings rabbitMqSettings)
+    private static void ValidateSettings(RabbitMqSettings rabbitMqSettings)
     {
         ArgumentException.ThrowIfNullOrEmpty(rabbitMqSettings.HostName, nameof(rabbitMqSettings.HostName));
         ArgumentException.ThrowIfNullOrEmpty(rabbitMqSettings.UserName, nameof(rabbitMqSettings.UserName));

@@ -25,7 +25,7 @@ public class DataWriterWriterService : IDataWriterService
     public async Task<int> SaveDataAsync<TEntity>(string keyName, IEnumerable<TEntity> batch, int batchId,
         Func<Exception, Task>? failBack) where TEntity : BaseEntity
     {
-        var tableName = typeof(TEntity).Name.ToLowerInvariant();
+        var tableName = GetTable<TEntity>();
         var tempTableName = $"temp_{tableName}_batch_{batchId}";
         var columns = typeof(TEntity)
             .GetProperties()
@@ -83,34 +83,6 @@ public class DataWriterWriterService : IDataWriterService
         }
     }
 
-    private async Task LoadDataToTempTable<TEntity>(NpgsqlConnection connection, string tempTableName, string keyName,
-        IEnumerable<TEntity> batch, string selectColumns) where TEntity : BaseEntity
-
-    {
-        var properties = typeof(TEntity)
-            .GetProperties()
-            .Where(p => p.GetCustomAttribute<ColumnAttribute>() != null)
-            .Where(p => string.Equals(keyName, "id", StringComparison.OrdinalIgnoreCase) ||
-                        (!string.Equals(keyName, "id", StringComparison.OrdinalIgnoreCase) && 
-                         !string.Equals(p.GetCustomAttribute<ColumnAttribute>()!.Name, "id", StringComparison.OrdinalIgnoreCase)))
-            .ToDictionary(k => k.GetCustomAttribute<ColumnAttribute>()!.Name!, v => v);
-
-        await using var writer = await connection.BeginBinaryImportAsync(
-            $"COPY public.{tempTableName} ({selectColumns}) FROM STDIN (FORMAT BINARY)");
-
-        foreach (TEntity entity in batch)
-        {
-            await writer.StartRowAsync();
-
-            foreach (KeyValuePair<string, PropertyInfo> pair in properties)
-            {
-                await writer.WriteAsync(pair.Value.GetValue(entity), GetNpgsqlDbTypeFast(pair.Value.PropertyType), CancellationToken.None);
-            }
-        }
-
-        await writer.CompleteAsync();
-    }
-
     public static NpgsqlDbType GetNpgsqlDbTypeFast(Type propertyType)
     {
         if (TypeMap.TryGetValue(propertyType, out var npgsqlType))
@@ -136,6 +108,57 @@ public class DataWriterWriterService : IDataWriterService
         }
 
         return NpgsqlDbType.Text;
+    }
+
+    #region Private Methods
+
+    private string GetTable<TEntity>()
+    {
+        var tableAttribute = typeof(TEntity).GetCustomAttribute<TableAttribute>();
+
+        if (tableAttribute != null && !string.IsNullOrEmpty(tableAttribute.Name))
+        {
+            return tableAttribute.Name;
+        }
+
+        // Fallback к автоматическому преобразованию
+        var tableName = typeof(TEntity).Name;
+        const string entitySuffix = "Entity";
+
+        if (tableName.EndsWith(entitySuffix, StringComparison.OrdinalIgnoreCase))
+        {
+            tableName = tableName.Substring(0, tableName.Length - entitySuffix.Length);
+        }
+
+        return tableName;
+    }
+
+    private async Task LoadDataToTempTable<TEntity>(NpgsqlConnection connection, string tempTableName, string keyName,
+        IEnumerable<TEntity> batch, string selectColumns) where TEntity : BaseEntity
+
+    {
+        var properties = typeof(TEntity)
+            .GetProperties()
+            .Where(p => p.GetCustomAttribute<ColumnAttribute>() != null)
+            .Where(p => string.Equals(keyName, "id", StringComparison.OrdinalIgnoreCase) ||
+                        (!string.Equals(keyName, "id", StringComparison.OrdinalIgnoreCase) &&
+                         !string.Equals(p.GetCustomAttribute<ColumnAttribute>()!.Name, "id", StringComparison.OrdinalIgnoreCase)))
+            .ToDictionary(k => k.GetCustomAttribute<ColumnAttribute>()!.Name!, v => v);
+
+        await using var writer = await connection.BeginBinaryImportAsync(
+            $"COPY public.{tempTableName} ({selectColumns}) FROM STDIN (FORMAT BINARY)");
+
+        foreach (TEntity entity in batch)
+        {
+            await writer.StartRowAsync();
+
+            foreach (KeyValuePair<string, PropertyInfo> pair in properties)
+            {
+                await writer.WriteAsync(pair.Value.GetValue(entity), GetNpgsqlDbTypeFast(pair.Value.PropertyType), CancellationToken.None);
+            }
+        }
+
+        await writer.CompleteAsync();
     }
 
     private static readonly Dictionary<Type, NpgsqlDbType> TypeMap = new()
@@ -190,4 +213,6 @@ public class DataWriterWriterService : IDataWriterService
         [typeof(Guid)] = NpgsqlDbType.Uuid,
         [typeof(Guid?)] = NpgsqlDbType.Uuid,
     };
+
+    #endregion Private Methods
 }
