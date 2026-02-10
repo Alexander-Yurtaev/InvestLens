@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Serilog;
 using Serilog.Context;
 using System.Net;
+using InvestLens.Web.Metrics;
 using Prometheus;
 
 namespace InvestLens.Web;
@@ -112,21 +113,25 @@ public static class Program
 
             app.Use(async (context, next) =>
             {
-                var correlationContextAccessor = context.RequestServices
-                    .GetRequiredService<ICorrelationContextAccessor>();
-
-                var correlationId = correlationContextAccessor.CorrelationContext?.CorrelationId;
-
-                if (!string.IsNullOrEmpty(correlationId))
+                // Увеличиваем счетчик при начале запроса
+                using (WebClientMetrics.ActiveRequests.TrackInProgress())
                 {
-                    using (LogContext.PushProperty("CorrelationId", correlationId))
+                    var correlationContextAccessor = context.RequestServices
+                        .GetRequiredService<ICorrelationContextAccessor>();
+
+                    var correlationId = correlationContextAccessor.CorrelationContext?.CorrelationId;
+
+                    if (!string.IsNullOrEmpty(correlationId))
+                    {
+                        using (LogContext.PushProperty("CorrelationId", correlationId))
+                        {
+                            await next(context);
+                        }
+                    }
+                    else
                     {
                         await next(context);
                     }
-                }
-                else
-                {
-                    await next(context);
                 }
             });
 

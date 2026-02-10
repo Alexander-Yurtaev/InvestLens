@@ -40,9 +40,9 @@ public class SecuritiesModel : PageModel
         [FromQuery(Name = "filter")] string? filter = null)
     {
         var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-        var method = "GET";
-        var endpoint = "/securities";
-        string statusCode = "200";
+        const string method = "GET";
+        const string endpoint = "/securities";
+        string statusCode;
 
         CurrentPage = page < 1 ? 1 : page;
         PageSize = pageSize < 1 ? 10 : pageSize;
@@ -154,7 +154,7 @@ public class SecuritiesModel : PageModel
 
     #region Private Methods
 
-    private IEnumerable<string> GetColumns()
+    private static IEnumerable<string> GetColumns()
     {
         var props = typeof(SecurityModel).GetProperties();
         foreach (var prop in props)
