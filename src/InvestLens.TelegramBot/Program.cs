@@ -112,7 +112,7 @@ public static class Program
         }
         catch (Exception ex)
         {
-            Log.Fatal(ex, "Приложение остановлено из‑за исключения");
+            Log.Fatal(ex, "Application terminated due to an exception");
             throw;
         }
     }

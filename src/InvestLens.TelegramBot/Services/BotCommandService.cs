@@ -53,7 +53,7 @@ public class BotCommandService : IBotCommandService
                 await _telegramBotClient.NotifyInfoAsync(refreshStatus.Status.GetDisplayName(), refreshStatus.Status.GetDescription(), cancellationToken);
                 break;
             case RefreshStatus.Processing:
-                await _telegramBotClient.NotifyStatusAsync($"Обновление данных: {refreshStatus.Duration:dd\\.hh\\:mm\\:ss}", $"{refreshStatus.Status.GetDisplayName()}: {refreshStatus.SavedCount:N0}/{refreshStatus.DownloadedCount:N0}", cancellationToken);
+                await _telegramBotClient.NotifyStatusAsync($"Updating data: {refreshStatus.Duration:dd\\.hh\\:mm\\:ss}", $"{refreshStatus.Status.GetDisplayName()}: {refreshStatus.SavedCount:N0}/{refreshStatus.DownloadedCount:N0}", cancellationToken);
                 break;
             case RefreshStatus.Completed:
                 await _telegramBotClient.NotifyOperationCompleteAsync(

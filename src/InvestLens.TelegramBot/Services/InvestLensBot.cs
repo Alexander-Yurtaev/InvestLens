@@ -72,8 +72,8 @@ public class InvestLensBot : BackgroundService, IHealthCheck
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Ошибка при проверке сообщений в чат-боте.");
-                    await _botClient.NotifyErrorAsync($"Ошибка при проверке сообщений в чат-боте: {ex.Message}", stoppingToken);
+                    _logger.LogError(ex, "Error checking messages in the chatbot.");
+                    await _botClient.NotifyErrorAsync($"Error checking messages in the chatbot: {ex.Message}", stoppingToken);
                 }
             }
 
@@ -109,13 +109,13 @@ public class InvestLensBot : BackgroundService, IHealthCheck
         // 2. Обработать полученные данные
         if (response is null)
         {
-            _logger.LogWarning("От Telegram не пришли данные.");
+            _logger.LogWarning("No data was received from Telegram.");
             return null;
         }
 
         if (!response.Ok)
         {
-            _logger.LogWarning("От Telegram получена ошибка: {ErrorCode} - {Description}", response.ErrorCode, response.Description);
+            _logger.LogWarning("Error received from Telegram: {ErrorCode} - {Description}", response.ErrorCode, response.Description);
             return null;
         }
 

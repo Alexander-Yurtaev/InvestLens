@@ -27,7 +27,7 @@ public class InformationEventHandler : IMessageHandler<BaseInformationMessage>
         {
             correlationId = _correlationIdService.GetOrCreateCorrelationId("TelegramBot");
             _logger.LogWarning(
-                "Пришло сообщение Id={MessageId} без CorrelationId. Новый correlationId: {CorrelationId}",
+                "I received a message Id={messageId} without a correlationId. New correlationId: {correlationId}",
                 message.MessageId, correlationId);
         }
         else
@@ -51,7 +51,7 @@ public class InformationEventHandler : IMessageHandler<BaseInformationMessage>
     private async Task<bool> HandleStartMessageAsync(StartMessage message,
         CancellationToken cancellationToken = default)
     {
-        _logger.LogInformation("Операция началась, MessageId: {MessageId} .", message.MessageId);
+        _logger.LogInformation("The operation has started, messageId: {messageId}.", message.MessageId);
         await _telegramBotClient.NotifyOperationStartAsync(message.Details, cancellationToken);
         return await Task.FromResult(true);
     }
@@ -60,12 +60,12 @@ public class InformationEventHandler : IMessageHandler<BaseInformationMessage>
         CancellationToken cancellationToken = default)
     {
         _logger.LogInformation(
-            "Операция завершилась: за {Duration:hh\\:mm\\:ss} было скачано {Count} записей, MessageId: {MessageId} ",
+            "Operation completed: {Duration:hh\\:mm\\:ss} {Count} records were downloaded, messageId: {messageId}",
             message.Duration, message.Count, message.MessageId);
 
         await _telegramBotClient.NotifyOperationCompleteAsync(
-            $"Операция завершилась: за {message.Duration:hh\\:mm\\:ss} было скачано {message.Count} записей, MessageId: {message.MessageId}",
-            message.Duration, cancellationToken);
+            $"Operation completed: for {message.Duration:hh\\:mm\\:ss} was downloaded {message.Count} entities, MessageId: {message.MessageId}",
+        message.Duration, cancellationToken);
 
         return await Task.FromResult(true);
     }
