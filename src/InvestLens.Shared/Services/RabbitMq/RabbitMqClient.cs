@@ -61,7 +61,7 @@ public class RabbitMqClient : IMessageBusClient
             WriteIndented = false
         };
 
-        _logger.LogInformation("RabbitMQ Client создан");
+        _logger.LogInformation("The RabbitMQ Client has been created");
     }
 
     internal async Task InitializeAsync(CancellationToken cancellationToken = default)
@@ -75,7 +75,7 @@ public class RabbitMqClient : IMessageBusClient
             prefetchCount: _settings.PrefetchCount,
             global: false, cancellationToken: cancellationToken);
 
-        _logger.LogInformation("RabbitMQ Client подключен к {Host}", _settings.HostName);
+        _logger.LogInformation("The RabbitMQ Client is connected to {Host}", _settings.HostName);
     }
 
     public async Task<IChannel> GetChannelAsync()
@@ -95,7 +95,7 @@ public class RabbitMqClient : IMessageBusClient
             {
                 if (_channel.IsClosed)
                 {
-                    throw new InvalidOperationException("Канал закрыт");
+                    throw new InvalidOperationException("The channel is closed");
                 }
             }
 
@@ -137,12 +137,12 @@ public class RabbitMqClient : IMessageBusClient
                 body: body,
                 cancellationToken: cancellationToken);
 
-            _logger.LogDebug("Сообщение {MessageId} опубликовано в {Exchange}/{RoutingKey}",
+            _logger.LogDebug("The {messageId} message is published in {Exchange}/{routingKey}",
                 message.MessageId, exchangeName, routingKey);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Ошибка при публикации сообщения {MessageId}", message.MessageId);
+            _logger.LogError(ex, "Error when posting a message {messageId}", message.MessageId);
             throw new MessageBusException($"Failed to publish message {message.MessageId}", ex);
         }
     }
@@ -159,7 +159,7 @@ public class RabbitMqClient : IMessageBusClient
         {
             if (_consumers.ContainsKey(queueName))
             {
-                _logger.LogWarning("Потребитель уже зарегистрирован для очереди {QueueName}", queueName);
+                _logger.LogWarning("The consumer is already registered for the queue {QueueName}", queueName);
                 return;
             }
 
@@ -233,12 +233,12 @@ public class RabbitMqClient : IMessageBusClient
             _consumers[queueName] = consumer;
 
             _logger.LogInformation(
-                "Потребитель {ConsumerTag} зарегистрирован для очереди {QueueName}",
+                "The consumer {ConsumerTag} is registered for the queue {QueueName}",
                 consumerTag, queueName);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Ошибка при создании подписки на очередь {QueueName}", queueName);
+            _logger.LogError(ex, "Error when creating a subscription to the queue {QueueName}", queueName);
             throw new MessageBusException($"Failed to subscribe to queue {queueName}", ex);
         }
     }
@@ -260,12 +260,12 @@ public class RabbitMqClient : IMessageBusClient
 
             if (message == null)
             {
-                _logger.LogError("Не удалось десериализовать сообщение {MessageId}", messageId);
+                _logger.LogError("Couldn't deserialize message {messageId}", messageId);
                 await _channel.BasicNackAsync(deliveryTag, false, false, cancellationToken);
                 return;
             }
 
-            _logger.LogDebug("Получено сообщение {MessageId} из очереди {Queue}",
+            _logger.LogDebug("{messageId} message received from {Queue}",
                 messageId, ea.RoutingKey);
 
             // Создаем обработчик через DI
@@ -281,25 +281,25 @@ public class RabbitMqClient : IMessageBusClient
                     if (success)
                     {
                         await _channel.BasicAckAsync(deliveryTag, false, cancellationToken);
-                        _logger.LogDebug("Сообщение {MessageId} успешно обработано", messageId);
+                        _logger.LogDebug("Message {messageId} successfully processed", messageId);
                     }
                     else
                     {
                         // Отправляем в DLQ после неудачной обработки
                         await _channel.BasicNackAsync(deliveryTag, false, false, cancellationToken);
-                        _logger.LogWarning("Обработчик вернул false для сообщения {MessageId}", messageId);
+                        _logger.LogWarning("The handler returned false for the {messageId} message", messageId);
                     }
                 }, cancellationToken);
             }
             else
             {
-                _logger.LogError("Не найден обработчик для типа {Type}", typeof(TH).Name);
+                _logger.LogError("No handler found for the {Type} type", typeof(TH).Name);
                 await _channel.BasicNackAsync(deliveryTag, false, false, cancellationToken);
             }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Ошибка обработки сообщения {MessageId}", messageId);
+            _logger.LogError(ex, "Error processing the message {messageId}", messageId);
 
             // Проверяем количество повторных попыток
             var redeliveryCount = GetRedeliveryCount(ea.BasicProperties);
@@ -316,7 +316,7 @@ public class RabbitMqClient : IMessageBusClient
             {
                 // Отправляем в DLQ
                 await _channel.BasicNackAsync(deliveryTag, false, false, cancellationToken);
-                _logger.LogWarning("Сообщение {MessageId} отправлено в DLQ после {Count} попыток",
+                _logger.LogWarning("{messageId} message sent to DLQ after {Count} attempts",
                     messageId, redeliveryCount);
             }
         }
@@ -337,14 +337,14 @@ public class RabbitMqClient : IMessageBusClient
     private Task OnConsumerShutdown(object sender, ShutdownEventArgs args)
     {
         _logger.LogInformation(
-            "Потребитель остановлен. Причина: {ReplyText}, Initiator: {Initiator}",
+            "The consumer is stopped. Reason: {ReplyText}, Initiator: {Initiator}",
             args.ReplyText, args.Initiator);
         return Task.CompletedTask;
     }
 
     private Task OnConsumerRegistered(object sender, ConsumerEventArgs args)
     {
-        _logger.LogDebug("Потребитель зарегистрирован: {ConsumerTags}", string.Join(',', args.ConsumerTags));
+        _logger.LogDebug("The consumer is registered: {ConsumerTags}", string.Join(',', args.ConsumerTags));
         return Task.CompletedTask;
     }
 
@@ -367,7 +367,7 @@ public class RabbitMqClient : IMessageBusClient
             if (consumerTag != null)
             {
                 await _channel.BasicCancelAsync(consumerTag, cancellationToken: cancellationToken);
-                _logger.LogInformation("Отписаны от очереди: {QueueName}", queueName);
+                _logger.LogInformation("Unsubscribed from the queue: {QueueName}", queueName);
             }
         }
     }
@@ -396,7 +396,7 @@ public class RabbitMqClient : IMessageBusClient
             _connection.Dispose();
         }
 
-        _logger.LogInformation("RabbitMQ Client отключен");
+        _logger.LogInformation("The RabbitMQ Client is disabled");
 
         // Предотвращаем вызов финализатора для этого объекта
         GC.SuppressFinalize(this);
@@ -407,12 +407,12 @@ public class RabbitMqClient : IMessageBusClient
         ArgumentNullException.ThrowIfNull(settings, nameof(settings));
 
         if (string.IsNullOrWhiteSpace(settings.HostName))
-            throw new ArgumentException("HostName не может быть пустым", nameof(settings));
+            throw new ArgumentException("The HostName cannot be empty", nameof(settings));
 
         if (settings.Port <= 0)
-            throw new ArgumentException("Port должен быть положительным числом", nameof(settings));
+            throw new ArgumentException("The port must be a positive number.", nameof(settings));
 
         if (settings.PrefetchCount <= 0)
-            throw new ArgumentException("PrefetchCount должен быть положительным числом", nameof(settings));
+            throw new ArgumentException("prefetchCount must be a positive number.", nameof(settings));
     }
 }

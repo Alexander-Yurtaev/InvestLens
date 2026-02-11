@@ -36,12 +36,7 @@ public class RefreshStatusService : IRefreshStatusService
             progress = await _resilientPolicy.ExecuteAsync(async () => await _redisClient.GetAsync<RefreshProgress>(RedisKeys.SecuritiesRefreshStatusRedisKey));
         }
 
-        if (progress is null)
-        {
-            throw new InvalidOperationException($"Проблема при получении {nameof(RefreshProgress)}.");
-        }
-
-        return progress;
+        return progress ?? throw new InvalidOperationException($"Problem with receiving {nameof(RefreshProgress)}.");
     }
 
     public async Task Reset(string correlationId)

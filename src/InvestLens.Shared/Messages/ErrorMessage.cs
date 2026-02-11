@@ -20,7 +20,7 @@ public class ErrorMessage : BaseTelegramMessage
         {
             _innerExceptionMessage = value;
             Exception = new ExceptionDto(
-                string.IsNullOrEmpty(_innerExceptionMessage) ? "Произошла ошибка" : _innerExceptionMessage,
+                string.IsNullOrEmpty(_innerExceptionMessage) ? "An error has occurred" : _innerExceptionMessage,
                 "SECURITY_REFRESH_ERROR", DateTime.UtcNow);
         }
     }

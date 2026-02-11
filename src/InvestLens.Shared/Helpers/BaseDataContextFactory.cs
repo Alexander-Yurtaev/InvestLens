@@ -18,12 +18,12 @@ public abstract class BaseDataContextFactory<T> : IDesignTimeDbContextFactory<T>
     {
         Console.WriteLine("BaseDataContextFactory ...");
 
-        Console.WriteLine($"Текущая директория: {Directory.GetCurrentDirectory()}");
-        Console.WriteLine($"Директория исполняемого файла: {AppDomain.CurrentDomain.BaseDirectory}");
-        Console.WriteLine($"Путь к общему .env: {Path.GetFullPath(@"..\..\..\.env")}");
-        Console.WriteLine($"Путь к локальному .env: {Path.GetFullPath(@"..\InvestLens.Data.Api\.env")}");
+        Console.WriteLine($"Current directory: {Directory.GetCurrentDirectory()}");
+        Console.WriteLine($"Directory of the executable file: {AppDomain.CurrentDomain.BaseDirectory}");
+        Console.WriteLine($"The path to the shared .env: {Path.GetFullPath(@"..\..\..\.env")}");
+        Console.WriteLine($"The path to the local .env: {Path.GetFullPath(@"..\InvestLens.Data.Api\.env")}");
 
-        Console.WriteLine("1. Загружаем .env");
+        Console.WriteLine("1. Download .env");
         DotNetEnv.Env.Load();
 
         var configuration = new ConfigurationBuilder()
@@ -37,15 +37,15 @@ public abstract class BaseDataContextFactory<T> : IDesignTimeDbContextFactory<T>
         CommonValidator.CommonValidate(configuration);
         CommonValidator.UserValidate(configuration);
         
-        Console.WriteLine("2. Получаем строку подключения");
+        Console.WriteLine("2. Get connection string");
         var connectionString = ConnectionStringHelper.GetTargetLocalhostConnectionString(configuration);
         Console.WriteLine($"connectionString: {connectionString}");
-        Console.WriteLine("3. Настраиваем опции контекста");
+        Console.WriteLine("3. Setting up context options");
         var optionsBuilder = new DbContextOptionsBuilder<T>();
         optionsBuilder.UseNpgsql(connectionString);
 
         T instance = (T?)Activator.CreateInstance(typeof(T), optionsBuilder.Options)
-                     ?? throw new InvalidOperationException($"Не удалось создать экземпляр типа {typeof(T)}");
+                     ?? throw new InvalidOperationException($"Failed to create an instance of the type {typeof(T)}");
 
         return instance;
     }
