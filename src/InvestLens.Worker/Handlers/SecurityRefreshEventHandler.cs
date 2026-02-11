@@ -47,13 +47,13 @@ public class SecurityRefreshEventHandler : IMessageHandler<SecurityRefreshMessag
         {
             correlationId = _correlationIdService.GetOrCreateCorrelationId("rabbitmq");
             _logger.LogWarning(
-                "RabbitMQ-сообщение Id={MessageId} пришло без CorrelationId. Создаем новое: {CorrelationId}.",
+                "RabbitMQ message Id={MessageId} received without CorrelationId. Creating new: {CorrelationId}",
                 message.MessageId, correlationId);
         }
 
         using (LogContext.PushProperty("CorrelationId", correlationId))
         {
-            _logger.LogInformation("Получено задание на обновление списка ценных бумаг.");
+            _logger.LogInformation("A task has been received to update the list of securities.");
 
             try
             {
@@ -67,7 +67,7 @@ public class SecurityRefreshEventHandler : IMessageHandler<SecurityRefreshMessag
                     // Проверяем, выполняется ли задача в данный момент
                     if (!_idleStatuses.Contains(securitiesRefreshStatus.Status))
                     {
-                        _logger.LogInformation("Обновление списка ценных бумаг уже выполняется. Статус: {Status}",
+                        _logger.LogInformation("The list of securities is already being updated. Status: {Status}",
                             securitiesRefreshStatus.Status);
                         return true;
                     }
@@ -76,8 +76,8 @@ public class SecurityRefreshEventHandler : IMessageHandler<SecurityRefreshMessag
                     if (DateTimeHelper.IsRefreshed(securitiesRefreshStatus.UpdatedAt, _jobSettings.DelayBetweenRefresh))
                     {
                         _logger.LogInformation(
-                            "Список ценных бумаг был обновлен {UpdatedAt}. " +
-                            "Следующее обновление возможно через {Delay} минут. Задача отменена.",
+                            "The list of securities has been updated {updatedAt}. " +
+                            "The next update is possible in {Delay} minutes. The task has been canceled.",
                             securitiesRefreshStatus.UpdatedAt,
                             _jobSettings.DelayBetweenRefresh.TotalMinutes);
                         return true;
@@ -92,12 +92,12 @@ public class SecurityRefreshEventHandler : IMessageHandler<SecurityRefreshMessag
                     BusClientConstants.DataSecuritiesRefreshKey,
                     cancellationToken);
 
-                _logger.LogInformation("Задание на обновление списка ценных бумаг отправлено в очередь.");
+                _logger.LogInformation("The task to update the list of securities has been sent to the queue.");
                 return true;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Ошибка при обработке задания обновления списка ценных бумаг.");
+                _logger.LogError(ex, "Error when processing the task of updating the list of securities.");
                 return false; // Возвращаем false для NACK и отправки в DLQ
             }
         }

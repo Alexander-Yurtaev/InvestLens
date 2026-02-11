@@ -29,20 +29,20 @@ public class GlobalIssDictionariesService : IGlobalIssDictionariesService
         var correlationId = _correlationIdService.GetOrCreateCorrelationId("daily");
         CorrelationHelper.CallLogWithCorrelationId(correlationId,
             () => _logger.LogInformation(
-                "Запуск ежедневного обновления списка ценных бумаг. CorrelationId: {CorrelationId}", correlationId));
+                "Launching a daily update of the securities list. CorrelationId: {CorrelationId}", correlationId));
         try
         {
             await GlobalIssDictionariesSecuritiesAsync(correlationId);
             CorrelationHelper.CallLogWithCorrelationId(correlationId,
                 () => _logger.LogInformation(
-                    "Ежедневное обновление списка ценных бумаг завершено успешно. CorrelationId: {CorrelationId}",
+                    "Daily updating of the securities list has been completed successfully. CorrelationId: {CorrelationId}",
                     correlationId));
         }
         catch (Exception ex)
         {
             CorrelationHelper.CallLogWithCorrelationId(correlationId,
                 () => _logger.LogError(ex,
-                    "Ежедневное обновление списка ценных бумаг завершилось с ошибкой. CorrelationId: {CorrelationId}",
+                    "The daily update of the securities list ended with an error. CorrelationId: {CorrelationId}",
                     correlationId));
             throw;
         }
@@ -53,14 +53,14 @@ public class GlobalIssDictionariesService : IGlobalIssDictionariesService
         var correlationId = _correlationIdService.GetOrCreateCorrelationId("init");
         await CorrelationHelper.CallLogWithCorrelationIdAsync(correlationId, async () =>
         {
-            _logger.LogInformation("Запуск обновления списка ценных бумаг при инициализации приложения.");
+            _logger.LogInformation("Launching an update of the securities list during application initialization.");
             try
             {
                 await GlobalIssDictionariesSecuritiesAsync(correlationId);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Запуск обновление списка ценных бумаг при инициализации приложения завершилось с ошибкой.");
+                _logger.LogError(ex, "The launch and updating of the securities list failed during application initialization.");
                 throw;
             }
         });

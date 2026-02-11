@@ -46,13 +46,13 @@ public class GlobalIssDictionariesRefreshEventHandler : IMessageHandler<GlobalIs
         {
             correlationId = _correlationIdService.GetOrCreateCorrelationId("GlobalIssDictionariesRefreshEventHandler");
             _logger.LogWarning(
-                "RabbitMQ-сообщение Id={MessageId} пришло без CorrelationId. Создаем новое: {CorrelationId}.",
+                "RabbitMQ message Id={MessageId} received without CorrelationId. Creating new: {CorrelationId}",
                 message.MessageId, correlationId);
         }
 
         using (LogContext.PushProperty("CorrelationId", correlationId))
         {
-            _logger.LogInformation("Получено задание на обновление списка ценных бумаг.");
+            _logger.LogInformation("A task has been received to update the list of securities.");
 
             try
             {
@@ -66,7 +66,7 @@ public class GlobalIssDictionariesRefreshEventHandler : IMessageHandler<GlobalIs
                     // Проверяем, выполняется ли задача в данный момент
                     if (!_idleStatuses.Contains(globalIssDictionariesRefreshStatus.Status))
                     {
-                        _logger.LogInformation("Обновление глобавльных справочников ISS. Статус: {Status}",
+                        _logger.LogInformation("Updating global ISS directories. Status: {Status}",
                             globalIssDictionariesRefreshStatus.Status);
                         return true;
                     }
@@ -75,8 +75,8 @@ public class GlobalIssDictionariesRefreshEventHandler : IMessageHandler<GlobalIs
                     if (DateTimeHelper.IsRefreshed(globalIssDictionariesRefreshStatus.UpdatedAt, _jobSettings.DelayBetweenRefresh))
                     {
                         _logger.LogInformation(
-                            "Глобальные справочники ISS обновлены {UpdatedAt}. " +
-                            "Следующее обновление возможно через {Delay} минут. Задача отменена.",
+                            "The global directories have been updated {updatedAt}. " +
+                            "The next update is possible in {Delay} minutes. The task has been canceled.",
                             globalIssDictionariesRefreshStatus.UpdatedAt,
                             _jobSettings.DelayBetweenRefresh.TotalMinutes);
                         return true;
@@ -91,7 +91,7 @@ public class GlobalIssDictionariesRefreshEventHandler : IMessageHandler<GlobalIs
                     BusClientConstants.DataGlobalIssDictionariesRefreshKey,
                     cancellationToken);
 
-                _logger.LogInformation("Задание на обновление глобальных справночник ISS отправлено в очередь.");
+                _logger.LogInformation("The task to update the global ISS directory has been queued.");
                 return true;
             }
             catch (Exception ex)

@@ -26,25 +26,25 @@ public class ConfigurableJobScheduler : IConfigurableJobScheduler
     /// </summary>
     public void ScheduleRecurringJobs()
     {
-        _logger.LogInformation("Начинаю регистрацию повторяющихся задач из конфигурации...");
+        _logger.LogInformation("I'm starting to register recurring tasks from the configuration...");
 
         foreach (var jobConfig in _jobsConfig.RecurringJobs)
         {
             if (!jobConfig.Enabled)
             {
-                _logger.LogInformation("Задача {JobId} отключена в конфигурации", jobConfig.JobId);
+                _logger.LogInformation("The {JobId} task is disabled in the configuration", jobConfig.JobId);
                 continue;
             }
 
             try
             {
                 RegisterRecurringJob(jobConfig);
-                _logger.LogInformation("Зарегистрирована задача {JobId}: {Description} ({Cron})",
+                _logger.LogInformation("Task registered {JobID}: {Description} ({Cron})",
                     jobConfig.JobId, jobConfig.Description, jobConfig.CronExpression);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Ошибка при регистрации задачи {JobId}", jobConfig.JobId);
+                _logger.LogError(ex, "Issue registration error {JobId}", jobConfig.JobId);
             }
         }
     }
@@ -54,24 +54,24 @@ public class ConfigurableJobScheduler : IConfigurableJobScheduler
     /// </summary>
     public void ScheduleStartupJobs()
     {
-        _logger.LogInformation("Планирую задачи при старте приложения...");
+        _logger.LogInformation("I plan tasks at the start of the application...");
 
         foreach (var jobConfig in _jobsConfig.StartupJobs)
         {
             if (!jobConfig.Enabled)
             {
-                _logger.LogInformation("Задача при старте {JobId} отключена", jobConfig.JobId);
+                _logger.LogInformation("The {JobId} task is disabled at startup", jobConfig.JobId);
                 continue;
             }
 
             try
             {
                 ScheduleStartupJob(jobConfig);
-                _logger.LogInformation("Запланирована задача при старте {JobId}", jobConfig.JobId);
+                _logger.LogInformation("Scheduled task at startup {JobId}", jobConfig.JobId);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Ошибка при планировании задачи при старте {JobId}", jobConfig.JobId);
+                _logger.LogError(ex, "Error when scheduling a task at startup {JobId}", jobConfig.JobId);
             }
         }
     }
@@ -84,7 +84,7 @@ public class ConfigurableJobScheduler : IConfigurableJobScheduler
         var jobConfig = _jobsConfig.RecurringJobs.FirstOrDefault(j => j.JobId == jobId);
         if (jobConfig == null)
         {
-            _logger.LogWarning("Задача {JobId} не найдена в конфигурации", jobId);
+            _logger.LogWarning("The {JobId} task was not found in the configuration", jobId);
             return;
         }
 
@@ -101,7 +101,7 @@ public class ConfigurableJobScheduler : IConfigurableJobScheduler
                 TimeZone = jobConfig.GetTimeZoneInfo()
             });
 
-        _logger.LogInformation("Обновлено расписание задачи {JobId}: {Cron}", jobId, newCronExpression);
+        _logger.LogInformation("Task schedule updated {JobId}: {Cron}", jobId, newCronExpression);
     }
 
     /// <summary>
@@ -145,14 +145,14 @@ public class ConfigurableJobScheduler : IConfigurableJobScheduler
     {
         try
         {
-            _logger.LogDebug("Запуск задачи: {ServiceType}.{MethodName}", serviceTypeName, methodName);
+            _logger.LogDebug("Starting a task: {ServiceType}.{MethodName}", serviceTypeName, methodName);
 
             // Получаем тип сервиса
             var serviceType = Type.GetType(serviceTypeName);
             if (serviceType == null)
             {
-                _logger.LogError("Тип сервиса не найден: {ServiceType}", serviceTypeName);
-                throw new MissingMemberException($"Тип сервиса не найден: {serviceTypeName}");
+                _logger.LogError("Service type not found: {ServiceType}", serviceTypeName);
+                throw new MissingMemberException($"Service type not found: {serviceTypeName}");
             }
 
             // Получаем сервис из DI контейнера
@@ -160,16 +160,16 @@ public class ConfigurableJobScheduler : IConfigurableJobScheduler
             var service = scope.ServiceProvider.GetService(serviceType);
             if (service == null)
             {
-                _logger.LogError("Сервис не зарегистрирован в DI: {ServiceType}", serviceTypeName);
-                throw new MissingMemberException($"Сервис не зарегистрирован в DI: {serviceTypeName}");
+                _logger.LogError("The service is not registered in DI: {ServiceType}", serviceTypeName);
+                throw new MissingMemberException($"The service is not registered in DI: {serviceTypeName}");
             }
 
             // Находим метод
             var method = serviceType.GetMethod(methodName);
             if (method == null)
             {
-                _logger.LogError("Метод не найден: {MethodName} в {ServiceType}", methodName, serviceTypeName);
-                throw new MissingMethodException($"Метод не найден: {methodName} в {serviceTypeName}");
+                _logger.LogError("Method not found: {MethodName} в {ServiceType}", methodName, serviceTypeName);
+                throw new MissingMethodException($"Method not found: {methodName} в {serviceTypeName}");
             }
 
             // Вызываем метод
@@ -181,7 +181,7 @@ public class ConfigurableJobScheduler : IConfigurableJobScheduler
                 await task;
             }
 
-            _logger.LogDebug("Задача выполнена успешно: {ServiceType}.{MethodName}",
+            _logger.LogDebug("The task was completed successfully: {ServiceType}.{MethodName}",
                 serviceTypeName, methodName);
         }
         catch (MissingMethodException)
@@ -195,13 +195,13 @@ public class ConfigurableJobScheduler : IConfigurableJobScheduler
         catch (TargetInvocationException ex)
         {
             _logger.LogError(ex.InnerException ?? ex,
-                "Ошибка в вызванном методе: {ServiceType}.{MethodName}",
+                "Error in the called method: {ServiceType}.{MethodName}",
                 serviceTypeName, methodName);
             throw ex.InnerException ?? ex;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Ошибка при выполнении задачи: {ServiceType}.{MethodName}",
+            _logger.LogError(ex, "Error when completing the task: {ServiceType}.{MethodName}",
                 serviceTypeName, methodName);
             throw;
         }
