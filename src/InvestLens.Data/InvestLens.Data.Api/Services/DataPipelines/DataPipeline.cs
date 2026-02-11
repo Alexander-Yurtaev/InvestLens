@@ -1,6 +1,5 @@
 ﻿using InvestLens.Data.Api.Converter;
 using InvestLens.Data.Entities;
-using InvestLens.Data.Entities.Dictionaries;
 using InvestLens.Shared.Contracts.Responses;
 using InvestLens.Shared.Exceptions;
 using InvestLens.Shared.Interfaces.Services;
@@ -8,7 +7,7 @@ using System.Collections.Concurrent;
 using System.Text.Json;
 using InvestLens.Shared.Interfaces.Redis.Services;
 
-namespace InvestLens.Data.Api.Services;
+namespace InvestLens.Data.Api.Services.DataPipelines;
 
 public abstract class DataPipeline<TEntity, TResponse> : IDataPipeline 
     where TEntity : BaseEntity
@@ -48,7 +47,9 @@ public abstract class DataPipeline<TEntity, TResponse> : IDataPipeline
 
         // Запускаем задачу сохранения в отдельном потоке
         var saveTask = Task.Run(() => ImportInBatches(saveQueue, failBack))
-            .ContinueWith(t => _logger.LogWarning($"SaveTask {t.Id} завершен."));
+            .ContinueWith(t => _logger.LogInformation("SaveTask {TaskId} completed.", t.Id), TaskContinuationOptions.OnlyOnRanToCompletion)
+            .ContinueWith(t => _logger.LogWarning("SaveTask {TaskId} canceled.", t.Id), TaskContinuationOptions.OnlyOnCanceled)
+            .ContinueWith(t => _logger.LogError(t.Exception, "Error in SaveTask: {ErrorMessage}", t.Exception?.Message ?? "none"), TaskContinuationOptions.OnlyOnFaulted);
 
         // Запускаем задачи загрузки
         var downloadTasks = new List<Task>();
@@ -209,141 +210,4 @@ public abstract class DataPipeline<TEntity, TResponse> : IDataPipeline
     }
 
     #endregion Privare Methods
-}
-
-public abstract class IndexDataPipeline<TEntity, TResponse> : DataPipeline<TEntity, TResponse>
-    where TEntity : DictionaryBaseEntity
-    where TResponse : IBaseDictionaryResponse
-{
-    protected IndexDataPipeline(HttpClient httpClient, IDataWriterService dataWriterService, IRefreshStatusService statusService,
-        ICorrelationIdService correlationIdService, ILogger<DataPipeline<TEntity, TResponse>> logger,
-        int maxConcurrentDownloads = 3, int saveBatchSize = 10000) : base(httpClient, dataWriterService, statusService,
-        correlationIdService, logger, maxConcurrentDownloads, saveBatchSize)
-
-    {
-    }
-
-    protected override string GetUrl(params int[] args)
-    {
-        return args[0] != 0 ? string.Empty : $"/iss/index.json";
-    }
-}
-
-public class SecurityDataPipeline : DataPipeline<SecurityEntity, SecuritiesResponse>, ISecurityDataPipeline
-{
-    public SecurityDataPipeline(HttpClient httpClient, IDataWriterService dataWriterService, IRefreshStatusService statusService,
-        ICorrelationIdService correlationIdService, ILogger<DataPipeline<SecurityEntity, SecuritiesResponse>> logger) : base(
-        httpClient, dataWriterService, statusService, correlationIdService, logger)
-
-    {
-    }
-
-    public override string Info => "Securities list";
-    protected override string GetKeyName => "secid";
-
-    protected override string GetUrl(params int[] args)
-    {
-        var page = args[0];
-        var batchSize = args[1];
-
-        return $"/iss/securities.json?start={page * batchSize}&limit={batchSize}";
-    }
-}
-
-public class EngineDataPipeline : IndexDataPipeline<EngineEntity, EngineDictionaryDataResponse>, IEngineDataPipeline
-{
-    public EngineDataPipeline(HttpClient httpClient, IDataWriterService dataWriterService, IRefreshStatusService statusService,
-        ICorrelationIdService correlationIdService, ILogger<EngineDataPipeline> logger) : base(
-        httpClient, dataWriterService, statusService, correlationIdService, logger, 1, 100)
-
-    {
-    }
-
-    public override string Info => "Available trading systems list";
-}
-
-public class MarketDataPipeline : IndexDataPipeline<MarketEntity, MarketDictionaryDataResponse>, IMarketDataPipeline
-{
-    public MarketDataPipeline(HttpClient httpClient, IDataWriterService dataWriterService, IRefreshStatusService statusService,
-        ICorrelationIdService correlationIdService, ILogger<MarketDataPipeline> logger) : base(
-        httpClient, dataWriterService, statusService, correlationIdService, logger, 1, 100)
-
-    {
-    }
-
-    public override string Info => "Available markets directory";
-}
-
-public class BoardDataPipeline : IndexDataPipeline<BoardEntity, BoardDictionaryDataResponse>, IBoardDataPipeline
-{
-    public BoardDataPipeline(HttpClient httpClient, IDataWriterService dataWriterService, IRefreshStatusService statusService,
-        ICorrelationIdService correlationIdService, ILogger<BoardDataPipeline> logger) : base(
-        httpClient, dataWriterService, statusService, correlationIdService, logger, 1, 100)
-
-    {
-    }
-
-    public override string Info => "Trading modes directory";
-}
-
-public class BoardGroupDataPipeline : IndexDataPipeline<BoardGroupEntity, BoardGroupDictionaryDataResponse>, IBoardGroupDataPipeline
-{
-    public BoardGroupDataPipeline(HttpClient httpClient, IDataWriterService dataWriterService, IRefreshStatusService statusService,
-        ICorrelationIdService correlationIdService, ILogger<BoardGroupDataPipeline> logger) : base(
-        httpClient, dataWriterService, statusService, correlationIdService, logger, 1, 100)
-
-    {
-    }
-
-    public override string Info => "Trading mode groups directory";
-}
-
-public class DurationDataPipeline : IndexDataPipeline<DurationEntity, DurationDictionaryDataResponse>, IDurationDataPipeline
-{
-    public DurationDataPipeline(HttpClient httpClient, IDataWriterService dataWriterService, IRefreshStatusService statusService,
-        ICorrelationIdService correlationIdService, ILogger<DurationDataPipeline> logger) : base(
-        httpClient, dataWriterService, statusService, correlationIdService, logger, 1, 100)
-
-    {
-    }
-
-    public override string Info => "Available HLOCV candle calculation intervals directory";
-
-    protected override string GetKeyName => "interval";
-}
-
-public class SecurityTypeDataPipeline : IndexDataPipeline<SecurityTypeEntity, SecurityTypeDictionaryDataResponse>, ISecurityTypeDataPipeline
-{
-    public SecurityTypeDataPipeline(HttpClient httpClient, IDataWriterService dataWriterService, IRefreshStatusService statusService,
-        ICorrelationIdService correlationIdService, ILogger<SecurityTypeDataPipeline> logger) : base(
-        httpClient, dataWriterService, statusService, correlationIdService, logger, 1, 100)
-
-    {
-    }
-
-    public override string Info => "Trading system instrument types";
-}
-
-public class SecurityGroupDataPipeline : IndexDataPipeline<SecurityGroupEntity, SecurityGroupDictionaryDataResponse>, ISecurityGroupDataPipeline
-{
-    public SecurityGroupDataPipeline(HttpClient httpClient, IDataWriterService dataWriterService, IRefreshStatusService statusService,
-        ICorrelationIdService correlationIdService, ILogger<SecurityGroupDataPipeline> logger) : base(
-        httpClient, dataWriterService, statusService, correlationIdService, logger, 1, 100)
-
-    {
-    }
-
-    public override string Info => "Trading system instrument groups";
-}
-
-public class SecurityCollectionDataPipeline : IndexDataPipeline<SecurityCollectionEntity, SecurityCollectionDictionaryDataResponse>, ISecurityCollectionDataPipeline
-{
-    public SecurityCollectionDataPipeline(HttpClient httpClient, IDataWriterService dataWriterService, IRefreshStatusService statusService,
-        ICorrelationIdService correlationIdService, ILogger<SecurityCollectionDataPipeline> logger) : base(
-        httpClient, dataWriterService, statusService, correlationIdService, logger, 1, 100)
-
-    {
-    }
-
-    public override string Info => "Trading system instrument collections";
 }
