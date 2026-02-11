@@ -3,6 +3,7 @@ using InvestLens.Abstraction.Redis.Services;
 using InvestLens.Abstraction.Telegram.Models;
 using InvestLens.Shared.Interfaces.Services;
 using InvestLens.Shared.Interfaces.Telegram.Services;
+using InvestLens.Shared.Messages;
 using InvestLens.TelegramBot.Data;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Serilog.Context;
@@ -73,7 +74,8 @@ public class InvestLensBot : BackgroundService, IHealthCheck
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Error checking messages in the chatbot.");
-                    await _botClient.NotifyErrorAsync($"Error checking messages in the chatbot: {ex.Message}", stoppingToken);
+                    var message = new ErrorMessage(DateTime.UtcNow, ex.Message);
+                    await _botClient.NotifyErrorAsync(message, $"Error checking messages in the chatbot: {ex.Message}", stoppingToken);
                 }
             }
 

@@ -81,10 +81,12 @@ public class TelegramBotClient : ITelegramBotClient
         await NotifyAsync(formattedMessage, cancellationToken);
     }
 
-    public async Task NotifyErrorAsync(string exceptionMessage, CancellationToken cancellationToken = default)
+    public async Task NotifyErrorAsync(IBaseMessage baseMessage, string exceptionMessage, CancellationToken cancellationToken = default)
     {
         var message = $"❌ <b>Ошибка в операции</b>\n" +
                      $"Correlation ID: {_correlationIdService.GetOrCreateCorrelationId(nameof(TelegramBotClient))}\n" +
+                     $"Время создания: {baseMessage.CreatedAt:yyyy-MM-dd HH:mm:ss} UTC\n" +
+                     $"Время завершения: {baseMessage.FinishedAt:yyyy-MM-dd HH:mm:ss} UTC\n" +
                      $"Ошибка: {exceptionMessage}\n" +
                      $"Время: {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss} UTC";
 

@@ -39,7 +39,7 @@ public class ErrorEventHandler : IMessageHandler<ErrorMessage>
         {
             _logger.LogInformation("The operation failed: {Exception}", message.Exception.Message);
 
-            await _telegramBotClient.NotifyErrorAsync($"The operation failed: {message.Exception.Message}",
+            await _telegramBotClient.NotifyErrorAsync(message, $"The operation failed: {message.Exception.Message}",
                 cancellationToken);
 
             return await Task.FromResult(true);

@@ -58,20 +58,25 @@ public class BotCommandService : IBotCommandService
                 await _telegramBotClient.NotifyStatusAsync($"Updating data: {refreshStatus.Duration:dd\\.hh\\:mm\\:ss}", $"{refreshStatus.Status.GetDisplayName()}: {refreshStatus.SavedCount:N0}/{refreshStatus.DownloadedCount:N0}", cancellationToken);
                 break;
             case RefreshStatus.Completed:
-                var message = new CompleteMessage
+                var completeMessage = new CompleteMessage
                 {
                     CreatedAt = refreshStatus.StartedAt,
                     FinishedAt = refreshStatus.UpdatedAt
                 };
-                message.Headers.Add(HeaderConstants.CorrelationHeader, refreshStatus.CorrelationId);
+                completeMessage.Headers.Add(HeaderConstants.CorrelationHeader, refreshStatus.CorrelationId);
                 await _telegramBotClient.NotifyOperationCompleteAsync(
-                    message,
+                    completeMessage,
                     $"{refreshStatus.Status.GetDescription()}: {refreshStatus.SavedCount}/{refreshStatus.DownloadedCount}",
                     refreshStatus.Duration,
                     cancellationToken);
                 break;
             case RefreshStatus.Failed:
-                await _telegramBotClient.NotifyErrorAsync(refreshStatus.ErrorMessage, cancellationToken);
+                var errorMessage = new ErrorMessage(refreshStatus.UpdatedAt, refreshStatus.ErrorMessage)
+                {
+                    CreatedAt = refreshStatus.StartedAt
+                };
+                errorMessage.Headers.Add(HeaderConstants.CorrelationHeader, refreshStatus.CorrelationId);
+                await _telegramBotClient.NotifyErrorAsync(errorMessage, refreshStatus.ErrorMessage, cancellationToken);
                 break;
             default:
                 throw new ArgumentOutOfRangeException();

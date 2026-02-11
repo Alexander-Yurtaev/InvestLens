@@ -9,7 +9,7 @@ public interface ITelegramBotClient
     Task NotifyOperationStartAsync(IBaseMessage baseMessage, string details, CancellationToken cancellationToken = default);
     Task NotifyOperationCompleteAsync(IBaseMessage baseMessage, string result, TimeSpan duration, CancellationToken cancellationToken = default);
     Task NotifyInfoAsync(string title, string message, CancellationToken cancellationToken = default);
-    Task NotifyErrorAsync(string exceptionMessage, CancellationToken cancellationToken = default);
+    Task NotifyErrorAsync(IBaseMessage baseMessage, string exceptionMessage, CancellationToken cancellationToken = default);
     Task NotifyWarningAsync(string warning, string details = "", CancellationToken cancellationToken = default);
     Task NotifyStatusAsync(string status, string currentState, CancellationToken cancellationToken = default);
     Task NotifyDataUpdateAsync(string dataType, int count, string description = "", CancellationToken cancellationToken = default);
