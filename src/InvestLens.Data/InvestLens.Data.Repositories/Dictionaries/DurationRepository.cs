@@ -33,8 +33,7 @@ public class DurationRepository : BaseReadOnlyRepository<DurationEntity>, IDurat
     {
         if (!string.IsNullOrEmpty(filter))
         {
-            filter = filter.ToUpper();
-            query = query.Where(s => s.Title.ToUpper().Contains(filter));
+            query = query.Where(s => s.Title.Contains(filter, StringComparison.InvariantCultureIgnoreCase));
         }
         return query;
     }

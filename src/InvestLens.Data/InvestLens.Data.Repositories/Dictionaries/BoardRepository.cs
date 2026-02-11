@@ -31,8 +31,7 @@ public class BoardRepository : BaseReadOnlyRepository<BoardEntity>, IBoardReposi
     {
         if (!string.IsNullOrEmpty(filter))
         {
-            filter = filter.ToUpper();
-            query = query.Where(s => s.BoardTitle.ToUpper().Contains(filter));
+            query = query.Where(s => s.BoardTitle.Contains(filter, StringComparison.InvariantCultureIgnoreCase));
         }
         return query;
     }

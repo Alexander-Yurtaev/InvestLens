@@ -151,12 +151,12 @@ public abstract class DataPipeline<TEntity, TResponse> : IDataPipeline
         var totalSaved = 0;
         var batchId = 0;
 
-        _logger.LogInformation("Запустилась задача для сохранения данных.");
+        _logger.LogInformation("Data saving task started.");
 
         foreach (var batch in queue.GetConsumingEnumerable())
         {
             var savedCount = await _dataWriterService.SaveDataAsync(GetKeyName, batch, batchId, failBack);
-            _logger.LogInformation($"Сохранено {batch.Count} записей.");
+            _logger.LogInformation($"Saved {batch.Count} records.");
             totalSaved += savedCount;
             batchId++;
             await _statusService.SetSaving(_correlationIdService.GetOrCreateCorrelationId(nameof(DataPipeline<TEntity, TResponse>)), totalSaved);
@@ -166,14 +166,14 @@ public abstract class DataPipeline<TEntity, TResponse> : IDataPipeline
         if (_accumulator.Any())
         {
             var savedCount = await _dataWriterService.SaveDataAsync(GetKeyName, _accumulator, batchId, failBack);
-            _logger.LogInformation($"Сохранены оставшиеся {savedCount} записей.");
+            _logger.LogInformation($"Saved remaining {savedCount} records.");
             totalSaved += savedCount;
             await _statusService.SetSaving(
                 _correlationIdService.GetOrCreateCorrelationId(nameof(DataPipeline<TEntity, TResponse>)),
                 totalSaved);
         }
 
-        _logger.LogInformation("Завершилась задача для сохранения данных.");
+        _logger.LogInformation("Data saving task completed.");
     }
 
     protected abstract string GetUrl(params int[] args);
@@ -194,7 +194,7 @@ public abstract class DataPipeline<TEntity, TResponse> : IDataPipeline
 
             if (response is null)
             {
-                throw new MoexApiException($"Не пришли данные.");
+                throw new MoexApiException("The data was not received.");
             }
 
             var entities = ResponseToEntityConverters.ResponseToEntityConverter(response, page, batchSize);
@@ -203,7 +203,7 @@ public abstract class DataPipeline<TEntity, TResponse> : IDataPipeline
         catch (Exception ex)
         {
             // Логирование ошибки
-            Console.WriteLine($"Ошибка при загрузке страницы {page}: {ex.Message}");
+            Console.WriteLine($"Error loading page {page}: {ex.Message}");
             return [];
         }
     }
@@ -238,7 +238,7 @@ public class SecurityDataPipeline : DataPipeline<SecurityEntity, SecuritiesRespo
     {
     }
 
-    public override string Info => "Список ценных бумаг";
+    public override string Info => "Securities list";
     protected override string GetKeyName => "secid";
 
     protected override string GetUrl(params int[] args)
@@ -259,7 +259,7 @@ public class EngineDataPipeline : IndexDataPipeline<EngineEntity, EngineDictiona
     {
     }
 
-    public override string Info => "Список доступных торговых систем";
+    public override string Info => "Available trading systems list";
 }
 
 public class MarketDataPipeline : IndexDataPipeline<MarketEntity, MarketDictionaryDataResponse>, IMarketDataPipeline
@@ -271,7 +271,7 @@ public class MarketDataPipeline : IndexDataPipeline<MarketEntity, MarketDictiona
     {
     }
 
-    public override string Info => "Справочник доступных рынков";
+    public override string Info => "Available markets directory";
 }
 
 public class BoardDataPipeline : IndexDataPipeline<BoardEntity, BoardDictionaryDataResponse>, IBoardDataPipeline
@@ -283,7 +283,7 @@ public class BoardDataPipeline : IndexDataPipeline<BoardEntity, BoardDictionaryD
     {
     }
 
-    public override string Info => "Справочник режимов торгов";
+    public override string Info => "Trading modes directory";
 }
 
 public class BoardGroupDataPipeline : IndexDataPipeline<BoardGroupEntity, BoardGroupDictionaryDataResponse>, IBoardGroupDataPipeline
@@ -295,7 +295,7 @@ public class BoardGroupDataPipeline : IndexDataPipeline<BoardGroupEntity, BoardG
     {
     }
 
-    public override string Info => "Справочник групп режимов торгов";
+    public override string Info => "Trading mode groups directory";
 }
 
 public class DurationDataPipeline : IndexDataPipeline<DurationEntity, DurationDictionaryDataResponse>, IDurationDataPipeline
@@ -307,7 +307,7 @@ public class DurationDataPipeline : IndexDataPipeline<DurationEntity, DurationDi
     {
     }
 
-    public override string Info => "Справочник доступных расчетных интервалов свечей в формате HLOCV";
+    public override string Info => "Available HLOCV candle calculation intervals directory";
 
     protected override string GetKeyName => "interval";
 }
@@ -321,7 +321,7 @@ public class SecurityTypeDataPipeline : IndexDataPipeline<SecurityTypeEntity, Se
     {
     }
 
-    public override string Info => "Типы инструментов для торговой системы";
+    public override string Info => "Trading system instrument types";
 }
 
 public class SecurityGroupDataPipeline : IndexDataPipeline<SecurityGroupEntity, SecurityGroupDictionaryDataResponse>, ISecurityGroupDataPipeline
@@ -333,7 +333,7 @@ public class SecurityGroupDataPipeline : IndexDataPipeline<SecurityGroupEntity, 
     {
     }
 
-    public override string Info => "Группы инструментов для торговой системы";
+    public override string Info => "Trading system instrument groups";
 }
 
 public class SecurityCollectionDataPipeline : IndexDataPipeline<SecurityCollectionEntity, SecurityCollectionDictionaryDataResponse>, ISecurityCollectionDataPipeline
@@ -345,5 +345,5 @@ public class SecurityCollectionDataPipeline : IndexDataPipeline<SecurityCollecti
     {
     }
 
-    public override string Info => "Коллекции инструментов для торговой системы";
+    public override string Info => "Trading system instrument collections";
 }

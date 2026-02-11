@@ -29,7 +29,7 @@ public class SecurityTypeRepository : BaseReadOnlyRepository<SecurityTypeEntity>
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Ошибка при получении списка сущностей");
+            Logger.LogError(ex, "Error while getting entity list");
             throw;
         }
     }
@@ -47,9 +47,8 @@ public class SecurityTypeRepository : BaseReadOnlyRepository<SecurityTypeEntity>
     {
         if (!string.IsNullOrEmpty(filter))
         {
-            filter = filter.ToUpper();
-            query = query.Where(s => s.SecurityTypeName.ToUpper().Contains(filter) ||
-                                     s.SecurityTypeTitle.ToUpper().Contains(filter));
+            query = query.Where(s => s.SecurityTypeName.Contains(filter, StringComparison.InvariantCultureIgnoreCase) ||
+                                     s.SecurityTypeTitle.Contains(filter, StringComparison.InvariantCultureIgnoreCase));
         }
         return query;
     }

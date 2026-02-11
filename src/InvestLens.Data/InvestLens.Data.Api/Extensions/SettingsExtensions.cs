@@ -25,7 +25,7 @@ public static class SettingsExtensions
         ArgumentException.ThrowIfNullOrEmpty(commonSettings.TargetMigration, nameof(commonSettings.TargetMigration));
         if (commonSettings.ExpiredRefreshStatus.TotalMinutes <= 0)
         {
-            throw new ArgumentException("ExpiredRefreshStatus must be grate then 0 minutes.");
+            throw new ArgumentException("ExpiredRefreshStatus must be greater than 0 minutes.");
         }
     }
 

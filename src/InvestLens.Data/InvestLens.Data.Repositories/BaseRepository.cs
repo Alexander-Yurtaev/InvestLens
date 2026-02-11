@@ -35,7 +35,7 @@ public abstract class BaseReadOnlyRepository<TEntity> : IBaseReadOnlyRepository<
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Ошибка при получении списка сущностей");
+            Logger.LogError(ex, "Error while getting entity list");
             throw;
         }
     }
@@ -69,7 +69,7 @@ public abstract class BaseReadOnlyRepository<TEntity> : IBaseReadOnlyRepository<
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Ошибка при получении списка сущностей");
+            Logger.LogError(ex, "Error while getting entity list");
             throw;
         }
     }
@@ -95,7 +95,7 @@ public abstract class BaseReadOnlyRepository<TEntity> : IBaseReadOnlyRepository<
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Ошибка при получении сущности Id: {Id}", id);
+            Logger.LogError(ex, "Error while getting entity with Id: {Id}", id);
             throw;
         }
     }
@@ -107,7 +107,7 @@ public abstract class BaseReadOnlyRepository<TEntity> : IBaseReadOnlyRepository<
         var entity = await ResilientPolicy.ExecuteAsync(async () => await DbSet.FindAsync(id));
         if (entity is not null || !throwIfNotFound) return entity;
 
-        Logger.LogWarning("Сущность не найдена с Id: {Id}", id);
+        Logger.LogWarning("Entity not found with Id: {Id}", id);
         throw new KeyNotFoundException($"Entity not found.");
     }
 
@@ -174,7 +174,7 @@ public abstract class BaseRepository<TEntity> : BaseReadOnlyRepository<TEntity> 
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Ошибка при создании сущности Id: {Id}", entity.Id);
+            Logger.LogError(ex, "Error while creating entity with Id: {Id}", entity.Id);
             throw;
         }
     }
@@ -212,7 +212,7 @@ public abstract class BaseRepository<TEntity> : BaseReadOnlyRepository<TEntity> 
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Ошибка при создании сущности");
+            Logger.LogError(ex, "Error while creating entity");
             throw;
         }
     }
@@ -231,7 +231,7 @@ public abstract class BaseRepository<TEntity> : BaseReadOnlyRepository<TEntity> 
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Ошибка при обновлении сущности Id: {Id}", entity.Id);
+            Logger.LogError(ex, "Error while updating entity with Id: {Id}", entity.Id);
             throw;
         }
     }
@@ -255,7 +255,7 @@ public abstract class BaseRepository<TEntity> : BaseReadOnlyRepository<TEntity> 
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Ошибка при удалении сущности Id: {Id}", id);
+            Logger.LogError(ex, "Error while deleting entity with Id: {Id}", id);
             throw;
         }
     }

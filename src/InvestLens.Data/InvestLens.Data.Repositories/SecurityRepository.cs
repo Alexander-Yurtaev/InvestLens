@@ -134,10 +134,9 @@ public class SecurityRepository : BaseRepository<SecurityEntity>, ISecurityRepos
     {
         if (!string.IsNullOrEmpty(filter))
         {
-            filter = filter.ToUpper();
-            query = query.Where(s => s.SecId.Contains(filter) ||
-                                     s.Name.ToUpper().Contains(filter) ||
-                                     s.ShortName.ToUpper().Contains(filter));
+            query = query.Where(s => s.SecId.Contains(filter, StringComparison.InvariantCultureIgnoreCase) ||
+                                     s.Name.Contains(filter, StringComparison.InvariantCultureIgnoreCase) ||
+                                     s.ShortName.Contains(filter, StringComparison.InvariantCultureIgnoreCase));
         }
         return query;
     }

@@ -32,9 +32,8 @@ public class EngineRepository : BaseReadOnlyRepository<EngineEntity>, IEngineRep
     {
         if (!string.IsNullOrEmpty(filter))
         {
-            filter = filter.ToUpper();
-            query = query.Where(s => s.Name.ToUpper().Contains(filter) ||
-                                     s.Title.ToUpper().Contains(filter));
+            query = query.Where(s => s.Name.Contains(filter, StringComparison.CurrentCultureIgnoreCase) ||
+                                     s.Title.Contains(filter, StringComparison.InvariantCultureIgnoreCase));
         }
         return query;
     }

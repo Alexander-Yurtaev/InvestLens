@@ -32,9 +32,8 @@ public class MarketRepository : BaseReadOnlyRepository<MarketEntity>, IMarketRep
     {
         if (!string.IsNullOrEmpty(filter))
         {
-            filter = filter.ToUpper();
-            query = query.Where(s => s.MarketName.ToUpper().Contains(filter) ||
-                                     s.MarketTitle.ToUpper().Contains(filter));
+            query = query.Where(s => s.MarketName.Contains(filter, StringComparison.InvariantCultureIgnoreCase) ||
+                                     s.MarketTitle.Contains(filter, StringComparison.InvariantCultureIgnoreCase));
         }
         return query;
     }

@@ -52,11 +52,11 @@ public class DataWriterWriterService : IDataWriterService
                 ALTER TABLE public.{tempTableName} ADD COLUMN PageSize INTEGER;
                 CREATE INDEX idx_{tempTableName}_{keyName} ON {tempTableName}({keyName});
             ");
-            _logger.LogInformation("Создана временная таблица: {TempTableName}", tempTableName);
+            _logger.LogInformation("Temporary table created: {TempTableName}", tempTableName);
 
             // 2. Загружаем данные
             await LoadDataToTempTable(connection, tempTableName, keyName, batch, selectColumns);
-            _logger.LogInformation("Данные загружены во временную таблицу: {TempTableName}", tempTableName);
+            _logger.LogInformation("Data loaded to temporary table: {TempTableName}", tempTableName);
 
             // 3. Синхронизируем с основной таблицей
             var savedCount = await connection.ExecuteAsync($@"
@@ -65,19 +65,19 @@ public class DataWriterWriterService : IDataWriterService
                 ON CONFLICT ({keyName}) DO UPDATE
                 SET {string.Join(',', conflictColumns)};
             ");
-            _logger.LogInformation("Данные из временной таблицы синхронизированны: {TempTableName}", tempTableName);
+            _logger.LogInformation("Data synchronized from temporary table: {TempTableName}", tempTableName);
 
 
             // 4. Удаляем временную таблицу
             await connection.ExecuteAsync($"DROP TABLE public.{tempTableName};");
-            _logger.LogInformation("Временная таблица удалена: {TempTableName}", tempTableName);
+            _logger.LogInformation("Temporary table deleted: {TempTableName}", tempTableName);
 
             return savedCount;
         }
         catch (Exception ex)
         {
             // Логируем ошибку, оставляем временную таблицу для анализа и продолжаем сохранение дальше
-            _logger.LogError(ex, $"Ошибка в батче {batchId}: {ex.Message}");
+            _logger.LogError(ex, "Error in batch {BatchId}: {ExceptionMessage}", batchId, ex.Message);
             failBack?.Invoke(ex);
             return 0;
         }

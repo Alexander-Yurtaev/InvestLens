@@ -27,7 +27,7 @@ public class RefreshStatusRepository : BaseRepository<RefreshStatusEntity>, IRef
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Ошибка при получении RefreshStatus для EntityName: {EntityName}", entityName);
+            Logger.LogError(ex, "Error while getting RefreshStatus for EntityName: {EntityName}", entityName);
             throw;
         }
     }
@@ -52,7 +52,7 @@ public class RefreshStatusRepository : BaseRepository<RefreshStatusEntity>, IRef
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Ошибка при сохранении RefreshStatus для EntityName: {EntityName}", entityName);
+            Logger.LogError(ex, "Error while saving RefreshStatus for EntityName: {EntityName}", entityName);
             throw;
         }
     }

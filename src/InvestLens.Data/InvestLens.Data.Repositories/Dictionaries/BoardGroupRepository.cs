@@ -32,9 +32,8 @@ public class BoardGroupRepository : BaseReadOnlyRepository<BoardGroupEntity>, IB
     {
         if (!string.IsNullOrEmpty(filter))
         {
-            filter = filter.ToUpper();
-            query = query.Where(s => s.Name.ToUpper().Contains(filter) ||
-                                     s.Title.ToUpper().Contains(filter));
+            query = query.Where(s => s.Name.Contains(filter, StringComparison.InvariantCultureIgnoreCase) ||
+                                     s.Title.Contains(filter, StringComparison.InvariantCultureIgnoreCase));
         }
         return query;
     }

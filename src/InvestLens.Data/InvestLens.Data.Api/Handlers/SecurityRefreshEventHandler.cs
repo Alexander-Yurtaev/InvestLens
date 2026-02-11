@@ -45,7 +45,7 @@ public class SecurityRefreshEventHandler : IMessageHandler<SecurityRefreshMessag
         {
             correlationId = _correlationIdService.GetOrCreateCorrelationId("SecurityRefreshEventHandler");
             _logger.LogWarning(
-                "RabbitMQ-сообщение Id={MessageId} пришло без CorrelationId. Создаем новое: {CorrelationId}.",
+                "RabbitMQ message Id={MessageId} received without CorrelationId. Creating new: {CorrelationId}",
                 message.MessageId, correlationId);
         }
         else
@@ -56,7 +56,7 @@ public class SecurityRefreshEventHandler : IMessageHandler<SecurityRefreshMessag
         using (LogContext.PushProperty("CorrelationId", correlationId))
         {
             _logger.LogInformation(
-                "Получено поручение обновить список ценных бумаг: {MessageId} от {MessageCreatedAt}.",
+                "Received request to update securities list: {MessageId} от {MessageCreatedAt}.",
                 message.MessageId, message.CreatedAt);
 
             var startedAt = await _statusService.Init(correlationId);
@@ -66,7 +66,7 @@ public class SecurityRefreshEventHandler : IMessageHandler<SecurityRefreshMessag
                 await ProcessAllDataAsync(_securityDataPipeline, correlationId, startedAt, message.MessageId, message.CreatedAt, cancellationToken);
 
                 _logger.LogInformation(
-                    "Завершено обновление: Securities: {MessageId} от {MessageCreatedAt}.",
+                    "Completed updating: Securities: {MessageId} from {MessageCreatedAt}.",
                     message.MessageId, message.CreatedAt);
 
                 return true;
@@ -74,7 +74,7 @@ public class SecurityRefreshEventHandler : IMessageHandler<SecurityRefreshMessag
             catch (Exception ex)
             {
                 _logger.LogError(ex,
-                    "Ошибка при обновлении списка ценных бумаг: {MessageId} от {MessageCreatedAt}.",
+                    "Error while updating securities list: {MessageId} from {MessageCreatedAt}.",
                     message.MessageId, message.CreatedAt);
 
                 await _statusService.SetFailed(correlationId, ex.Message);

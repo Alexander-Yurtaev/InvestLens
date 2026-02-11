@@ -67,7 +67,7 @@ public class GlobalIssDictionariesRefreshEventHandler : IMessageHandler<GlobalIs
         {
             correlationId = _correlationIdService.GetOrCreateCorrelationId("SecurityRefreshEventHandler");
             _logger.LogWarning(
-                "RabbitMQ-сообщение Id={MessageId} пришло без CorrelationId. Создаем новое: {CorrelationId}.",
+                "RabbitMQ message Id={MessageId} received without CorrelationId. Creating new: {CorrelationId}",
                 message.MessageId, correlationId);
         }
         else
@@ -78,7 +78,7 @@ public class GlobalIssDictionariesRefreshEventHandler : IMessageHandler<GlobalIs
         using (LogContext.PushProperty("CorrelationId", correlationId))
         {
             _logger.LogInformation(
-                "Получено поручение обновить Global ISS Dictionaries: {MessageId} от {MessageCreatedAt}.",
+                "Received request to update Global ISS Dictionaries: {MessageId} от {MessageCreatedAt}.",
                 message.MessageId, message.CreatedAt);
 
             var startedAt = await _statusService.Init(correlationId);
@@ -86,7 +86,7 @@ public class GlobalIssDictionariesRefreshEventHandler : IMessageHandler<GlobalIs
             try
             {
                 await SendStartMessage("Global_Iss_Dictionaries", 
-                    $"Началась загрузка: Global ISS Dictionaries.", startedAt, cancellationToken);
+                    "Started loading: Global ISS Dictionaries.", startedAt, cancellationToken);
 
                 var totalRecords = 0;
 
@@ -100,7 +100,7 @@ public class GlobalIssDictionariesRefreshEventHandler : IMessageHandler<GlobalIs
                 totalRecords += await ProcessAllDataAsync(_securityCollectionDataPipeline, correlationId, startedAt, message.MessageId, message.CreatedAt, cancellationToken);
 
                 _logger.LogInformation(
-                    "Завершено обновление: Global ISS Dictionaries: {MessageId} от {MessageCreatedAt}.",
+                    "Completed updating: Global ISS Dictionaries: {MessageId} from {MessageCreatedAt}.",
                     message.MessageId, message.CreatedAt);
 
                 await SendCompleteMessage("Global_Iss_Dictionaries", startedAt, totalRecords, cancellationToken);
@@ -110,7 +110,7 @@ public class GlobalIssDictionariesRefreshEventHandler : IMessageHandler<GlobalIs
             catch (Exception ex)
             {
                 _logger.LogError(ex,
-                    "Ошибка при обновлении Global ISS Dictionaries: {MessageId} от {MessageCreatedAt}.",
+                    "Error while updating Global ISS Dictionaries: {MessageId} from {MessageCreatedAt}.",
                     message.MessageId, message.CreatedAt);
 
                 await _statusService.SetFailed(correlationId, ex.Message);
@@ -174,13 +174,13 @@ public class GlobalIssDictionariesRefreshEventHandler : IMessageHandler<GlobalIs
 
     private async Task<int> ProcessAllDataAsync(IDataPipeline dataPipeline, string correlationId, DateTime startedAt, Guid messageId, DateTime createdAt, CancellationToken cancellationToken)
     {
-        await SendStartMessage(correlationId, $"Началась загрузка: {dataPipeline.Info}.", startedAt, cancellationToken);
+        await SendStartMessage(correlationId, $"Started loading: {dataPipeline.Info}.", startedAt, cancellationToken);
         var totalRecords = await dataPipeline.ProcessAllDataAsync(async (ex) =>
         {
             await SendErrorMessage(correlationId, startedAt, ex, cancellationToken);
         });
 
-        _logger.LogInformation("Загрузка завершена: {Info} {MessageId} от {MessageCreatedAt}.", dataPipeline.Info, messageId, createdAt);
+        _logger.LogInformation("Loading completed: {Info} {MessageId} от {MessageCreatedAt}.", dataPipeline.Info, messageId, createdAt);
 
         await _statusService.SetCompleted(correlationId, totalRecords);
         await SendCompleteMessage(correlationId, startedAt, totalRecords, cancellationToken);
