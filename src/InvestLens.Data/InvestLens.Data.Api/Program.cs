@@ -1,5 +1,4 @@
 ﻿using CorrelationId;
-using CorrelationId.Abstractions;
 using CorrelationId.DependencyInjection;
 using HealthChecks.UI.Client;
 using InvestLens.Abstraction.MessageBus.Data;
@@ -121,27 +120,40 @@ public static class Program
 
             var app = builder.Build();
 
-            app.UseCorrelationId();
-
             app.Use(async (context, next) =>
             {
-                var correlationContextAccessor = context.RequestServices
-                    .GetRequiredService<ICorrelationContextAccessor>();
+                var correlationIdService = context.RequestServices.GetRequiredService<ICorrelationIdService>();
 
-                var correlationId = correlationContextAccessor.CorrelationContext?.CorrelationId;
+                // 1. Получаем или создаем CorrelationId
+                var correlationId = context.Request.Headers[HeaderConstants.CorrelationHeader].FirstOrDefault();
 
-                if (!string.IsNullOrEmpty(correlationId))
+                if (string.IsNullOrEmpty(correlationId))
                 {
-                    using (LogContext.PushProperty("CorrelationId", correlationId))
-                    {
-                        await next(context);
-                    }
+                    correlationId = correlationIdService.GetOrCreateCorrelationId("use");
+                    context.Request.Headers.Append(HeaderConstants.CorrelationHeader, correlationId);
+                    Log.Information("Generated new CorrelationId.");
                 }
                 else
+                {
+                    // 2. Сохраняем в CorrelationContext
+                    correlationIdService.SetCorrelationId(correlationId);
+                }
+
+                // 3. Добавляем CorrelationId в заголовок ответа
+                context.Response.OnStarting(() =>
+                {
+                    context.Response.Headers.Append(HeaderConstants.CorrelationHeader, correlationId);
+                    return Task.CompletedTask;
+                });
+
+                // 4. Добавляем в логи через LogContext
+                using (LogContext.PushProperty("CorrelationId", correlationId))
                 {
                     await next(context);
                 }
             });
+
+            app.UseCorrelationId();
 
             // 3. Использование Serilog для логирования запросов
             app.UseSerilogRequestLogging();
