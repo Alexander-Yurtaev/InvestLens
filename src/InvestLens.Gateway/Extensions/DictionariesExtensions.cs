@@ -32,7 +32,7 @@ public static class DictionariesExtensions
             try
             {
                 // Создаем gRPC клиент
-                if (string.IsNullOrEmpty(dataBaseAddress)) throw new InvalidOperationException("Ошибка в настроках.");
+                if (string.IsNullOrEmpty(dataBaseAddress)) throw new InvalidOperationException("Configuration error.");
 
                 using var channel = GrpcChannel.ForAddress(dataBaseAddress);
                 var client = new GeneralDictionariesServices.GeneralDictionariesServicesClient(channel);
@@ -53,8 +53,8 @@ public static class DictionariesExtensions
         })
         .WithOpenApi(operation =>
         {
-            operation.Summary = "Получить список торговых систем";
-            operation.Description = "Возвращает пагинированный список торговых систем";
+            operation.Summary = "Get trading systems list";
+            operation.Description = "Returns a paginated list of trading systems";
             return operation;
         })
         .WithTags("Dictionaries")
@@ -75,7 +75,7 @@ public static class DictionariesExtensions
             try
             {
                 // Создаем gRPC клиент
-                if (string.IsNullOrEmpty(dataBaseAddress)) throw new InvalidOperationException("Ошибка в настроках.");
+                if (string.IsNullOrEmpty(dataBaseAddress)) throw new InvalidOperationException("Configuration error.");
 
                 using var channel = GrpcChannel.ForAddress(dataBaseAddress);
                 var client = new GeneralDictionariesServices.GeneralDictionariesServicesClient(channel);
@@ -96,8 +96,8 @@ public static class DictionariesExtensions
         })
         .WithOpenApi(operation =>
         {
-            operation.Summary = "Получить список торговых площадок";
-            operation.Description = "Возвращает пагинированный список торговых площадок";
+            operation.Summary = "Get trading boards list";
+            operation.Description = "Returns a paginated list of trading boards";
             return operation;
         })
         .WithTags("Dictionaries")
@@ -118,7 +118,7 @@ public static class DictionariesExtensions
             try
             {
                 // Создаем gRPC клиент
-                if (string.IsNullOrEmpty(dataBaseAddress)) throw new InvalidOperationException("Ошибка в настроках.");
+                if (string.IsNullOrEmpty(dataBaseAddress)) throw new InvalidOperationException("Configuration error.");
 
                 using var channel = GrpcChannel.ForAddress(dataBaseAddress);
                 var client = new GeneralDictionariesServices.GeneralDictionariesServicesClient(channel);
@@ -139,8 +139,8 @@ public static class DictionariesExtensions
         })
         .WithOpenApi(operation =>
         {
-            operation.Summary = "Получить список групп торговых площадок";
-            operation.Description = "Возвращает пагинированный список групп торговых площадок";
+            operation.Summary = "Get trading board groups list";
+            operation.Description = "Returns a paginated list of trading board groups";
             return operation;
         })
         .WithTags("Dictionaries")
@@ -161,7 +161,7 @@ public static class DictionariesExtensions
             try
             {
                 // Создаем gRPC клиент
-                if (string.IsNullOrEmpty(dataBaseAddress)) throw new InvalidOperationException("Ошибка в настроках.");
+                if (string.IsNullOrEmpty(dataBaseAddress)) throw new InvalidOperationException("Configuration error.");
 
                 using var channel = GrpcChannel.ForAddress(dataBaseAddress);
                 var client = new GeneralDictionariesServices.GeneralDictionariesServicesClient(channel);
@@ -182,8 +182,8 @@ public static class DictionariesExtensions
         })
         .WithOpenApi(operation =>
         {
-            operation.Summary = "Получить список рынков";
-            operation.Description = "Возвращает пагинированный список рынков";
+            operation.Summary = "Get markets list";
+            operation.Description = "Returns a paginated list of markets";
             return operation;
         })
         .WithTags("Dictionaries")
@@ -204,7 +204,7 @@ public static class DictionariesExtensions
             try
             {
                 // Создаем gRPC клиент
-                if (string.IsNullOrEmpty(dataBaseAddress)) throw new InvalidOperationException("Ошибка в настроках.");
+                if (string.IsNullOrEmpty(dataBaseAddress)) throw new InvalidOperationException("Configuration error.");
 
                 using var channel = GrpcChannel.ForAddress(dataBaseAddress);
                 var client = new GeneralDictionariesServices.GeneralDictionariesServicesClient(channel);
@@ -225,8 +225,8 @@ public static class DictionariesExtensions
         })
         .WithOpenApi(operation =>
         {
-            operation.Summary = "Получить список периодов";
-            operation.Description = "Возвращает пагинированный список периодов";
+            operation.Summary = "Get durations list";
+            operation.Description = "Returns a paginated list of durations";
             return operation;
         })
         .WithTags("Dictionaries")
@@ -247,7 +247,7 @@ public static class DictionariesExtensions
             try
             {
                 // Создаем gRPC клиент
-                if (string.IsNullOrEmpty(dataBaseAddress)) throw new InvalidOperationException("Ошибка в настроках.");
+                if (string.IsNullOrEmpty(dataBaseAddress)) throw new InvalidOperationException("Configuration error.");
 
                 using var channel = GrpcChannel.ForAddress(dataBaseAddress);
                 var client = new GeneralDictionariesServices.GeneralDictionariesServicesClient(channel);
@@ -268,8 +268,8 @@ public static class DictionariesExtensions
         })
         .WithOpenApi(operation =>
         {
-            operation.Summary = "Получить список типов ценных бумаг";
-            operation.Description = "Возвращает пагинированный список типов ценных бумаг";
+            operation.Summary = "Get security types list";
+            operation.Description = "Returns a paginated list of security types";
             return operation;
         })
         .WithTags("Dictionaries")
@@ -290,7 +290,7 @@ public static class DictionariesExtensions
             try
             {
                 // Создаем gRPC клиент
-                if (string.IsNullOrEmpty(dataBaseAddress)) throw new InvalidOperationException("Ошибка в настроках.");
+                if (string.IsNullOrEmpty(dataBaseAddress)) throw new InvalidOperationException("Configuration error.");
 
                 using var channel = GrpcChannel.ForAddress(dataBaseAddress);
                 var client = new GeneralDictionariesServices.GeneralDictionariesServicesClient(channel);
@@ -311,8 +311,8 @@ public static class DictionariesExtensions
         })
         .WithOpenApi(operation =>
         {
-            operation.Summary = "Получить список групп ценных бумаг";
-            operation.Description = "Возвращает пагинированный список групп ценных бумаг";
+            operation.Summary = "Get security groups list";
+            operation.Description = "Returns a paginated list of security groups";
             return operation;
         })
         .WithTags("Dictionaries")
@@ -333,7 +333,7 @@ public static class DictionariesExtensions
             try
             {
                 // Создаем gRPC клиент
-                if (string.IsNullOrEmpty(dataBaseAddress)) throw new InvalidOperationException("Ошибка в настроках.");
+                if (string.IsNullOrEmpty(dataBaseAddress)) throw new InvalidOperationException("Configuration error.");
 
                 using var channel = GrpcChannel.ForAddress(dataBaseAddress);
                 var client = new GeneralDictionariesServices.GeneralDictionariesServicesClient(channel);
@@ -354,8 +354,8 @@ public static class DictionariesExtensions
         })
         .WithOpenApi(operation =>
         {
-            operation.Summary = "Получить список коллекций ценных бумаг";
-            operation.Description = "Возвращает пагинированный список коллекций ценных бумаг";
+            operation.Summary = "Get security collections list";
+            operation.Description = "Returns a paginated list of security collections";
             return operation;
         })
         .WithTags("Dictionaries")

@@ -23,7 +23,7 @@ public static class SecuritiesExtensions
             try
             {
                 // Создаем gRPC клиент
-                if (string.IsNullOrEmpty(dataBaseAddress)) throw new InvalidOperationException("Ошибка в настроках.");
+                if (string.IsNullOrEmpty(dataBaseAddress)) throw new InvalidOperationException("Configuration error.");
 
                 using var channel = GrpcChannel.ForAddress(dataBaseAddress);
                 var client = new SecurityServices.SecurityServicesClient(channel);
@@ -52,8 +52,8 @@ public static class SecuritiesExtensions
         })
         .WithOpenApi(operation =>
         {
-            operation.Summary = "Получить список ценных бумаг с деталями";
-            operation.Description = "Возвращает пагинированный список ценных бумаг с детальной информацией";
+            operation.Summary = "Get securities list with details";
+            operation.Description = "Returns a paginated list of securities with detailed information";
             return operation;
         })
         .WithTags("Securities")
