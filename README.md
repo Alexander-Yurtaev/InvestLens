@@ -165,6 +165,10 @@ cp .\src\InvestLens.Worker\.env.example .\src\InvestLens.Worker\.env
 
 # Отредактировать .env файл-ы
 
+# 3. Создать сертификаты для https-соединений
+mkdr C:\docker-certs\invest-lens
+run .\scripts\generate-certificates.bat
+
 # 3. Запустить все сервисы
 docker-compose up -d
 
