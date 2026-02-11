@@ -61,12 +61,12 @@ public abstract class DictionaryBasePage<TModel> : PageModel
 
                 if (JsonSerializer.Deserialize(json, ConcreteType, options) is not BaseModelWithPagination<TModel> model)
                 {
-                    _logger.LogWarning($"Data-сервис не вернул данные.");
+                    _logger.LogWarning("The data service did not return the data.");
                     TempData["Warning"] = "Список ценных бумаг пуст.";
                 }
                 else
                 {
-                    _logger.LogInformation("От Data-сервера получено {EntitiesCount} записей.", model.Models.Count);
+                    _logger.LogInformation("{SecuritiesCount} records were received from the Data server.", model.Models.Count);
 
                     Models.AddRange(model.Models);
                     TotalPages = model.TotalPages;
@@ -76,7 +76,7 @@ public abstract class DictionaryBasePage<TModel> : PageModel
             else
             {
                 _logger.LogError("Failed to get {Entities}. Status: {StatusCode}", Route, response.StatusCode);
-                TempData["Error"] = $"Failed to get {Route}. Status: {response.StatusCode}";
+                TempData["Error"] = $"Не удалось получить {Route}. Статус: {response.StatusCode}";
             }
         }
         catch (Exception ex)

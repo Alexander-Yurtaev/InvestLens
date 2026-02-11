@@ -70,12 +70,12 @@ public class SecuritiesModel : PageModel
 
                 if (model is null)
                 {
-                    _logger.LogWarning("Data-сервис не вернул данные.");
-                    TempData["Warning"] = "Список ценных бумаг пуст.";
+                    _logger.LogWarning("The data service did not return the data.");
+                    TempData["Warning"] = "The list of securities is empty.";
                 }
                 else
                 {
-                    _logger.LogInformation("От Data-сервера получено {SecuritiesCount} записей.", model.Models.Count);
+                    _logger.LogInformation("{SecuritiesCount} records were received from the Data server.", model.Models.Count);
 
                     Securities.AddRange(model.Models);
                     TotalPages = model.TotalPages;
