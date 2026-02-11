@@ -1,16 +1,17 @@
-﻿using System.Collections.Concurrent;
+﻿using InvestLens.Data.Entities;
+using System.Collections.Concurrent;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Reflection;
 
-namespace InvestLens.Shared.Helpers;
+namespace InvestLens.Data.Api.Helpers;
 
 public static class PropertyHelper
 {
     private static readonly ConcurrentDictionary<Type, Dictionary<string, PropertyInfo>> Cache = new();
 
-    public static PropertyInfo? GetPropertyByColumnCached<T>(string jsonPropertyName)
+    public static PropertyInfo? GetPropertyByColumnCached<TEntity>(string jsonPropertyName) where TEntity : BaseEntity
     {
-        var type = typeof(T);
+        var type = typeof(TEntity);
 
         if (!Cache.TryGetValue(type, out var propertyMap))
         {

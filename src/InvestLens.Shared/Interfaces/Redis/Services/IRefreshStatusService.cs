@@ -1,6 +1,6 @@
-﻿using InvestLens.Abstraction.Redis.Data;
+﻿using InvestLens.Shared.Interfaces.Redis.Data;
 
-namespace InvestLens.Abstraction.Redis.Services;
+namespace InvestLens.Shared.Interfaces.Redis.Services;
 
 public interface IRefreshStatusService
 {

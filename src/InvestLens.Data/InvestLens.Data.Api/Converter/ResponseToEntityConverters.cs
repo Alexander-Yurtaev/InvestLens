@@ -1,9 +1,8 @@
 ﻿using InvestLens.Data.Entities;
 using System.Text.Json;
+using InvestLens.Data.Api.Helpers;
 using InvestLens.Data.Entities.Dictionaries;
-using InvestLens.Grpc.Service;
 using InvestLens.Shared.Contracts.Responses;
-using InvestLens.Shared.Helpers;
 
 namespace InvestLens.Data.Api.Converter;
 
@@ -44,7 +43,7 @@ public static class ResponseToEntityConverters
             {
                 var column = securitiesResponse.Section.Columns[i];
                 var metaData = securitiesResponse.Section.Metadata[column];
-                var propertyInfo = PropertyHelper.GetPropertyByColumnCached<Security>(column);
+                var propertyInfo = PropertyHelper.GetPropertyByColumnCached<SecurityEntity>(column);
 
                 if (propertyInfo is null)
                 {

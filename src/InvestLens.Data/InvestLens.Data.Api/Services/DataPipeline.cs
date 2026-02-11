@@ -1,5 +1,4 @@
-﻿using InvestLens.Abstraction.Redis.Services;
-using InvestLens.Data.Api.Converter;
+﻿using InvestLens.Data.Api.Converter;
 using InvestLens.Data.Entities;
 using InvestLens.Data.Entities.Dictionaries;
 using InvestLens.Shared.Contracts.Responses;
@@ -7,6 +6,7 @@ using InvestLens.Shared.Exceptions;
 using InvestLens.Shared.Interfaces.Services;
 using System.Collections.Concurrent;
 using System.Text.Json;
+using InvestLens.Shared.Interfaces.Redis.Services;
 
 namespace InvestLens.Data.Api.Services;
 
@@ -203,8 +203,8 @@ public abstract class DataPipeline<TEntity, TResponse> : IDataPipeline
         catch (Exception ex)
         {
             // Логирование ошибки
-            Console.WriteLine($"Error loading page {page}: {ex.Message}");
-            return [];
+            _logger.LogError(ex, ex.Message);
+            throw;
         }
     }
 

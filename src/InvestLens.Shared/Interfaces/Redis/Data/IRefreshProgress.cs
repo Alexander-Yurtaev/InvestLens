@@ -1,6 +1,6 @@
 ﻿using InvestLens.Abstraction.Redis.Enums;
 
-namespace InvestLens.Abstraction.Redis.Data;
+namespace InvestLens.Shared.Interfaces.Redis.Data;
 
 public interface IRefreshProgress
 {

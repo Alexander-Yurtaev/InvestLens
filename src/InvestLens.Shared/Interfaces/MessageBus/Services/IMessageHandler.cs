@@ -1,4 +1,4 @@
-﻿using InvestLens.Abstraction.MessageBus.Models;
+﻿using InvestLens.Shared.Interfaces.MessageBus.Models;
 
 namespace InvestLens.Abstraction.MessageBus.Services;
 

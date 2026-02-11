@@ -1,12 +1,13 @@
 ﻿using InvestLens.Abstraction.Telegram.Models;
+using InvestLens.Shared.Interfaces.MessageBus.Models;
 
-namespace InvestLens.Abstraction.Telegram.Services;
+namespace InvestLens.Shared.Interfaces.Telegram.Services;
 
 public interface ITelegramBotClient
 {
     Task NotifyAsync(string message, CancellationToken cancellationToken = default);
-    Task NotifyOperationStartAsync(string details, CancellationToken cancellationToken = default);
-    Task NotifyOperationCompleteAsync(string result, TimeSpan duration, CancellationToken cancellationToken = default);
+    Task NotifyOperationStartAsync(IBaseMessage baseMessage, string details, CancellationToken cancellationToken = default);
+    Task NotifyOperationCompleteAsync(IBaseMessage baseMessage, string result, TimeSpan duration, CancellationToken cancellationToken = default);
     Task NotifyInfoAsync(string title, string message, CancellationToken cancellationToken = default);
     Task NotifyErrorAsync(string exceptionMessage, CancellationToken cancellationToken = default);
     Task NotifyWarningAsync(string warning, string details = "", CancellationToken cancellationToken = default);

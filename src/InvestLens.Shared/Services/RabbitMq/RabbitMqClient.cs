@@ -1,5 +1,4 @@
 ﻿using InvestLens.Abstraction.MessageBus.Data;
-using InvestLens.Abstraction.MessageBus.Models;
 using InvestLens.Abstraction.MessageBus.Services;
 using InvestLens.Shared.Constants;
 using InvestLens.Shared.Exceptions;
@@ -12,6 +11,7 @@ using System.Collections.Concurrent;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using InvestLens.Shared.Interfaces.MessageBus.Models;
 using InvestLens.Shared.Interfaces.Services;
 
 namespace InvestLens.Shared.Services.RabbitMq;

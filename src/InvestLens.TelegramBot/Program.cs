@@ -2,11 +2,11 @@
 using CorrelationId.HttpClient;
 using DotNetEnv.Configuration;
 using InvestLens.Abstraction.MessageBus.Services;
-using InvestLens.Abstraction.Redis.Services;
-using InvestLens.Abstraction.Telegram.Services;
 using InvestLens.Shared.Constants;
 using InvestLens.Shared.Extensions;
+using InvestLens.Shared.Interfaces.Redis.Services;
 using InvestLens.Shared.Interfaces.Services;
+using InvestLens.Shared.Interfaces.Telegram.Services;
 using InvestLens.Shared.Messages;
 using InvestLens.Shared.Services;
 using InvestLens.Shared.Services.RabbitMq;

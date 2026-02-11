@@ -1,11 +1,12 @@
 ﻿using Microsoft.Extensions.Options;
 using System.Net.Http.Json;
 using InvestLens.Abstraction.Telegram.Models;
+using InvestLens.Shared.Interfaces.MessageBus.Models;
 using InvestLens.Shared.Interfaces.Services;
+using InvestLens.Shared.Interfaces.Telegram.Services;
 
 namespace InvestLens.TelegramBot.Services;
 
-using InvestLens.Abstraction.Telegram.Services;
 using Models;
 using System.Threading;
 
@@ -46,21 +47,23 @@ public class TelegramBotClient : ITelegramBotClient
         await SendWithRetryAsync(payload, cancellationToken);
     }
 
-    public async Task NotifyOperationStartAsync(string details, CancellationToken cancellationToken = default)
+    public async Task NotifyOperationStartAsync(IBaseMessage baseMessage, string details, CancellationToken cancellationToken = default)
     {
         var message = $"🚀 <b>Операция начата</b>\n" +
                      $"Correlation ID: {_correlationIdService.GetOrCreateCorrelationId(nameof(TelegramBotClient))}\n" +
-                     $"Время: {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss} UTC\n" +
-                     $"Детали: {details}";
+                     $"Время создания: {baseMessage.CreatedAt:yyyy-MM-dd HH:mm:ss} UTC\n" +
+                     $"Детали: {details}\n" +
+                     $"Время: {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss} UTC";
 
         await NotifyAsync(message, cancellationToken);
     }
 
-    public async Task NotifyOperationCompleteAsync(string result, TimeSpan duration, CancellationToken cancellationToken = default)
+    public async Task NotifyOperationCompleteAsync(IBaseMessage baseMessage, string result, TimeSpan duration, CancellationToken cancellationToken = default)
     {
         var message = $"✅ <b>Операция завершена</b>\n" +
                      $"Correlation ID: {_correlationIdService.GetOrCreateCorrelationId(nameof(TelegramBotClient))}\n" +
-                     //$"Длительность: {duration:dd\\.hh\\:mm\\:ss}\n" +
+                     $"Время создания: {baseMessage.CreatedAt:yyyy-MM-dd HH:mm:ss} UTC\n" +
+                     $"Время завершения: {baseMessage.FinishedAt:yyyy-MM-dd HH:mm:ss} UTC\n" +
                      $"Длительность: {duration}\n" +
                      $"Результат: {result}\n" +
                      $"Время: {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss} UTC";

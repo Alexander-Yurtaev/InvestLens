@@ -1,6 +1,6 @@
 ﻿using InvestLens.Abstraction.MessageBus.Services;
-using InvestLens.Abstraction.Redis.Services;
 using InvestLens.Shared.Constants;
+using InvestLens.Shared.Interfaces.Redis.Services;
 using InvestLens.Shared.Interfaces.Services;
 using InvestLens.Shared.Messages;
 using Serilog.Context;

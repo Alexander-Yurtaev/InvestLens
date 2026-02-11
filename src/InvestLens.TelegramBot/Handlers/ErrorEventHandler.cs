@@ -1,7 +1,7 @@
 ﻿using InvestLens.Abstraction.MessageBus.Services;
-using InvestLens.Abstraction.Telegram.Services;
 using InvestLens.Shared.Constants;
 using InvestLens.Shared.Interfaces.Services;
+using InvestLens.Shared.Interfaces.Telegram.Services;
 using InvestLens.Shared.Messages;
 using Serilog.Context;
 

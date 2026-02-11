@@ -1,7 +1,8 @@
-﻿using InvestLens.Abstraction.Redis.Data;
-using InvestLens.Abstraction.Redis.Enums;
+﻿using InvestLens.Abstraction.Redis.Enums;
 using InvestLens.Abstraction.Redis.Services;
 using InvestLens.Shared.Constants;
+using InvestLens.Shared.Interfaces.Redis.Data;
+using InvestLens.Shared.Interfaces.Redis.Services;
 using InvestLens.Shared.Interfaces.Services;
 using InvestLens.Shared.Models.Redis;
 using Polly;

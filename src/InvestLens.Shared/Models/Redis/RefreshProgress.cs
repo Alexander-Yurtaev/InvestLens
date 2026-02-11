@@ -1,5 +1,5 @@
-﻿using InvestLens.Abstraction.Redis.Data;
-using InvestLens.Abstraction.Redis.Enums;
+﻿using InvestLens.Abstraction.Redis.Enums;
+using InvestLens.Shared.Interfaces.Redis.Data;
 
 namespace InvestLens.Shared.Models.Redis;
 
