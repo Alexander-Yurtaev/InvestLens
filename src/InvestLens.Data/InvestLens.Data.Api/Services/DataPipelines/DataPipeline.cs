@@ -2,14 +2,14 @@
 using InvestLens.Data.Entities;
 using InvestLens.Shared.Contracts.Responses;
 using InvestLens.Shared.Exceptions;
+using InvestLens.Shared.Interfaces.Redis.Services;
 using InvestLens.Shared.Interfaces.Services;
 using System.Collections.Concurrent;
 using System.Text.Json;
-using InvestLens.Shared.Interfaces.Redis.Services;
 
 namespace InvestLens.Data.Api.Services.DataPipelines;
 
-public abstract class DataPipeline<TEntity, TResponse> : IDataPipeline 
+public abstract class DataPipeline<TEntity, TResponse> : IDataPipeline
     where TEntity : BaseEntity
     where TResponse : IBaseResponse
 {
@@ -26,8 +26,8 @@ public abstract class DataPipeline<TEntity, TResponse> : IDataPipeline
         IRefreshStatusService statusService,
         ICorrelationIdService correlationIdService,
         ILogger<DataPipeline<TEntity, TResponse>> logger,
-        int maxConcurrentDownloads=3,
-        int saveBatchSize=10_000)
+        int maxConcurrentDownloads = 3,
+        int saveBatchSize = 10_000)
     {
         _httpClient = httpClient;
         _dataWriterService = dataWriterService;
@@ -40,36 +40,46 @@ public abstract class DataPipeline<TEntity, TResponse> : IDataPipeline
 
     public abstract string Info { get; }
 
-    public async Task<int> ProcessAllDataAsync(Func<Exception, Task> failBack)
+    public async Task<int> ProcessAllDataAsync(Func<Exception, Task> failBack, CancellationToken cancellationToken = default)
     {
         var downloadSemaphore = new SemaphoreSlim(_maxConcurrentDownloads);
         var saveQueue = new BlockingCollection<List<TEntity>>(10); // Буфер на 10 пачек
 
         // Запускаем задачу сохранения в отдельном потоке
-        var saveTask = Task.Run(() => ImportInBatches(saveQueue, failBack))
-            .ContinueWith(t => _logger.LogInformation("SaveTask {TaskId} completed.", t.Id), TaskContinuationOptions.OnlyOnRanToCompletion)
-            .ContinueWith(t => _logger.LogWarning("SaveTask {TaskId} canceled.", t.Id), TaskContinuationOptions.OnlyOnCanceled)
-            .ContinueWith(t => _logger.LogError(t.Exception, "Error in SaveTask: {ErrorMessage}", t.Exception?.Message ?? "none"), TaskContinuationOptions.OnlyOnFaulted);
+        Task saveTask;
+        try
+        {
+            saveTask = Task.Run(() => ImportInBatches(saveQueue, failBack, cancellationToken), cancellationToken);
+            _logger.LogInformation("SaveTask {TaskId} completed.", saveTask.Id);
+        }
+        catch (OperationCanceledException ex)
+        {
+            _logger.LogError(ex, "SaveTask canceled.");
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "SaveTask failed.");
+            throw;
+        }
 
         // Запускаем задачи загрузки
         var downloadTasks = new List<Task>();
 
-        int totalRecords = 0;
-        int page = 0;
-        bool breakFlag = false;
+        var totalRecords = 0;
+        var page = 0;
+        var breakFlag = false;
 
-        while (true)
+        while (!breakFlag && !cancellationToken.IsCancellationRequested)
         {
-            await downloadSemaphore.WaitAsync();
-
-            if (breakFlag) break;
+            await downloadSemaphore.WaitAsync(cancellationToken);
 
             var pageNumber = page;
             var task = Task.Run(async () =>
             {
                 try
                 {
-                    var batch = await DownloadBatchAsync(pageNumber, _batchSize);
+                    var batch = await DownloadBatchAsync(pageNumber, _batchSize, cancellationToken);
 
                     if (batch.Any())
                     {
@@ -88,14 +98,14 @@ public abstract class DataPipeline<TEntity, TResponse> : IDataPipeline
                     var accumulated = AccumulateForSaving(batch, _saveBatchSize);
                     if (accumulated != null)
                     {
-                        saveQueue.Add(accumulated);
+                        saveQueue.Add(accumulated, cancellationToken);
                     }
                 }
                 finally
                 {
                     downloadSemaphore.Release();
                 }
-            });
+            }, cancellationToken);
 
             downloadTasks.Add(task);
 
@@ -127,27 +137,25 @@ public abstract class DataPipeline<TEntity, TResponse> : IDataPipeline
         }
 
         // Проверяем количество
-        if (_accumulator.Count >= threshold)
+        if (_accumulator.Count < threshold) return null;
+
+        // Извлекаем пачку
+        var toSave = new List<TEntity>();
+        int count = 0;
+
+        while (count < threshold && _accumulator.TryDequeue(out var item))
         {
-            // Извлекаем пачку
-            var toSave = new List<TEntity>();
-            int count = 0;
-
-            while (count < threshold && _accumulator.TryDequeue(out var item))
-            {
-                toSave.Add(item);
-                count++;
-            }
-
-            return toSave;
+            toSave.Add(item);
+            count++;
         }
 
-        return null;
+        return toSave;
     }
 
     protected virtual string GetKeyName => "id";
 
-    private async Task ImportInBatches(BlockingCollection<List<TEntity>> queue, Func<Exception, Task> failBack)
+    private async Task ImportInBatches(BlockingCollection<List<TEntity>> queue, Func<Exception, Task> failBack,
+        CancellationToken cancellationToken)
     {
         var totalSaved = 0;
         var batchId = 0;
@@ -156,7 +164,7 @@ public abstract class DataPipeline<TEntity, TResponse> : IDataPipeline
 
         foreach (var batch in queue.GetConsumingEnumerable())
         {
-            var savedCount = await _dataWriterService.SaveDataAsync(GetKeyName, batch, batchId, failBack);
+            var savedCount = await _dataWriterService.SaveDataAsync(GetKeyName, batch, batchId, failBack, cancellationToken);
             _logger.LogInformation($"Saved {batch.Count} records.");
             totalSaved += savedCount;
             batchId++;
@@ -166,7 +174,7 @@ public abstract class DataPipeline<TEntity, TResponse> : IDataPipeline
         // Сохраняем остатки
         if (_accumulator.Any())
         {
-            var savedCount = await _dataWriterService.SaveDataAsync(GetKeyName, _accumulator, batchId, failBack);
+            var savedCount = await _dataWriterService.SaveDataAsync(GetKeyName, _accumulator, batchId, failBack, cancellationToken);
             _logger.LogInformation($"Saved remaining {savedCount} records.");
             totalSaved += savedCount;
             await _statusService.SetSaving(
@@ -179,7 +187,7 @@ public abstract class DataPipeline<TEntity, TResponse> : IDataPipeline
 
     protected abstract string GetUrl(params int[] args);
 
-    private async Task<List<TEntity>> DownloadBatchAsync(int page, int batchSize)
+    private async Task<List<TEntity>> DownloadBatchAsync(int page, int batchSize, CancellationToken cancellationToken)
     {
         string url = GetUrl(page, batchSize);
 
@@ -187,10 +195,10 @@ public abstract class DataPipeline<TEntity, TResponse> : IDataPipeline
 
         try
         {
-            var responseMessage = await _httpClient.GetAsync(url);
+            var responseMessage = await _httpClient.GetAsync(url, cancellationToken);
             responseMessage.EnsureSuccessStatusCode();
 
-            var json = await responseMessage.Content.ReadAsStringAsync();
+            var json = await responseMessage.Content.ReadAsStringAsync(cancellationToken);
             var response = JsonSerializer.Deserialize<TResponse>(json);
 
             if (response is null)
