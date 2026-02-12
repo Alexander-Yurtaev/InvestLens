@@ -208,7 +208,6 @@ public static class Program
             app.UseCors("AllowAll");
 
             await DatabaseHelper.EnsureDatabaseInitAsync(app);
-
             using (var scope = app.Services.CreateScope())
             {
                 var rabbitMqService = scope.ServiceProvider.GetService<IRabbitMqService>()!;

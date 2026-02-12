@@ -1,9 +1,9 @@
 ﻿using InvestLens.Abstraction.Redis.Data;
 using InvestLens.Abstraction.Redis.Services;
+using InvestLens.Shared.Interfaces.Services;
 using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
 using System.Text.Json;
-using InvestLens.Shared.Interfaces.Services;
 
 namespace InvestLens.Shared.Services.Redis;
 

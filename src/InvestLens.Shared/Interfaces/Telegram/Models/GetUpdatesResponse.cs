@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace InvestLens.Abstraction.Telegram.Models;
+namespace InvestLens.Shared.Interfaces.Telegram.Models;
 
 public class GetUpdatesResponse
 {
@@ -13,7 +13,7 @@ public class GetUpdatesResponse
     [JsonPropertyName("description")]
     public string Description { get; set; } = string.Empty;
 
-    [JsonPropertyName("result")] 
+    [JsonPropertyName("result")]
     public GetUpdatesResult[] Result { get; set; } = [];
 }
 
@@ -43,10 +43,10 @@ public class Message
     [JsonPropertyName("date")]
     public int Date { get; set; }
 
-    [JsonPropertyName("text")] 
+    [JsonPropertyName("text")]
     public string Text { get; set; } = string.Empty;
 
-    [JsonPropertyName("entities")] 
+    [JsonPropertyName("entities")]
     public Entity[] Entities { get; set; } = [];
 
     [JsonPropertyName("sticker")]
@@ -61,10 +61,10 @@ public class From
     [JsonPropertyName("is_bot")]
     public bool IsBot { get; set; }
 
-    [JsonPropertyName("first_name")] 
+    [JsonPropertyName("first_name")]
     public required string FirstName { get; set; }
 
-    [JsonPropertyName("last_name")] 
+    [JsonPropertyName("last_name")]
     public required string LastName { get; set; }
 
     [JsonPropertyName("username")]

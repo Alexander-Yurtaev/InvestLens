@@ -3,7 +3,7 @@
 public interface IDataPipeline
 {
     string Info { get; }
-    Task<int> ProcessAllDataAsync(Func<Exception, Task> failBack);
+    Task<int> ProcessAllDataAsync(Func<Exception, Task> failBack, CancellationToken cancellationToken = default);
 }
 
 public interface ISecurityDataPipeline : IDataPipeline

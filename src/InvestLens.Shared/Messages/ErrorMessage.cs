@@ -1,5 +1,5 @@
-﻿using System.Text.Json.Serialization;
-using InvestLens.Shared.Contracts.Dto;
+﻿using InvestLens.Shared.Contracts.Dto;
+using System.Text.Json.Serialization;
 
 namespace InvestLens.Shared.Messages;
 

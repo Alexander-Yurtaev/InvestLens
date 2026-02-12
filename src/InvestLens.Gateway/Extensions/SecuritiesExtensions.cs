@@ -12,8 +12,8 @@ public static class SecuritiesExtensions
     {
         return endpoints.MapGet("/api/data/securities", async (
             IMapper mapper,
-            int page=1,
-            int pageSize=10,
+            int page = 1,
+            int pageSize = 10,
             string? sort = "",
             string? filter = ""
         ) =>
@@ -30,7 +30,7 @@ public static class SecuritiesExtensions
 
                 // Вызываем gRPC метод
                 var response = await client.GetSecuritiesWithDetailsAsync(new GetPaginationRequest()
-                    { Page = page, PageSize = pageSize, Sort = sort, Filter = filter });
+                { Page = page, PageSize = pageSize, Sort = sort, Filter = filter });
 
                 // Преобразуем gRPC ответ в REST формат
                 var securities = mapper.Map<SecurityWithDetailsModelWithPagination>(response);

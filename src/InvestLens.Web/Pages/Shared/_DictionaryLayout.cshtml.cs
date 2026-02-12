@@ -1,9 +1,9 @@
 ﻿using InvestLens.Shared.Models;
+using InvestLens.Shared.Models.Dictionaries;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using InvestLens.Shared.Models.Dictionaries;
 
 namespace InvestLens.Web.Pages.Shared;
 

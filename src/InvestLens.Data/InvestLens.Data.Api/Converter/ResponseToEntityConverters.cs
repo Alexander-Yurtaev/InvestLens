@@ -1,8 +1,8 @@
-﻿using InvestLens.Data.Entities;
-using System.Text.Json;
-using InvestLens.Data.Api.Helpers;
+﻿using InvestLens.Data.Api.Helpers;
+using InvestLens.Data.Entities;
 using InvestLens.Data.Entities.Dictionaries;
 using InvestLens.Shared.Contracts.Responses;
+using System.Text.Json;
 
 namespace InvestLens.Data.Api.Converter;
 

@@ -178,7 +178,7 @@ public class GlobalIssDictionariesRefreshEventHandler : IMessageHandler<GlobalIs
         var totalRecords = await dataPipeline.ProcessAllDataAsync(async (ex) =>
         {
             await SendErrorMessage(correlationId, startedAt, ex, cancellationToken);
-        });
+        }, cancellationToken);
 
         _logger.LogInformation("Loading completed: {Info} {MessageId} от {MessageCreatedAt}.", dataPipeline.Info, messageId, createdAt);
 

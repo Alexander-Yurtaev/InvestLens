@@ -1,10 +1,10 @@
 ﻿using InvestLens.Shared.Models;
+using InvestLens.Web.Metrics;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.ComponentModel;
 using System.Reflection;
 using System.Text.Json;
-using InvestLens.Web.Metrics;
 
 namespace InvestLens.Web.Pages;
 
@@ -55,7 +55,7 @@ public class SecuritiesModel : PageModel
         {
             var response =
                 await client.GetAsync($"api/data/securities?page={CurrentPage}&pageSize={PageSize}&sort={sort}&filter={filter}");
-            
+
             statusCode = ((int)response.StatusCode).ToString();
 
             if (response.IsSuccessStatusCode)

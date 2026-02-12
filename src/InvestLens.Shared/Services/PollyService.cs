@@ -1,10 +1,10 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using InvestLens.Shared.Interfaces.Services;
+using Microsoft.Extensions.Logging;
 using Polly;
 using Polly.Extensions.Http;
 using RabbitMQ.Client.Exceptions;
 using StackExchange.Redis;
 using System.Net.Sockets;
-using InvestLens.Shared.Interfaces.Services;
 
 namespace InvestLens.Shared.Services;
 
@@ -39,7 +39,7 @@ public class PollyService : IPollyService
     // RabbitMQ политики
     public AsyncPolicy GetRabbitMqRetryPolicy()
     {
-        var retryIntervals = new[]{ 1, 2, 4, 60, 10 };
+        var retryIntervals = new[] { 1, 2, 4, 60, 10 };
 
         return Policy
             .Handle<BrokerUnreachableException>()

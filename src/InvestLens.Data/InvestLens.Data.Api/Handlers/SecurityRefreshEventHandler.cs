@@ -136,7 +136,8 @@ public class SecurityRefreshEventHandler : IMessageHandler<SecurityRefreshMessag
         });
     }
 
-    private async Task ProcessAllDataAsync(IDataPipeline dataPipeline, string correlationId, DateTime startedAt, Guid messageId, DateTime createdAt, CancellationToken cancellationToken)
+    private async Task ProcessAllDataAsync(IDataPipeline dataPipeline, string correlationId, DateTime startedAt,
+        Guid messageId, DateTime createdAt, CancellationToken cancellationToken)
     {
         await SendStartMessage(correlationId, $"Началась загрузка: {dataPipeline.Info}.", startedAt, cancellationToken);
         var totalRecords = await dataPipeline.ProcessAllDataAsync(async (ex) =>
@@ -144,7 +145,8 @@ public class SecurityRefreshEventHandler : IMessageHandler<SecurityRefreshMessag
             await SendErrorMessage(correlationId, startedAt, ex, cancellationToken);
         });
 
-        _logger.LogInformation("Загрузка завершена: {Info} {MessageId} от {MessageCreatedAt}.", dataPipeline.Info, messageId, createdAt);
+        _logger.LogInformation("Загрузка завершена: {Info} {MessageId} от {MessageCreatedAt}.", dataPipeline.Info,
+            messageId, createdAt);
 
         await _statusService.SetCompleted(correlationId, totalRecords);
         await SendCompleteMessage(correlationId, startedAt, totalRecords, cancellationToken);

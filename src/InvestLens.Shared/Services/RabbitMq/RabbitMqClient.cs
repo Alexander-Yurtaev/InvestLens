@@ -2,6 +2,8 @@
 using InvestLens.Abstraction.MessageBus.Services;
 using InvestLens.Shared.Constants;
 using InvestLens.Shared.Exceptions;
+using InvestLens.Shared.Interfaces.MessageBus.Models;
+using InvestLens.Shared.Interfaces.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
@@ -11,8 +13,6 @@ using System.Collections.Concurrent;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using InvestLens.Shared.Interfaces.MessageBus.Models;
-using InvestLens.Shared.Interfaces.Services;
 
 namespace InvestLens.Shared.Services.RabbitMq;
 

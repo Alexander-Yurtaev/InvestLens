@@ -10,12 +10,12 @@ using InvestLens.Shared.Interfaces.Services;
 using InvestLens.Shared.Services;
 using InvestLens.Shared.Services.RabbitMq;
 using InvestLens.Shared.Validators;
+using InvestLens.Web.Metrics;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Prometheus;
 using Serilog;
 using Serilog.Context;
 using System.Net;
-using InvestLens.Web.Metrics;
-using Prometheus;
 
 namespace InvestLens.Web;
 

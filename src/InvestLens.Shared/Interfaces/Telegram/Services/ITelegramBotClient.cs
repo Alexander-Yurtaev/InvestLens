@@ -1,5 +1,6 @@
 ﻿using InvestLens.Abstraction.Telegram.Models;
 using InvestLens.Shared.Interfaces.MessageBus.Models;
+using InvestLens.Shared.Interfaces.Telegram.Models;
 
 namespace InvestLens.Shared.Interfaces.Telegram.Services;
 

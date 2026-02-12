@@ -1,11 +1,11 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
-using Dapper;
+﻿using Dapper;
 using InvestLens.Data.Entities;
-using Npgsql;
-using NpgsqlTypes;
-using System.Reflection;
 using InvestLens.Shared.Helpers;
 using InvestLens.Shared.Interfaces.Services;
+using Npgsql;
+using NpgsqlTypes;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Reflection;
 
 namespace InvestLens.Data.Api.Services;
 
@@ -23,7 +23,7 @@ public class DataWriterWriterService : IDataWriterService
     }
 
     public async Task<int> SaveDataAsync<TEntity>(string keyName, IEnumerable<TEntity> batch, int batchId,
-        Func<Exception, Task>? failBack) where TEntity : BaseEntity
+        Func<Exception, Task>? failBack, CancellationToken cancellationToken) where TEntity : BaseEntity
     {
         var tableName = GetTable<TEntity>();
         var tempTableName = $"temp_{tableName}_batch_{batchId}";
@@ -43,7 +43,7 @@ public class DataWriterWriterService : IDataWriterService
         try
         {
             await using var connection = new NpgsqlConnection(_connectionString);
-            await connection.OpenAsync();
+            await connection.OpenAsync(cancellationToken);
 
             // 1. Создаем временную таблицу
             await connection.ExecuteAsync($@"

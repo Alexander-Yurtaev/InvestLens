@@ -24,7 +24,7 @@ public static class GatewayMetrics
             labelNames: ["route", "status_code"],
             new HistogramConfiguration
             {
-                Buckets=Histogram.ExponentialBuckets(0.001, 2, 16)
+                Buckets = Histogram.ExponentialBuckets(0.001, 2, 16)
             }
         );
 }

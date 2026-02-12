@@ -167,7 +167,6 @@ public static class Program
             app.UseHttpsRedirection();
 
             await EnsureDatabaseInitAsync(app);
-
             using (var scope = app.Services.CreateScope())
             {
                 var rabbitMqService = scope.ServiceProvider.GetService<IRabbitMqService>()!;

@@ -12,7 +12,7 @@ public static class DataServiceMetrics
             labelNames: ["operation", "table"],
             new HistogramConfiguration
             {
-                Buckets=Histogram.ExponentialBuckets(0.001, 2, 16)
+                Buckets = Histogram.ExponentialBuckets(0.001, 2, 16)
             }
         );
 
@@ -24,7 +24,7 @@ public static class DataServiceMetrics
             labelNames: ["method", "status"],
             new HistogramConfiguration
             {
-                Buckets=Histogram.ExponentialBuckets(0.001, 2, 16)
+                Buckets = Histogram.ExponentialBuckets(0.001, 2, 16)
             }
         );
 
