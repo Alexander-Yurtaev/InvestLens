@@ -55,15 +55,7 @@ public class MoexDataReaderService : IMoexDataReaderService
     public async Task<SecurityModelWithPagination> GetSecurities(int page, int pageSize, string? sort = "", string? filter = "")
     {
         var securities = await _securityRepository.Get(page, pageSize, sort, filter);
-        var result = new SecurityModelWithPagination
-        {
-            Page = securities.Page,
-            PageSize = securities.PageSize,
-            TotalPages = securities.TotalPages,
-            TotalItems = securities.TotalItems,
-            Models = _mapper.Map<List<SecurityModel>>(securities.Entities)
-        };
-        
+        var result = _mapper.Map<SecurityModelWithPagination>(securities);
         return result;
     }
 

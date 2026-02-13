@@ -45,7 +45,8 @@ public class InvestLensDataContext : DbContext
             security.Property(s => s.SecId)
                 .HasColumnName("secid")
                 .HasMaxLength(51)
-                .IsRequired();
+                .IsRequired()
+                .IsUnicode(true);
 
             security.HasIndex(s => s.SecId).IsUnique();
 
@@ -113,11 +114,11 @@ public class InvestLensDataContext : DbContext
                 .HasMaxLength(12)
                 .IsRequired(false);
 
-            security.HasIndex(s => s.SecId)
-                .HasMethod("GIN")
-                .HasOperators("gin_trgm_ops")
-                .HasDatabaseName("IX_Securities_SecId_GIN")
-                .IsUnique(false);
+            //security.HasIndex(s => s.SecId)
+            //    .HasMethod("GIN")
+            //    .HasOperators("gin_trgm_ops")
+            //    .HasDatabaseName("IX_Securities_SecId_GIN")
+            //    .IsUnique(false);
 
             security.HasIndex(s => s.Name)
                 .HasMethod("GIN")

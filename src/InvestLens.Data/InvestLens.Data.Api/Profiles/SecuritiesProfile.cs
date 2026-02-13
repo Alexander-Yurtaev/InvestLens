@@ -15,5 +15,6 @@ public class SecuritiesProfile : Profile
         CreateMap<SecurityModel, SecurityWithDetails>();
         CreateMap<SecurityWithDetailsModelWithPagination, Grpc.Service.GetSecuritiesWithDetailsResponse>()
             .ForMember(dest => dest.Data, opt => opt.MapFrom(src => src.Models));
+        CreateMap<EntitiesWithPagination<SecurityEntity>, SecurityModelWithPagination>();
     }
 }
