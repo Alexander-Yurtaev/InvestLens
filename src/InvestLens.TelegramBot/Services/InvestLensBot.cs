@@ -1,6 +1,5 @@
 ﻿using InvestLens.Abstraction.Redis.Data;
 using InvestLens.Abstraction.Redis.Services;
-using InvestLens.Abstraction.Telegram.Models;
 using InvestLens.Shared.Interfaces.Services;
 using InvestLens.Shared.Interfaces.Telegram.Models;
 using InvestLens.Shared.Interfaces.Telegram.Services;

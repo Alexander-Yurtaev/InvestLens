@@ -118,6 +118,8 @@ public static class Program
                     return await service.GetConnection(settings, CancellationToken.None);
                 });
 
+            builder.Services.AddHostedService<WarmUpService>();
+
             var app = builder.Build();
 
             app.Use(async (context, next) =>

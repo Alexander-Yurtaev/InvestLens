@@ -20,4 +20,7 @@ public interface IMoexDataReaderService
     Task<EntitiesWithPagination<SecurityTypeEntity>> GetSecurityTypes(int page, int pageSize, string? sort = "", string? filter = "");
     Task<EntitiesWithPagination<SecurityGroupEntity>> GetSecurityGroups(int page, int pageSize, string? sort = "", string? filter = "");
     Task<EntitiesWithPagination<SecurityCollectionEntity>> GetSecurityCollections(int page, int pageSize, string? sort = "", string? filter = "");
+
+    Task<IEnumerable<SecurityTypeEntity>> GetAllSecurityTypes();
+    Task<IEnumerable<SecurityGroupEntity>> GetAllSecurityGroups();
 }
