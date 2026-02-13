@@ -3,6 +3,7 @@ using InvestLens.Data.DataContext;
 using InvestLens.Data.Entities.Dictionaries;
 using InvestLens.Shared.Interfaces.Services;
 using Microsoft.Extensions.Logging;
+using System.Linq.Expressions;
 
 namespace InvestLens.Data.Repositories.Dictionaries;
 
@@ -19,9 +20,9 @@ public class SecurityCollectionRepository : BaseReadOnlyRepository<SecurityColle
         return result.Entities;
     }
 
-    protected override Dictionary<string, Func<SecurityCollectionEntity, object>> GetSortSelectors()
+    protected override Dictionary<string, Expression<Func<SecurityCollectionEntity, object>>> GetSortSelectors()
     {
-        return new Dictionary<string, Func<SecurityCollectionEntity, object>>
+        return new Dictionary<string, Expression<Func<SecurityCollectionEntity, object>>>
         {
             {nameof(SecurityCollectionEntity.Name).ToLowerInvariant(), sc => sc.Name},
             {nameof(SecurityCollectionEntity.Title).ToLowerInvariant(), sc => sc.Title},

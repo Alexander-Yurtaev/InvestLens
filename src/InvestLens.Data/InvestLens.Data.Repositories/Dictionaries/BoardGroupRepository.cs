@@ -3,6 +3,7 @@ using InvestLens.Data.DataContext;
 using InvestLens.Data.Entities.Dictionaries;
 using InvestLens.Shared.Interfaces.Services;
 using Microsoft.Extensions.Logging;
+using System.Linq.Expressions;
 
 namespace InvestLens.Data.Repositories.Dictionaries;
 
@@ -19,9 +20,9 @@ public class BoardGroupRepository : BaseReadOnlyRepository<BoardGroupEntity>, IB
         return result.Entities;
     }
 
-    protected override Dictionary<string, Func<BoardGroupEntity, object>> GetSortSelectors()
+    protected override Dictionary<string, Expression<Func<BoardGroupEntity, object>>> GetSortSelectors()
     {
-        return new Dictionary<string, Func<BoardGroupEntity, object>>
+        return new Dictionary<string, Expression<Func<BoardGroupEntity, object>>>
         {
             {nameof(BoardGroupEntity.Name).ToLowerInvariant(), bg => bg.Name},
             {nameof(BoardGroupEntity.Title).ToLowerInvariant(), bg => bg.Title},

@@ -112,6 +112,27 @@ public class InvestLensDataContext : DbContext
                 .HasColumnName("marketprice_boardid")
                 .HasMaxLength(12)
                 .IsRequired(false);
+
+            security.HasIndex(s => s.SecId)
+                .HasMethod("GIN")
+                .HasOperators("gin_trgm_ops")
+                .HasDatabaseName("IX_Securities_SecId_GIN")
+                .IsUnique(false);
+
+            security.HasIndex(s => s.Name)
+                .HasMethod("GIN")
+                .HasOperators("gin_trgm_ops")
+                .HasDatabaseName("IX_Securities_Name_GIN");
+
+            security.HasIndex(s => s.ShortName)
+                .HasMethod("GIN")
+                .HasOperators("gin_trgm_ops")
+                .HasDatabaseName("IX_Securities_ShortName_GIN");
+
+            security.HasIndex(s => s.Isin)
+                .HasMethod("GIN")
+                .HasOperators("gin_trgm_ops")
+                .HasDatabaseName("IX_Securities_Isin_GIN");
         });
     }
 

@@ -45,7 +45,7 @@ public class SecurityGrpcService : SecurityServices.SecurityServicesBase
         try
         {
             using var timer = DataServiceMetrics.DbQueryDuration
-                .WithLabels("SELECT", "Data")
+                .WithLabels("SELECT", "Security")
                 .NewTimer();
 
             var securities =

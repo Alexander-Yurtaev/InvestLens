@@ -3,6 +3,7 @@ using InvestLens.Data.DataContext;
 using InvestLens.Data.Entities.Dictionaries;
 using InvestLens.Shared.Interfaces.Services;
 using Microsoft.Extensions.Logging;
+using System.Linq.Expressions;
 
 namespace InvestLens.Data.Repositories.Dictionaries;
 
@@ -19,9 +20,9 @@ public class MarketRepository : BaseReadOnlyRepository<MarketEntity>, IMarketRep
         return result.Entities;
     }
 
-    protected override Dictionary<string, Func<MarketEntity, object>> GetSortSelectors()
+    protected override Dictionary<string, Expression<Func<MarketEntity, object>>> GetSortSelectors()
     {
-        return new Dictionary<string, Func<MarketEntity, object>>
+        return new Dictionary<string, Expression<Func<MarketEntity, object>>>
         {
             {nameof(MarketEntity.MarketName).ToLowerInvariant(), m => m.MarketName},
             {nameof(MarketEntity.MarketTitle).ToLowerInvariant(), m => m.MarketTitle},

@@ -1,6 +1,8 @@
 ﻿using Grpc.Core;
+using InvestLens.Data.Api.Metrics;
 using InvestLens.Grpc.Service;
 using InvestLens.Shared.Interfaces.Services;
+using Prometheus;
 using Board = InvestLens.Grpc.Service.Board;
 using BoardGroup = InvestLens.Grpc.Service.BoardGroup;
 using Duration = InvestLens.Grpc.Service.Duration;
@@ -29,6 +31,10 @@ public class GlobalDictionariesGrpcService : GeneralDictionariesServices.General
     {
         try
         {
+            using var timer = DataServiceMetrics.DbQueryDuration
+                .WithLabels("SELECT", "Engine")
+                .NewTimer();
+
             var engines = await _moexReaderService.GetEngines(request.Page, request.PageSize, request.Sort, request.Filter);
             var response = new GetEnginesResponse
             {
@@ -58,6 +64,10 @@ public class GlobalDictionariesGrpcService : GeneralDictionariesServices.General
     {
         try
         {
+            using var timer = DataServiceMetrics.DbQueryDuration
+                .WithLabels("SELECT", "Market")
+                .NewTimer();
+
             var markets = await _moexReaderService.GetMarkets(request.Page, request.PageSize, request.Sort, request.Filter);
             var response = new GetMarketsResponse
             {
@@ -102,6 +112,10 @@ public class GlobalDictionariesGrpcService : GeneralDictionariesServices.General
     {
         try
         {
+            using var timer = DataServiceMetrics.DbQueryDuration
+                .WithLabels("SELECT", "Board")
+                .NewTimer();
+
             var boards = await _moexReaderService.GetBoards(request.Page, request.PageSize, request.Sort, request.Filter);
             var response = new GetBoardsResponse
             {
@@ -137,6 +151,10 @@ public class GlobalDictionariesGrpcService : GeneralDictionariesServices.General
     {
         try
         {
+            using var timer = DataServiceMetrics.DbQueryDuration
+                .WithLabels("SELECT", "BoardGroup")
+                .NewTimer();
+
             var boardGroups = await _moexReaderService.GetBoardGroups(request.Page, request.PageSize, request.Sort, request.Filter);
             var response = new GetBoardGroupsResponse
             {
@@ -176,6 +194,10 @@ public class GlobalDictionariesGrpcService : GeneralDictionariesServices.General
     {
         try
         {
+            using var timer = DataServiceMetrics.DbQueryDuration
+                .WithLabels("SELECT", "Duration")
+                .NewTimer();
+
             var durations = await _moexReaderService.GetDurations(request.Page, request.PageSize, request.Sort, request.Filter);
             var response = new GetDurationsResponse
             {
@@ -207,6 +229,10 @@ public class GlobalDictionariesGrpcService : GeneralDictionariesServices.General
     {
         try
         {
+            using var timer = DataServiceMetrics.DbQueryDuration
+                .WithLabels("SELECT", "SecurityType")
+                .NewTimer();
+
             var securityTypes = await _moexReaderService.GetSecurityTypes(request.Page, request.PageSize, request.Sort, request.Filter);
             var response = new GetSecurityTypesResponse
             {
@@ -241,6 +267,10 @@ public class GlobalDictionariesGrpcService : GeneralDictionariesServices.General
     {
         try
         {
+            using var timer = DataServiceMetrics.DbQueryDuration
+                .WithLabels("SELECT", "SecurityGroup")
+                .NewTimer();
+
             var securityGroups = await _moexReaderService.GetSecurityGroups(request.Page, request.PageSize, request.Sort, request.Filter);
             var response = new GetSecurityGroupsResponse
             {
@@ -271,6 +301,10 @@ public class GlobalDictionariesGrpcService : GeneralDictionariesServices.General
     {
         try
         {
+            using var timer = DataServiceMetrics.DbQueryDuration
+                .WithLabels("SELECT", "SecurityCollection")
+                .NewTimer();
+
             var securityCollections = await _moexReaderService.GetSecurityCollections(request.Page, request.PageSize, request.Sort, request.Filter);
             var response = new GetSecurityCollectionsResponse
             {

@@ -4,6 +4,7 @@ using InvestLens.Data.Entities;
 using InvestLens.Shared.Interfaces.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using System.Linq.Expressions;
 
 namespace InvestLens.Data.Repositories;
 
@@ -117,9 +118,9 @@ public class SecurityRepository : BaseRepository<SecurityEntity>, ISecurityRepos
         return result.Entities;
     }
 
-    protected override Dictionary<string, Func<SecurityEntity, object>> GetSortSelectors()
+    protected override Dictionary<string, Expression<Func<SecurityEntity, object>>> GetSortSelectors()
     {
-        return new Dictionary<string, Func<SecurityEntity, object>>
+        return new Dictionary<string, Expression<Func<SecurityEntity, object>>>
         {
             {nameof(SecurityEntity.SecId).ToLowerInvariant(), s => s.SecId},
             {nameof(SecurityEntity.Name).ToLowerInvariant(), s => s.Name},
@@ -134,9 +135,10 @@ public class SecurityRepository : BaseRepository<SecurityEntity>, ISecurityRepos
     {
         if (!string.IsNullOrEmpty(filter))
         {
-            query = query.Where(s => s.SecId.Contains(filter, StringComparison.InvariantCultureIgnoreCase) ||
-                                     s.Name.Contains(filter, StringComparison.InvariantCultureIgnoreCase) ||
-                                     s.ShortName.Contains(filter, StringComparison.InvariantCultureIgnoreCase));
+            query = query.Where(s => EF.Functions.ILike(s.SecId, $"%{filter}%") ||
+                                     (!string.IsNullOrEmpty(s.Isin) && EF.Functions.ILike(s.Isin, $"%{filter}%")) ||
+                                     EF.Functions.ILike(s.Name, filter) ||
+                                     EF.Functions.ILike(s.ShortName, $"%{filter}%"));
         }
         return query;
     }

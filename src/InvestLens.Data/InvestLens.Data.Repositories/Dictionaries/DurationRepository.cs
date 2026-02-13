@@ -3,6 +3,7 @@ using InvestLens.Data.DataContext;
 using InvestLens.Data.Entities.Dictionaries;
 using InvestLens.Shared.Interfaces.Services;
 using Microsoft.Extensions.Logging;
+using System.Linq.Expressions;
 
 namespace InvestLens.Data.Repositories.Dictionaries;
 
@@ -19,9 +20,9 @@ public class DurationRepository : BaseReadOnlyRepository<DurationEntity>, IDurat
         return result.Entities;
     }
 
-    protected override Dictionary<string, Func<DurationEntity, object>> GetSortSelectors()
+    protected override Dictionary<string, Expression<Func<DurationEntity, object>>> GetSortSelectors()
     {
-        return new Dictionary<string, Func<DurationEntity, object>>
+        return new Dictionary<string, Expression<Func<DurationEntity, object>>>
         {
             {nameof(DurationEntity.Interval).ToLowerInvariant(), d => d.Interval},
             {nameof(DurationEntity.DurationValue).ToLowerInvariant(), d => d.DurationValue},

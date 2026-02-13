@@ -16,15 +16,10 @@ public static class QueryableExtensions
         return query;
     }
 
-    public static IEnumerable<TEntity> OrderByEx<TEntity>(this IEnumerable<TEntity> query,
-        Func<IEnumerable<TEntity>, string, IEnumerable<TEntity>> sortCause, string? sort)
+    public static IQueryable<TEntity> OrderByEx<TEntity>(this IQueryable<TEntity> query,
+        Func<IQueryable<TEntity>, string, IQueryable<TEntity>> sortCause, string sort)
         where TEntity : BaseEntity
     {
-        if (!string.IsNullOrEmpty(sort))
-        {
-            query = sortCause(query, sort);
-        }
-
-        return query;
+        return sortCause(query, sort);
     }
 }

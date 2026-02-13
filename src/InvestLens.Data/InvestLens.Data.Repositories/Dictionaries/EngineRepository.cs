@@ -3,6 +3,7 @@ using InvestLens.Data.DataContext;
 using InvestLens.Data.Entities.Dictionaries;
 using InvestLens.Shared.Interfaces.Services;
 using Microsoft.Extensions.Logging;
+using System.Linq.Expressions;
 
 namespace InvestLens.Data.Repositories.Dictionaries;
 
@@ -19,9 +20,9 @@ public class EngineRepository : BaseReadOnlyRepository<EngineEntity>, IEngineRep
         return result.Entities;
     }
 
-    protected override Dictionary<string, Func<EngineEntity, object>> GetSortSelectors()
+    protected override Dictionary<string, Expression<Func<EngineEntity, object>>> GetSortSelectors()
     {
-        return new Dictionary<string, Func<EngineEntity, object>>
+        return new Dictionary<string, Expression<Func<EngineEntity, object>>>
         {
             {nameof(EngineEntity.Name).ToLowerInvariant(), e => e.Name},
             {nameof(EngineEntity.Title).ToLowerInvariant(), e => e.Title},
