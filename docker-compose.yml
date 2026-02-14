@@ -1,4 +1,4 @@
-services:
+﻿services:
   investlens.gateway:
     image: ${DOCKER_REGISTRY-}investlensgateway
     container_name: investlens_gateway
@@ -27,7 +27,8 @@ services:
       context: .
       dockerfile: src/InvestLens.Web/Dockerfile
     depends_on:
-      - investlens.data.api
+      investlens.data.api:
+        condition: service_healthy
 
   investlens.data.api:
     image: ${DOCKER_REGISTRY-}investlensdataapi
@@ -47,10 +48,19 @@ services:
     build:
       context: .
       dockerfile: src/InvestLens.Data/InvestLens.Data.Api/Dockerfile
+    healthcheck:
+        test: ["CMD", "curl", "-f", "http://localhost:8080/health"]  # если есть health endpoint
+        interval: 10s
+        timeout: 5s
+        retries: 5
+        start_period: 30s
     depends_on:
-      - investlens.postgres
-      - investlens.redis
-      - investlens.rabbitmq
+      investlens.postgres:
+        condition: service_healthy
+      investlens.redis:
+        condition: service_healthy
+      investlens.rabbitmq:
+        condition: service_healthy
 
   investlens.worker:
     image: ${DOCKER_REGISTRY-}investlensworker
@@ -71,9 +81,12 @@ services:
       context: .
       dockerfile: src/InvestLens.Worker/Dockerfile
     depends_on:
-      - investlens.postgres
-      - investlens.redis
-      - investlens.rabbitmq
+      investlens.postgres:
+        condition: service_healthy
+      investlens.redis:
+        condition: service_healthy
+      investlens.rabbitmq:
+        condition: service_healthy
 
   investlens.telegrambot:
     image: ${DOCKER_REGISTRY-}investlenstelegrambot
@@ -92,14 +105,22 @@ services:
       context: .
       dockerfile: src/InvestLens.TelegramBot/Dockerfile
     depends_on:
-      - investlens.redis
-      - investlens.rabbitmq
+      investlens.redis:
+        condition: service_healthy
+      investlens.rabbitmq:
+        condition: service_healthy
 
   investlens.postgres:
     image: postgres:15-alpine
     container_name: investlens_postgres
     env_file:
       - .env
+    healthcheck:
+        test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+        interval: 5s
+        timeout: 5s
+        retries: 5
+        start_period: 10s
 
   investlens.redis:
     image: redis:7-alpine
@@ -114,6 +135,11 @@ services:
       --save 900 1
       --save 300 10
       --save 60 10000
+    healthcheck:
+        test: ["CMD", "redis-cli", "ping"]
+        interval: 5s
+        timeout: 3s
+        retries: 5
     restart: unless-stopped
 
   investlens.rabbitmq:
@@ -126,11 +152,10 @@ services:
       - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD:-rabbitmq}
       - RABBITMQ_DEFAULT_VHOST=${RABBITMQ_VHOST:-/}
     healthcheck:
-        test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
-        interval: 10s
-        timeout: 5s
-        retries: 10
-        start_period: 30s
+      test: rabbitmq-diagnostics check_port_connectivity
+      interval: 30s
+      timeout: 30s
+      retries: 5
     restart: unless-stopped
 
   investlens.prometheus:
