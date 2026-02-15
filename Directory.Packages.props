@@ -73,6 +73,15 @@
     <PackageVersion Include="Hangfire.AspNetCore" Version="1.8.23" />
     <PackageVersion Include="Hangfire.PostgreSql" Version="1.21.1" />
   </ItemGroup>
+  <ItemGroup Label="Avalonia">
+	  <PackageVersion Include="Avalonia" Version="11.3.11" />
+	  <PackageVersion Include="Avalonia.Desktop" Version="11.3.11" />
+	  <PackageVersion Include="Avalonia.Themes.Fluent" Version="11.3.11" />
+	  <PackageVersion Include="Avalonia.Fonts.Inter" Version="11.3.11" />
+	  <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
+	  <PackageVersion Include="Avalonia.Diagnostics" Version="11.3.11"/>
+	  <PackageVersion Include="ReactiveUI.Avalonia" Version="11.3.8" />
+  </ItemGroup>
   <ItemGroup>
     <PackageVersion Include="Microsoft.Extensions.Hosting" Version="9.0.12" />
   </ItemGroup>
