@@ -226,12 +226,8 @@ public static class Program
             await DatabaseHelper.EnsureDatabaseCreatedAsync(pollyService, app.Configuration, true);
 
             // 3. Получаем целевую миграцию
-            var commonSettings = app.Services.GetService<ICommonSettings>();
-            if (commonSettings is null)
-            {
-                throw new ArgumentException("CommonSettings must be initialized.");
-            }
-
+            var commonSettings = app.Services.GetRequiredService<ICommonSettings>();
+            
             // 4. Применяем миграции
             var targetMigration = commonSettings.TargetMigration;
             if (string.IsNullOrEmpty(targetMigration))

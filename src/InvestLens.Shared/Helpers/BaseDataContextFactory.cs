@@ -8,6 +8,8 @@ namespace InvestLens.Shared.Helpers;
 
 public abstract class BaseDataContextFactory<T> : IDesignTimeDbContextFactory<T> where T : DbContext
 {
+    protected abstract string LocalEnvPath { get; }
+
     /// <summary>
     /// 
     /// </summary>
@@ -29,7 +31,7 @@ public abstract class BaseDataContextFactory<T> : IDesignTimeDbContextFactory<T>
         var configuration = new ConfigurationBuilder()
             .AddEnvironmentVariables()  // Берём из переменных ОС (включая .env после Env.Load())
             .AddDotNetEnv(Path.GetFullPath(@"..\..\..\.env"))
-            .AddDotNetEnv(Path.GetFullPath(@"..\InvestLens.Data.Api\.env"))
+            .AddDotNetEnv(Path.GetFullPath(LocalEnvPath))
             .Build();
 
         configuration["DB_HOST"] = "postgres_multi_db";

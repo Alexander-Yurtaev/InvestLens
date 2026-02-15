@@ -7,7 +7,7 @@ public static class SettingsExtensions
     public static ICommonSettings AddCommonSettings(this IServiceCollection services, IConfiguration configuration)
     {
         var commonSettings = configuration.GetSection("CommonSettings").Get<CommonSettings>() ??
-                             throw new ArgumentNullException("CommonSettings");
+                             throw new InvalidOperationException("CommonSettings");
 
         ValidateCommonSettings(commonSettings);
 

@@ -4,11 +4,34 @@
       "commandName": "DockerCompose",
       "commandVersion": "1.0",
       "serviceActions": {
-        "investlens_web": "StartDebugging",
-        "investlens_data_api": "StartDebugging",
-        "investlens_worker": "StartDebugging",
-        "investlens_telegrambot": "StartDebugging",
-        "investlens_gateway": "StartDebugging"
+        "investlens.prometheus": "StartWithoutDebugging",
+        "investlens.postgres": "StartWithoutDebugging",
+        "investlens.grafana": "StartWithoutDebugging",
+        "investlens.gateway": "StartDebugging",
+        "investlens.data.api": "StartDebugging",
+        "investlens.auth.api": "StartDebugging",
+        "investlens.rabbitmq": "StartWithoutDebugging",
+        "investlens.redis": "StartWithoutDebugging",
+        "investlens.telegrambot": "StartDebugging",
+        "investlens.web": "StartDebugging",
+        "investlens.worker": "StartDebugging"
+      }
+    },
+    "LaunchAuthService": {
+      "commandName": "DockerCompose",
+      "commandVersion": "1.0",
+      "serviceActions": {
+        "investlens.auth.api": "StartDebugging",
+        "investlens.data.api": "DoNotStart",
+        "investlens.gateway": "DoNotStart",
+        "investlens.grafana": "DoNotStart",
+        "investlens.postgres": "StartWithoutDebugging",
+        "investlens.prometheus": "DoNotStart",
+        "investlens.rabbitmq": "DoNotStart",
+        "investlens.redis": "DoNotStart",
+        "investlens.telegrambot": "DoNotStart",
+        "investlens.web": "DoNotStart",
+        "investlens.worker": "DoNotStart"
       }
     }
   }

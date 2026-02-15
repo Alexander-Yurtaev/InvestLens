@@ -83,58 +83,67 @@ public static class DatabaseHelper
     public static async Task EnsureDatabaseCreatedAsync(IPollyService pollyService, IConfiguration configuration,
         bool createUser = false)
     {
-        CommonValidator.CommonValidate(configuration);
-        if (createUser)
+        try
         {
-            CommonValidator.UserValidate(configuration);
-        }
-
-        // Создаем master connection string (к БД postgres)
-        string masterConnectionString = ConnectionStringHelper.GetMasterConnectionString(configuration);
-
-        // Создаем политику retry для подключения
-        var retryPolicy = Policy
-            .Handle<NpgsqlException>()
-            .Or<SocketException>()
-            .WaitAndRetryAsync(
-                retryCount: 20,
-                sleepDurationProvider: _ => TimeSpan.FromSeconds(3),
-                onRetry: (exception, _, retryAttempt, _) =>
-                {
-                    Log.Warning(
-                        "Database connection retry {RetryAttempt}/20: {Message}",
-                        retryAttempt, exception.Message);
-                });
-
-        await using var masterConnection = new NpgsqlConnection(masterConnectionString);
-
-        await retryPolicy.ExecuteAsync(async () =>
-        {
-            await masterConnection.OpenAsync();
-        });
-
-        // Проверяем существование базы данных
-        var databaseName = ConnectionStringHelper.GetDatabaseName(configuration);
-        ArgumentException.ThrowIfNullOrEmpty(databaseName);
-        var dbExists = await CheckDatabaseExistsAsync(masterConnection, databaseName);
-
-        if (!dbExists)
-        {
-            // Создаем БД с ролью postgres
-            await CreateDatabaseAsync(masterConnection, databaseName);
-
+            CommonValidator.CommonValidate(configuration);
             if (createUser)
             {
-                // Создаем пользователя приложения
-                var (username, password) = ConnectionStringHelper.GetServiceUserInfo(configuration);
-                ArgumentException.ThrowIfNullOrEmpty(username);
-                ArgumentException.ThrowIfNullOrEmpty(password);
-                // Подключаемся к созданной БД с ролью postgres
-                await using var serviceMasterConnection = new NpgsqlConnection(ConnectionStringHelper.GetTargetMasterConnectionString(configuration));
-                await serviceMasterConnection.OpenAsync();
-
-                await CreateAppUserAsync(serviceMasterConnection, username, password);
+                CommonValidator.UserValidate(configuration);
             }
+
+            // Создаем master connection string (к БД postgres)
+            string masterConnectionString = ConnectionStringHelper.GetMasterConnectionString(configuration);
+
+            // Создаем политику retry для подключения
+            var retryPolicy = Policy
+                .Handle<NpgsqlException>()
+                .Or<SocketException>()
+                .WaitAndRetryAsync(
+                    retryCount: 20,
+                    sleepDurationProvider: _ => TimeSpan.FromSeconds(3),
+                    onRetry: (exception, _, retryAttempt, _) =>
+                    {
+                        Log.Warning(
+                            "Database connection retry {RetryAttempt}/20: {Message}",
+                            retryAttempt, exception.Message);
+                    });
+
+            await using var masterConnection = new NpgsqlConnection(masterConnectionString);
+
+            await retryPolicy.ExecuteAsync(async () =>
+            {
+                await masterConnection.OpenAsync();
+            });
+
+            // Проверяем существование базы данных
+            var databaseName = ConnectionStringHelper.GetDatabaseName(configuration);
+            ArgumentException.ThrowIfNullOrEmpty(databaseName);
+            var dbExists = await CheckDatabaseExistsAsync(masterConnection, databaseName);
+            
+            if (!dbExists)
+            {
+                // Создаем БД с ролью postgres
+                await CreateDatabaseAsync(masterConnection, databaseName);
+                
+                if (createUser)
+                {
+                    // Создаем пользователя приложения
+                    var (username, password) = ConnectionStringHelper.GetServiceUserInfo(configuration);
+                    ArgumentException.ThrowIfNullOrEmpty(username);
+                    ArgumentException.ThrowIfNullOrEmpty(password);
+                    // Подключаемся к созданной БД с ролью postgres
+                    await using var serviceMasterConnection =
+                        new NpgsqlConnection(ConnectionStringHelper.GetTargetMasterConnectionString(configuration));
+                    await serviceMasterConnection.OpenAsync();
+
+                    await CreateAppUserAsync(serviceMasterConnection, username, password);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, ex.Message);
+            throw;
         }
     }
 

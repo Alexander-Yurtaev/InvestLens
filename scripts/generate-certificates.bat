@@ -33,6 +33,13 @@ openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout "C:\docker-certs\inv
 openssl pkcs12 -export -out "C:\docker-certs\invest-lens\investlens_data_api.pfx" -inkey "C:\docker-certs\invest-lens\investlens_data_api.key" -in "C:\docker-certs\invest-lens\investlens_data_api.crt" -passout pass:YourPassword123
 
 
+echo Generate certificate for investlens_auth_api
+
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout "C:\docker-certs\invest-lens\investlens_auth_api.key" -out "C:\docker-certs\invest-lens\investlens_auth_api.crt" -subj "/CN=investlens_auth_api" -addext "subjectAltName=DNS:investlens_auth_api"
+
+openssl pkcs12 -export -out "C:\docker-certs\invest-lens\investlens_auth_api.pfx" -inkey "C:\docker-certs\invest-lens\investlens_auth_api.key" -in "C:\docker-certs\invest-lens\investlens_auth_api.crt" -passout pass:YourPassword123
+
+
 echo Generate certificate for investlens_grafana
 
 openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout "C:\docker-certs\invest-lens\investlens_grafana.key" -out "C:\docker-certs\invest-lens\investlens_grafana.crt" -subj "/CN=investlens_grafana" -addext "subjectAltName=DNS:investlens_grafana"
