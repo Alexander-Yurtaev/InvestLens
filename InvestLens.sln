@@ -78,6 +78,16 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InvestLens.Auth.Entities", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InvestLens.Auth.Repositories", "src\InvestLens.Auth\InvestLens.Auth.Repositories\InvestLens.Auth.Repositories.csproj", "{E0FE23DD-5403-4705-81B4-F066EE234261}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "InvestLens.Portfolio", "InvestLens.Portfolio", "{B8302AC7-6F2E-4E38-9B9C-1DD6D01AB6C6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InvestLens.Portfolio.Api", "src\InvestLens.Portfolio\InvestLens.Portfolio.Api\InvestLens.Portfolio.Api.csproj", "{F3EB02C6-0F18-4065-9962-632F8F733867}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InvestLens.Portfolio.DataContext", "src\InvestLens.Portfolio\InvestLens.Portfolio.DataContext\InvestLens.Portfolio.DataContext.csproj", "{055D11F8-8787-423E-BFEC-1751C7C25AAD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InvestLens.Portfolio.Entities", "src\InvestLens.Portfolio\InvestLens.Portfolio.Entities\InvestLens.Portfolio.Entities.csproj", "{6617E4C3-A4FF-4FE9-AFE0-81361A3B49A2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InvestLens.Portfolio.Repositories", "src\InvestLens.Portfolio\InvestLens.Portfolio.Repositories\InvestLens.Portfolio.Repositories.csproj", "{BE34F1D9-B8F1-4D8C-9054-F3FE9B3631A9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -144,6 +154,22 @@ Global
 		{E0FE23DD-5403-4705-81B4-F066EE234261}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E0FE23DD-5403-4705-81B4-F066EE234261}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E0FE23DD-5403-4705-81B4-F066EE234261}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F3EB02C6-0F18-4065-9962-632F8F733867}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F3EB02C6-0F18-4065-9962-632F8F733867}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F3EB02C6-0F18-4065-9962-632F8F733867}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F3EB02C6-0F18-4065-9962-632F8F733867}.Release|Any CPU.Build.0 = Release|Any CPU
+		{055D11F8-8787-423E-BFEC-1751C7C25AAD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{055D11F8-8787-423E-BFEC-1751C7C25AAD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{055D11F8-8787-423E-BFEC-1751C7C25AAD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{055D11F8-8787-423E-BFEC-1751C7C25AAD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6617E4C3-A4FF-4FE9-AFE0-81361A3B49A2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6617E4C3-A4FF-4FE9-AFE0-81361A3B49A2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6617E4C3-A4FF-4FE9-AFE0-81361A3B49A2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6617E4C3-A4FF-4FE9-AFE0-81361A3B49A2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BE34F1D9-B8F1-4D8C-9054-F3FE9B3631A9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BE34F1D9-B8F1-4D8C-9054-F3FE9B3631A9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BE34F1D9-B8F1-4D8C-9054-F3FE9B3631A9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BE34F1D9-B8F1-4D8C-9054-F3FE9B3631A9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -168,6 +194,11 @@ Global
 		{7104FADE-DE72-4129-B873-7E5307531F44} = {98CA9C64-610A-4843-97E1-2E751A4CCA80}
 		{95B34C2F-F22B-4E1C-9DFD-C26DC2C4FBB9} = {98CA9C64-610A-4843-97E1-2E751A4CCA80}
 		{E0FE23DD-5403-4705-81B4-F066EE234261} = {98CA9C64-610A-4843-97E1-2E751A4CCA80}
+		{B8302AC7-6F2E-4E38-9B9C-1DD6D01AB6C6} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{F3EB02C6-0F18-4065-9962-632F8F733867} = {B8302AC7-6F2E-4E38-9B9C-1DD6D01AB6C6}
+		{055D11F8-8787-423E-BFEC-1751C7C25AAD} = {B8302AC7-6F2E-4E38-9B9C-1DD6D01AB6C6}
+		{6617E4C3-A4FF-4FE9-AFE0-81361A3B49A2} = {B8302AC7-6F2E-4E38-9B9C-1DD6D01AB6C6}
+		{BE34F1D9-B8F1-4D8C-9054-F3FE9B3631A9} = {B8302AC7-6F2E-4E38-9B9C-1DD6D01AB6C6}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {F09F387B-F917-4C4C-993B-B2E123B73E68}

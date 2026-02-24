@@ -47,6 +47,28 @@ services:
       investlens.data.api:
         condition: service_healthy
 
+  investlens.portfolio.api:
+      image: ${DOCKER_REGISTRY-}investlensportfolioapi
+      container_name: investlens_portfolio_api
+      env_file:
+        - .env
+        - src/InvestLens.Portfolio/InvestLens.Portfolio.Api/.env
+      environment:
+        - DB_HOST=investlens_postgres
+        - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      build:
+        context: .
+        dockerfile: src/InvestLens.Portfolio/InvestLens.Portfolio.Api/Dockerfile
+      healthcheck:
+        test: ["CMD", "curl", "-f", "http://localhost:8080/health"]  # если есть health endpoint
+        interval: 30s
+        timeout: 5s
+        retries: 5
+        start_period: 30s
+      depends_on:
+          investlens.postgres:
+            condition: service_healthy
+
   investlens.data.api:
     image: ${DOCKER_REGISTRY-}investlensdataapi
     container_name: investlens_data_api

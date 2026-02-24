@@ -14,7 +14,8 @@
         "investlens.redis": "StartWithoutDebugging",
         "investlens.telegrambot": "StartDebugging",
         "investlens.web": "StartDebugging",
-        "investlens.worker": "StartDebugging"
+        "investlens.worker": "StartDebugging",
+        "investlens.portfolio.api": "StartDebugging"
       }
     },
     "LaunchAuthService": {
@@ -31,7 +32,8 @@
         "investlens.redis": "DoNotStart",
         "investlens.telegrambot": "DoNotStart",
         "investlens.web": "DoNotStart",
-        "investlens.worker": "DoNotStart"
+        "investlens.worker": "DoNotStart",
+        "investlens.portfolio.api": "StartDebugging"
       }
     }
   }

@@ -19,6 +19,12 @@ openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout "C:\docker-certs\inv
 openssl pkcs12 -export -out "C:\docker-certs\invest-lens\investlens_web.pfx" -inkey "C:\docker-certs\invest-lens\investlens_web.key" -in "C:\docker-certs\invest-lens\investlens_web.crt" -passout pass:YourPassword123
 
 
+echo Generate certificate for investlens_portfolio
+
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout "C:\docker-certs\invest-lens\investlens_portfolio.key" -out "C:\docker-certs\invest-lens\investlens_portfolio.crt" -subj "/CN=investlens_portfolio" -addext "subjectAltName=DNS:investlens_portfolio"
+
+openssl pkcs12 -export -out "C:\docker-certs\invest-lens\investlens_portfolio.pfx" -inkey "C:\docker-certs\invest-lens\investlens_portfolio.key" -in "C:\docker-certs\invest-lens\investlens_portfolio.crt" -passout pass:YourPassword123
+
 echo Generate certificate for investlens_worker
 
 openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout "C:\docker-certs\invest-lens\investlens_worker.key" -out "C:\docker-certs\invest-lens\investlens_worker.crt" -subj "/CN=investlens_worker" -addext "subjectAltName=DNS:investlens_worker"
