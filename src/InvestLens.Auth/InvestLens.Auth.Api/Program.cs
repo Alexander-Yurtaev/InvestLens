@@ -6,11 +6,9 @@ using InvestLens.Shared.Constants;
 using InvestLens.Shared.Helpers;
 using InvestLens.Shared.Interfaces.Services;
 using InvestLens.Shared.Services;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 using Serilog.Context;
-using System.Security.Claims;
 
 namespace InvestLens.Auth.Api
 {
