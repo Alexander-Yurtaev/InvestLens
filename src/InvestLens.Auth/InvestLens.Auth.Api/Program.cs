@@ -6,9 +6,11 @@ using InvestLens.Shared.Constants;
 using InvestLens.Shared.Helpers;
 using InvestLens.Shared.Interfaces.Services;
 using InvestLens.Shared.Services;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 using Serilog.Context;
+using System.Security.Claims;
 
 namespace InvestLens.Auth.Api
 {
@@ -18,7 +20,7 @@ namespace InvestLens.Auth.Api
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            builder.Services.AddCorrelationId(options =>
+            builder.Services.AddDefaultCorrelationId(options =>
             {
                 options.RequestHeader = HeaderConstants.CorrelationHeader;
                 options.ResponseHeader = HeaderConstants.CorrelationHeader;
@@ -105,8 +107,18 @@ namespace InvestLens.Auth.Api
 
                 app.UseAuthorization();
 
-
                 app.MapControllers();
+
+                app.MapGet("/", () => "Auth Service");
+
+                app.MapGet("/portfolio", (
+                    [FromServices] IHttpContextAccessor httpContextAccessor
+                    ) =>
+                {
+                    var user = httpContextAccessor.HttpContext?.User;
+                    var userId = user?.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "-";
+                    return $"Portfolio list for userId={userId}";
+                }).RequireAuthorization();
 
                 await EnsureDatabaseInitAsync(app);
 
