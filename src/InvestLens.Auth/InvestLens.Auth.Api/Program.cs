@@ -111,15 +111,6 @@ namespace InvestLens.Auth.Api
 
                 app.MapGet("/", () => "Auth Service");
 
-                app.MapGet("/portfolio", (
-                    [FromServices] IHttpContextAccessor httpContextAccessor
-                    ) =>
-                {
-                    var user = httpContextAccessor.HttpContext?.User;
-                    var userId = user?.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "-";
-                    return $"Portfolio list for userId={userId}";
-                }).RequireAuthorization();
-
                 await EnsureDatabaseInitAsync(app);
 
                 await app.RunAsync();
