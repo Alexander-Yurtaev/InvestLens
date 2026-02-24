@@ -12,6 +12,7 @@ services:
     image: ${DOCKER_REGISTRY-}investlensauthapi
     container_name: investlens_auth_api
     env_file:
+      - .env
       - src/InvestLens.Auth/InvestLens.Auth.Api/.env
     environment:
       - DB_HOST=investlens_postgres
@@ -26,7 +27,8 @@ services:
   investlens.web:
     image: ${DOCKER_REGISTRY-}investlensweb
     container_name: investlens_web
-    env_file: 
+    env_file:
+      - .env
       - src/InvestLens.Web/.env
     environment:
       - DB_HOST=investlens_postgres
@@ -48,7 +50,8 @@ services:
   investlens.data.api:
     image: ${DOCKER_REGISTRY-}investlensdataapi
     container_name: investlens_data_api
-    env_file: 
+    env_file:
+      - .env
       - src/InvestLens.Data/InvestLens.Data.Api/.env
     environment:
       - DB_HOST=investlens_postgres
@@ -80,7 +83,8 @@ services:
   investlens.worker:
     image: ${DOCKER_REGISTRY-}investlensworker
     container_name: investlens_worker
-    env_file: 
+    env_file:
+      - .env
       - src/InvestLens.Worker/.env
     environment:
       - DB_HOST=investlens_postgres
@@ -106,7 +110,8 @@ services:
   investlens.telegrambot:
     image: ${DOCKER_REGISTRY-}investlenstelegrambot
     container_name: investlens_telegrambot
-    env_file: 
+    env_file:
+      - .env
       - src/InvestLens.TelegramBot/.env
     environment:
       - REDIS_HOST=investlens_redis
