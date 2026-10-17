@@ -1,190 +1,81 @@
-# InvestLens | .NET 9 • Docker • PostgreSQL • gRPC • RabbitMQ
+# InvestLens
 
-**Название проекта:** InvestLens
+**Учебно-практический проект на .NET для изучения микросервисной архитектуры**
 
-**Описание:**
+[Репозиторий](https://github.com/Alexander-Yurtaev/InvestLens)
 
-InvestLens — это полнофункциональная платформа для мониторинга и аналитики инвестиционных портфелей, построенная на **микросервисной архитектуре** с использованием современных практик разработки и DevOps.
+## О проекте
 
-**Ключевые особенности системы:**
+InvestLens — личный pet-проект для учёта и анализа инвестиционных портфелей. Проект создавался для систематизации знаний по современной платформе .NET и практического изучения разработки серверных приложений с несколькими взаимодействующими сервисами.
 
-*   **Полноценная микросервисная архитектура** — 6 независимых сервисов, каждый со своей зоной ответственности
-*   **Многоуровневое взаимодействие** — комбинация синхронного (gRPC) и асинхронного (RabbitMQ) взаимодействия
-*   **Производственный мониторинг** — полный стек видимости работы системы с метриками, логами и трассировкой
-*   **Отказоустойчивость** — политики Retry и Circuit Breaker для всех внешних вызовов
-*   **Контейнеризация** — полная изоляция и простота развертывания через Docker Compose
-*   **Фоновые задачи** — управляемый планировщик с веб-интерфейсом
-*   **Уведомления** — Telegram-бот для мониторинга состояния системы
+В отличие от привычных мне desktop-приложений, в этом проекте я сосредоточился на серверной архитектуре: разделении ответственности между компонентами, взаимодействии сервисов, работе с данными и настройке инфраструктуры.
 
-## 🛠️ **Технологический стек**
+Проект разрабатывался самостоятельно с использованием технической документации, учебных материалов и исследовательской работы над архитектурными решениями.
 
-### **Backend & Фреймворки**
-- **.NET 9.0** (ASP.NET Core, Minimal API)
-- **Entity Framework Core 9.0** (Code-First подход)
-- **Npgsql 9.0** (PostgreSQL провайдер)
-- **Dapper** для высокопроизводительных операций с данными
+**Текущий статус:** разработка приостановлена. Проект не следует рассматривать как завершённую production-ready систему; отдельные компоненты и инструкции по запуску могут требовать доработки.
 
-### **Взаимодействие сервисов**
-- **gRPC** (Google.Protobuf, Grpc.AspNetCore) — межсервисная коммуникация
-- **RabbitMQ** — брокер сообщений для асинхронных операций
-- **YARP (Yet Another Reverse Proxy)** — API Gateway
+## Цели проекта
 
-### **Фоновые задачи & Планировщик**
-- **Hangfire** — надежный планировщик фоновых задач с PostgreSQL storage
-- **Hangfire Dashboard** для мониторинга и управления задачами
+- Практическое изучение современной платформы .NET и ASP.NET Core.
+- Получение опыта самостоятельного проектирования серверной системы с несколькими сервисами.
+- Изучение API Gateway и подходов к взаимодействию сервисов.
+- Практика работы с реляционной базой данных, кэшированием и брокером сообщений.
+- Знакомство с контейнеризацией, фоновыми задачами, логированием и мониторингом.
 
-### **Базы данных & Кэширование**
-- **PostgreSQL 15** — основное хранилище данных
-- **Redis 7** — кэширование и хранение состояния
-- **StackExchange.Redis** — клиент для Redis
+## Архитектура
 
-### **Логирование & Мониторинг**
-- **Serilog** — структурированное логирование
-- **Prometheus + Grafana** — сбор и визуализация метрик
-- **prometheus-net** — интеграция метрик в ASP.NET Core
-- **CorrelationId** — сквозная идентификация запросов
-- **Health Checks** — мониторинг здоровья сервисов (PostgreSQL, Redis, RabbitMQ, Hangfire)
+В проекте исследуется разделение приложения на несколько компонентов с отдельными зонами ответственности.
 
-### **Внешние API & Интеграции**
-- **Telegram.Bot** — интеграция с Telegram API
-- **MOEX ISS API** — источник финансовых данных
-- **AutoMapper** — маппинг объектов
+Основные архитектурные направления:
 
-### **Resilience & Паттерны**
-- **Polly** — политики устойчивости (Retry, Circuit Breaker)
-- **CorrelationId** для распределенной трассировки
-- **Централизованная конфигурация** через `.env` файлы
+- **API Gateway:** YARP в качестве единой точки входа и механизма маршрутизации запросов.
+- **HTTP API:** ASP.NET Core и Minimal API.
+- **Межсервисное взаимодействие:** gRPC для синхронных вызовов и RabbitMQ для асинхронного обмена сообщениями.
+- **Доступ к данным:** Entity Framework Core и Dapper.
+- **Фоновые задачи:** Hangfire.
+- **Внешние интеграции:** MOEX ISS API и Telegram API.
+- **Инфраструктура:** Docker Compose, PostgreSQL и Redis.
+- **Наблюдаемость:** Serilog, Prometheus и Grafana.
 
-### **Frontend (Web Application)**
-- **ASP.NET Core Razor Pages** — серверный рендеринг
-- **Bootstrap 5** — UI компоненты
-- **Font Awesome** — иконки
-- **Клиентская пагинация и сортировка**
+Архитектура и отдельные механизмы развивались по мере изучения технологий. Перечень выше отражает направления реализации проекта, а не гарантию того, что каждый компонент сейчас полностью настроен и работает совместно.
 
-### **DevOps & Инфраструктура**
-- **Docker & Docker Compose** — контейнеризация
-- **PostgreSQL**, **Redis**, **RabbitMQ** как сервисы
-- **Прометей + Grafana** для мониторинга
-- **Централизованное управление пакетами**
+## Технологический стек
 
-## 🏗️ **Архитектура системы**
+| Область | Технологии |
+|---|---|
+| Платформа | C#, .NET 9 |
+| Backend | ASP.NET Core, Minimal API |
+| Доступ к данным | Entity Framework Core, Dapper |
+| База данных | PostgreSQL |
+| Кэширование | Redis |
+| API Gateway | YARP |
+| Взаимодействие сервисов | gRPC, RabbitMQ |
+| Фоновые задачи | Hangfire |
+| Логирование и мониторинг | Serilog, Prometheus, Grafana |
+| Внешние интеграции | MOEX ISS API, Telegram API |
+| Инфраструктура | Docker, Docker Compose |
+| Дополнительные инструменты | AutoMapper, Polly |
 
-### **Микросервисная архитектура**
+## Что изучал и реализовывал в ходе работы
 
-```mermaid
-flowchart TD
-    Client["Web Client<br/>(Browser)"]
-    subgraph "Gateway Layer (YARP + ASP.NET Core)"
-        GW["API Gateway<br/>InvestLens.Gateway"]
-    end
-    
-    subgraph "Business Layer (ASP.NET Core)"
-        WEB["Web Application<br/>InvestLens.Web<br/>(Razor Pages + HttpClient)"]
-    end
-    
-    subgraph "Data & Processing Layer"
-        DATA["Data API Service<br/>InvestLens.Data.Api<br/>(gRPC Server + Minimal API)"]
-        WORKER["Worker Service<br/>InvestLens.Worker<br/>(Hangfire + Minimal API)"]
-        BOT["Telegram Bot Service<br/>InvestLens.TelegramBot"]
-    end
-    
-    subgraph "External Data Source"
-        MOEX[(MOEX ISS API)]
-    end
-    
-    subgraph "Infrastructure"
-        POSTGRES[(PostgreSQL)]
-        REDIS[(Redis)]
-        RABBIT[(RabbitMQ)]
-    end
-    
-    subgraph "Monitoring"
-        PROM[Prometheus]
-        GRAFANA[Grafana]
-    end
-    
-    Client -->|HTTPS| GW
-    GW -->|HTTP/HTTPS| WEB
-    WEB -->|HTTP| GW
-    GW -->|gRPC| DATA
-    
-    WORKER -->|RabbitMQ| DATA
-    DATA -->|RabbitMQ| WORKER
-    DATA -->|HTTP| MOEX
-    
-    WEB -->|HTTP| PROM
-    DATA -->|HTTP| PROM
-    WORKER -->|HTTP| PROM
-    PROM --> GRAFANA
-    
-    BOT -->|Redis| REDIS
-    DATA -->|PostgreSQL| POSTGRES
-    WORKER -->|Hangfire| POSTGRES
-    WORKER -->|RabbitMQ| RABBIT
-    DATA -->|RabbitMQ| RABBIT
-    BOT -->|RabbitMQ| RABBIT
-```
-### **Ключевые архитектурные решения:**
+- Разделение приложения на сервисы с различными зонами ответственности.
+- Настройку маршрутизации запросов через API Gateway.
+- Подходы к синхронному и асинхронному взаимодействию компонентов.
+- Организацию доступа к данным и работу с PostgreSQL.
+- Выполнение фоновых задач и интеграцию внешних API.
+- Контейнеризацию приложения и инфраструктурных зависимостей.
+- Настройку логирования, метрик и проверок состояния сервисов.
 
-1. **Central Package Management (CPM)** — централизованное управление версиями NuGet пакетов через `Directory.Packages.props` для обеспечения согласованности зависимостей между всеми 6 микросервисами
-2. **Контейнеризация (Docker Compose)** — весь стек разворачивается через Docker, включая инфраструктурные сервисы.
-3. **API Gateway (YARP)** — единая точка входа, маршрутизация и CORS.
-4. **Асинхронная коммуникация**:
-   - **gRPC** для высокопроизводительной синхронной связи между сервисами
-   - **RabbitMQ** для асинхронной обработки фоновых задач и событий
-5. **Фоновые задачи (Hangfire)** — планировщик с Web Dashboard для управления джобами.
-6. **Telegram Bot** — отдельный сервис для уведомлений и мониторинга.
-7. **Полный мониторинг**:
-   - **Prometheus** для сбора метрик
-   - **Grafana** для визуализации
-   - **Health Checks** с UI для всех сервисов
-   - **Correlation ID** для сквозной трассировки запросов
+## Запуск
 
-## 🎯 **Ключевые технические достижения**
+Инструкции по развёртыванию требуют проверки и актуализации. Перед запуском необходимо проверить конфигурацию Docker Compose, переменные окружения, сертификаты и доступность зависимых сервисов.
 
-1.  **Сложная обработка данных** — конвейерная загрузка данных из MOEX с пагинацией, буферизацией и batch-сохранением
-2.  **Гибкий планировщик** — конфигурируемые задачи Hangfire с веб-интерфейсом управления
-3.  **Полноценная трассировка** — сквозной Correlation ID через все сервисы
-4.  **Production-мониторинг** — метрики Prometheus для каждого сервиса
-5.  **Резилентность** — политики Polly для всех внешних зависимостей
-6.  **Современный .NET** — использование последних версий .NET 9 и Entity Framework Core 9
+Проект предназначен прежде всего для изучения архитектурных подходов и самостоятельной практики разработки на .NET.
 
-## 🚀 **Запуск проекта**
+## Отдельный WPF-клиент
 
-```bash
-# 1. Клонировать репозиторий
-git clone https://github.com/Alexander-Yurtaev/InvestLens.git
-cd investlens
+[InvestLens.WPF](https://github.com/Alexander-Yurtaev/InvestLens.WPF) — отдельный репозиторий, созданный для desktop-клиента. Он не считается готовым клиентом для текущей серверной системы без дополнительной проверки реализации и интеграции.
 
-# 2. Настроить переменные окружения
-cp .env.example .env
-cp .\src\InvestLens.Data\InvestLens.Data.Api\.env.example .\src\InvestLens.Data\InvestLens.Data.Api\.env
-cp .\src\InvestLens.TelegramBot\.env.example .\src\InvestLens.TelegramBot\.env
-cp .\src\InvestLens.Web\.env.example .\src\InvestLens.Web\.env
-cp .\src\InvestLens.Worker\.env.example .\src\InvestLens.Worker\.env
+## Лицензия
 
-# Отредактировать .env файл-ы
-
-# 3. Создать сертификаты для https-соединений
-mkdr C:\docker-certs\invest-lens
-run .\scripts\generate-certificates.bat
-
-# 3. Запустить все сервисы
-docker-compose up -d
-
-# 4. Доступные эндпоинты:
-#    • Web UI:              https://localhost:8081
-#    • Hangfire Dashboard:  https://localhost:5021/jobs
-#    • Health Checks:       https://localhost:8081/health-ui
-#    • Grafana:             http://localhost:3000 (admin/admin)
-#    • Prometheus:          http://localhost:9090
-#    • RabbitMQ:            http://localhost:15672
-```
-
----
-
-Проект представляет собой отличный пример full-stack .NET решения, демонстрирующий как современные архитектурные паттерны, так и внимание к production-аспектам разработки.
-
-<p align="center">
-  <img src="docs/images/Invest Lens.jpeg" alt="Invest Lens" width="800">
-</p>
+MIT — см. файл `LICENSE` в репозитории.
